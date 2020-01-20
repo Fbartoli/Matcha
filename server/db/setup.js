@@ -28,7 +28,7 @@ con.connect(function(err) {
       if (err) throw err;
       console.log('Connected!');
       const sql = `CREATE TABLE IF NOT EXISTS user(
-        ID INT PRIMARY KEY NOT NULL,
+        ID INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
         mobile INT(11),
         username VARCHAR(128) NOT NULL UNIQUE,
         nom VARCHAR(128),
@@ -42,6 +42,7 @@ con.connect(function(err) {
         orientation VARCHAR(32),
         password VARCHAR(128),
         active INT DEFAULT 0
+        location VARCHAR(128),
       )`;
       con.query(sql, function(err) {
         if (err) {
