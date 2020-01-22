@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint .",
-    "rebuild": "rm -rf node_modules && npm install"
+    "rebuild": "rm -rf node_modules && npm install",
+    "start": "nodemon app.js"
   },
   "author": "",
   "license": "ISC",
@@ -21,7 +22,9 @@
     "express": "^4.17.1",
     "express-session": "^1.17.0",
     "mysql": "^2.17.1",
+    "nodemailer": "^6.4.2",
     "passport-local": "^1.0.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "uniqid": "^5.2.0"
   }
 }

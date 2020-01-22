@@ -1,60 +1,39 @@
 // include the model (aka DB connection)
-const db = require('../models/dbconnection');
+const bcrypt = require('bcrypt');
+const uniqid = require('uniqid');
+const usermodel = require('../models/usermodel');
+
+const MAIL_REGEX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{6,}/;
+const USERNAME_REGEX = /^[a-zA-Z0-9_.-]*$/;
+const NAME_REGEX = /^[a-zA-Z_.-]*$/;
 
 // create class
 const User = {
   getAllusers: function(req, res) {
-    const pathname = req._parsedUrl.pathname.split('/');
-    const section = pathname[1];
-    db.query('SELECT * from ??', [section], function(error, results) {
-      if (error) {
-        let apiResult = {};
-        apiResult.meta = {
-          table: section,
-          type: 'collection',
-          total: 0,
-        };
-        apiResult.data = [];
-        res.json(apiResult);
-      }
-      let resultJson = JSON.stringify(results);
-      resultJson = JSON.parse(resultJson);
-      let apiResult = {};
-      apiResult.meta = {
-        table: section,
-        type: 'collection',
-        total: 1,
-        total_entries: 0,
-      };
-      apiResult.data = resultJson;
-      res.json(apiResult);
-    });
+    return usermodel.getAllusers(req, res);
   },
   addUser: function(req, res) {
-    const post = [req.body.username, req.body.username, req.body.prenom, req.body.email, req.body.password];
-    db.query('INSERT INTO user (username, nom, prenom, email, password) VALUES (?, ?, ?, ?, ?)', post, function(error, result) {
-        if (error) {
-          let apiResult = {};
-          apiResult.meta = {
-            table: 'user',
-            type: 'add an user',
-            error: error,
-          };
-          apiResult.data = [];
-          res.json(apiResult);
-        } else {
-          let resultJson = JSON.stringify(result);
-          resultJson = JSON.parse(resultJson);
-          let apiResult = {};
-          apiResult.meta = {
-            table: 'user',
-            type: 'add an user',
-            msg: 'sucess',
-          };
-          apiResult.data = resultJson;
-          res.json(apiResult);
-        }
-    });
-  }
+    let {username, name, surname, email, password} = req.body;
+    if (!MAIL_REGEX.test(email)) {
+      return res.status(400).json({error: 'Invalid mail.'});
+    }
+    if (!PASSWORD_REGEX.test(password)) {
+      return res.status(400).json({error: 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 6 characters.'});
+    }
+    if (!USERNAME_REGEX.test(username)) {
+      return res.status(400).json({error: 'Invalid username, it should contain only letters and numbers'});
+    }
+    if (!PASSWORD_REGEX.test(name)) {
+      return res.status(400).json({error: 'Invalid name, it should contain only letters'});
+    }
+    if (!PASSWORD_REGEX.test(surname)) {
+      return res.status(400).json({error: 'Invalid surname, it should contain only letters'});
+    }
+    const post = [username, name, surname, email, password];
+
+    return usermodel.addUser(post, res);
+  },
 };
+
 module.exports = User;

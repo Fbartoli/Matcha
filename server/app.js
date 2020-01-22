@@ -13,7 +13,7 @@ app.route('/register')
       res.sendFile('index.html', {root: path.join(__dirname)});
     })
     .post(user.addUser);
-app.route('/user')
+app.route('/users')
     .get(user.getAllusers);
 app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);
