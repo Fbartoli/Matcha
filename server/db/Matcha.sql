@@ -24,7 +24,7 @@ CREATE TABLE `users` (
   `confirmation` int,
   `notification` boolean DEFAULT (1),
   `score` int DEFAULT (0),
-  `isOnline` boolean DEFAULT (1),
+  `isOnline` boolean DEFAULT (0),
   `photo` json
 );
 
