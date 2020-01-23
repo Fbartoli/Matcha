@@ -31,6 +31,7 @@ export default {
 
 <style scoped>
   nav {
+    z-index: 4;
     display: flex;
     justify-content: space-between;
     align-items: center;

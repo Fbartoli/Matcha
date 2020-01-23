@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import BigHeartLogo from '~/components/BigHeartLogo.vue'
+import BigHeartLogo from '~/components/layout/BigHeartLogo.vue'
 export default {
   components: {
     BigHeartLogo
