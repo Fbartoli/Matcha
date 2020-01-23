@@ -2,10 +2,13 @@
   <nav class="nav">
     <div class="logo">
       <nuxt-link :to="{name: 'index'}" class="logo text-lg">
-        Home Page
+        Home_Page
+      </nuxt-link>
+      <nuxt-link to="/users">
+        Users
       </nuxt-link>
       <h1>
-        <!-- User ID: {{ route.params.id }} -->
+        User ID: {{ $route.params.id }}
       </h1>
       <span class="subheader">Will you find the one you dream about ?</span>
     </div>
@@ -14,11 +17,12 @@
 
 <script>
 export default {
-  data () {
-    return {
-      userID: ''
-    }
-  },
+  // data () {
+  //   return {
+  //     userId: ''
+  //   }
+  // },
+  // control doesnt' work?? ==> to review validate (data) {}
   validate (data) {
     return /^\d+$/.test(data.params.id)
   }

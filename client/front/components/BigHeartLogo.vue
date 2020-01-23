@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<style>
+<style scoped>
 .BigHeartLogo {
   animation: turn 4s linear forwards 0s;
   transform: rotateX(24deg);

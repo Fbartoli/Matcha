@@ -4,11 +4,12 @@
       <h1
         class="username"
       >
-        {{ user.username }}
+        Hello_Wolrd H1 --users
+        <!-- {{ user.username }} -->
       </h1>
-      <p>{{ user.sex }}</p>
+      <!-- <p>{{ user.sex }}</p> -->
     </article>
-    <aside>
+    <!-- <aside>
       <h3>People that fit your tastes</h3>
       <ul>
         <li v-for="(related, idUser) in relatedUsers" :key="idUser">
@@ -17,7 +18,7 @@
           </nuxt-link>
         </li>
       </ul>
-    </aside>
+    </aside> -->
   </div>
 </template>
 
@@ -25,7 +26,7 @@
 export default {
   data () {
     return {
-      id: this.$route.params.id,
+      // id: this.$route.params.id,
       users: [
         {
           id: '777',
@@ -35,14 +36,14 @@ export default {
       ]
     }
   },
-  computed: {
-    user () {
-      return this.users.find(user => user.id === this.id)
-    },
-    relatedUsers () {
-      return this.users.filter(user => user.id !== this.id)
-    }
-  }
+  // computed: {
+  //   user () {
+  //     return this.users.find(user => user.id === this.id)
+  //   },
+  //   relatedUsers () {
+  //     return this.users.filter(user => user.id !== this.id)
+  //   }
+  // }
 }
 </script>
 
