@@ -1,12 +1,18 @@
 // include the model (aka DB connection)
 const bcrypt = require('bcrypt');
-const uniqid = require('uniqid');
+// const uniqid = require('uniqid');
+const CONFIG = require('../config/config');
 const usermodel = require('../models/usermodel');
+const jwt = require('jsonwebtoken');
+
 
 const MAIL_REGEX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{6,}/;
 const USERNAME_REGEX = /^[a-zA-Z0-9_.-]*$/;
 const NAME_REGEX = /^[a-zA-Z_.-]*$/;
+
+const jwtkey = CONFIG.jwt_secret;
+const jwtExpirySeconds = CONFIG.jwt_expiration;
 
 // create class
 const User = {
@@ -107,6 +113,14 @@ const User = {
               access: 'granted',
             };
             apiResult.data = resultJson;
+            const token = jwt.sign({username}, jwtkey, {
+              algorithm: 'HS256',
+              expiresIn: jwtExpirySeconds
+            });
+            console.log('token:', token);
+            res.cookie('token', token, {maxAge: jwtExpirySeconds * 1000});
+
+            return res.json(apiResult).end();
           } else {
             apiResult.meta = {
               access: 'denied',
@@ -114,9 +128,10 @@ const User = {
             apiResult.data = resultJson;
           }
 
-          return res.json(apiResult);
+          return res.status(401).json(apiResult)
+          .end();
       }
-    })
+    });
   }
 };
 

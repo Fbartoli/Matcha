@@ -2,11 +2,16 @@ const express = require('express');
 const CONFIG = require('./config/config');
 const path = require('path');
 const user = require('./controllers/user');
+const jwtcheck = require('./middleware/handlers');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const port = CONFIG.port;
 
 app.use(express.urlencoded({extended: true}));
+app.use(bodyParser.json());
+app.use(cookieParser());
 
 app.get('/', function(req, res) {
   res.send('Welcome to the Matcha API');
@@ -25,9 +30,10 @@ app.route('/login')
     .post(user.checkPassword);
 
 app.route('/users')
-    .get(user.getAllusers);
+    .get(function(req, res) {
+      jwtcheck(req, res, user.getAllusers);
+    });
 
 app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);
 });
-
