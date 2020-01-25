@@ -195,11 +195,6 @@ const User = {
     if (!(username || id)) {
      return res.send('Invalid').redirect('/login');
     }
-    usermodel.findOneUser(username, function(err, result) {
-      if (err) {
-        
-      }
-    });
   }
 };
 
