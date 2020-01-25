@@ -16,7 +16,9 @@ app.use(cookieParser());
 app.get('/', function(req, res) {
   res.send('Welcome to the Matcha API');
 });
-
+app.get('/activate', function(req, res) {
+  user.activate(req, res);
+});
 app.route('/register')
     .get(function(req, res) {
       res.sendFile('index.html', {root: path.join(__dirname)});

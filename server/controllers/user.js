@@ -1,9 +1,10 @@
 // include the model (aka DB connection)
 const bcrypt = require('bcrypt');
-// const uniqid = require('uniqid');
+const uniqid = require('uniqid');
 const CONFIG = require('../config/config');
 const usermodel = require('../models/usermodel');
 const jwt = require('jsonwebtoken');
+const mail = require('../utils/mail');
 
 
 const MAIL_REGEX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
@@ -43,9 +44,8 @@ const User = {
     });
   },
   addUser: function(req, res) {
-    const pathname = req._parsedUrl.pathname.split('/');
-    const section = pathname[1];
     let {username, name, surname, email, password} = req.body;
+    const confirmation = uniqid();
     if (!(username || name || surname || email || password)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
@@ -70,31 +70,75 @@ const User = {
 
         return res.status(500).json({error: 'bcrypt popo' + err});
       }
-      const post = [username, name, surname, email, hash];
-      usermodel.addUser(post, function(err, result) {
+      const post = [username, name, surname, email, hash, confirmation];
       let apiResult = {};
-      if (err) {
-        apiResult.meta = {
-          table: section,
-          type: 'collection',
-          total: 0,
-          error: err,
-        };
-        apiResult.data = [];
-      } else {
-      let resultJson = JSON.stringify(result);
-      resultJson = JSON.parse(resultJson);
-      apiResult.meta = {
-        table: 'user',
-        type: 'collection',
-      };
-      apiResult.data = resultJson;
-      }
+      usermodel.findOneEmail(email, function(err, result) {
+        if (err) {
+          apiResult.meta = {
+            type: 'collection',
+            total: 0,
+            error: err,
+          };
+          apiResult.data = [];
+        } else {
+          let resultJson = JSON.stringify(result);
+          resultJson = JSON.parse(resultJson);
+          if (resultJson[0]) {
+            apiResult.meta = {
+              error: 'email already exists'
+           };
+           apiResult.data = [];
 
-      return res.json(apiResult);
+           return res.json(apiResult);
+          } else {
+            usermodel.findOneUser(username, function(err, result) {
+              if (err) {
+                apiResult.meta = {
+                  type: 'collection',
+                  total: 0,
+                  error: err,
+                };
+                apiResult.data = [];
+              } else {
+                let resultJson = JSON.stringify(result);
+                resultJson = JSON.parse(resultJson);
+                if (resultJson[0]) {
+                  apiResult.meta = {
+                    error: 'Username already exists'
+                 };
+                 apiResult.data = [];
+
+                 return res.json(apiResult);
+                } else {
+                  usermodel.addUser(post, function(err, result) {
+                    if (err) {
+                      apiResult.meta = {
+                        type: 'collection',
+                        total: 0,
+                        error: err,
+                      };
+                      apiResult.data = [];
+                    } else {
+                      let resultJson = JSON.stringify(result);
+                      resultJson = JSON.parse(resultJson);
+                      apiResult.meta = {
+                        table: 'user',
+                        type: 'collection',
+                      };
+                      apiResult.data = resultJson;
+                      mail(email, 'activation link matcha', 'http://localhost:8080/activate?id' + confirmation + 'username' + username, null);
+                    }
+
+                    return res.json(apiResult);
+                  });
+                }
+              }
+            });
+          }
+        }
+      });
     });
-  });
-},
+  },
   checkPassword: function(req, res) {
     let {username, password} = req.body;
     usermodel.findOneUser(username, function(err, result) {
@@ -108,28 +152,52 @@ const User = {
       } else {
         let resultJson = JSON.stringify(result);
         resultJson = JSON.parse(resultJson);
-          if (bcrypt.compareSync(password, resultJson[0].password)) {
-            apiResult.meta = {
-              access: 'granted',
-            };
-            apiResult.data = resultJson;
-            const token = jwt.sign({username}, jwtkey, {
-              algorithm: 'HS256',
-              expiresIn: jwtExpirySeconds
-            });
-            console.log('token:', token);
-            res.cookie('token', token, {maxAge: jwtExpirySeconds * 1000});
+        if (!resultJson[0]) {
+          apiResult.meta = {
+            access: 'denied',
+            error: 'User not found',
+          };
+          apiResult.data = resultJson;
+          res.status(401);
+        } else if (resultJson[0].active === 0) {
+          apiResult.meta = {
+            access: 'denied',
+            error: 'account not activated',
+          };
+          res.status(401);
+        } else if (bcrypt.compareSync(password, resultJson[0].password)) {
+          apiResult.meta = {
+            access: 'granted',
+          };
+          apiResult.data = resultJson;
+          const token = jwt.sign({username}, jwtkey, {
+            algorithm: 'HS256',
+            expiresIn: jwtExpirySeconds
+          });
+          console.log('token:', token);
+          res.cookie('token', token, {maxAge: jwtExpirySeconds * 1000});
+        } else {
+          apiResult.meta = {
+            access: 'denied',
+            error: 'Wrong password',
+          };
+          apiResult.data = resultJson;
+          res.status(401);
+        }
+      }
 
-            return res.json(apiResult).end();
-          } else {
-            apiResult.meta = {
-              access: 'denied',
-            };
-            apiResult.data = resultJson;
-          }
-
-          return res.status(401).json(apiResult)
-          .end();
+      return res.json(apiResult).end();
+    });
+  },
+  activate: function(req, res) {
+    const id = req.query.id;
+    const username = req.query.id;
+    if (!(username || id)) {
+     return res.send('Invalid').redirect('/login');
+    }
+    usermodel.findOneUser(username, function(err, result) {
+      if (err) {
+        
       }
     });
   }
