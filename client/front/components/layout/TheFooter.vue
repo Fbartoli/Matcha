@@ -17,6 +17,10 @@ h6{
   margin-top: 20px;
 }
 
+.TheFooter {
+  z-index: 4;
+}
+
 .footer--pic{
   width: auto;
   height: 50px;

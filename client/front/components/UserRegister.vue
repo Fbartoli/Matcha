@@ -58,7 +58,7 @@
 </template>
 
 <script>
-import Modal from '@/components/Modal'
+import Modal from '@/components/entest/Modal'
 export default {
   components: {
     Modal

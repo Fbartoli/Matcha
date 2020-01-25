@@ -6,7 +6,11 @@
       "@/*": ["./*"],
       "~~/*": ["./*"],
       "@@/*": ["./*"]
-    }
+    },
+    "types": [
+      "@nuxt/vue-app",
+      "@nuxtjs/axios"
+    ]
   },
   "exclude": ["node_modules", ".nuxt", "dist"]
 }

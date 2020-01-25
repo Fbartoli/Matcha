@@ -1,32 +1,47 @@
 <template>
   <nav class="nav">
     <div class="logo">
+      <br>
       <nuxt-link :to="{name: 'index'}" class="logo text-lg">
-        Home Page
+        Home_Page
       </nuxt-link>
+      <br>
+      <nuxt-link to="/users">
+        Users
+      </nuxt-link>
+      <br>
+      <nuxt-link to="/login">
+        Login !
+      </nuxt-link>
+      <br>
+      <nuxt-link to="/login/auth">
+        Post Login
+      </nuxt-link>
+      <br>
       <h1>
-        <!-- User ID: {{ route.params.id }} -->
+        Matcha
       </h1>
+      <br>
       <span class="subheader">Will you find the one you dream about ?</span>
+      <!-- <br>
+      <div class="">Username: {{ loadedAuths.username }}</div>
+      <div class="">Profile picture: {{ loadedAuths.picture }}</div> -->
     </div>
   </nav>
 </template>
 
 <script>
-export default {
-  data () {
-    return {
-      userID: ''
-    }
-  },
-  validate (data) {
-    return /^\d+$/.test(data.params.id)
-  }
+  export default {
 }
-</script>
+  // control doesnt' work?? ==> to review validate (data) {}
+  // validate (data) {
+  //   return /^\d+$/.test(data.params.id)
+  // }
 
+</script>
 <style scoped>
   nav {
+    z-index: 4;
     display: flex;
     justify-content: space-between;
     align-items: center;
