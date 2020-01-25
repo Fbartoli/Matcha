@@ -7,6 +7,7 @@
         Hello_Wolrd H1 --users
         <!-- {{ user.username }} -->
       </h1>
+        <InfoList :infos="loadedInfos" />
       <!-- <p>{{ user.sex }}</p> -->
     </article>
     <!-- <aside>
@@ -23,7 +24,12 @@
 </template>
 
 <script>
+import InfoList from "@/components/users/InfoList"
+
 export default {
+  components: {
+    InfoList
+  },
   data () {
     return {
       // id: this.$route.params.id,
@@ -36,14 +42,43 @@ export default {
       ]
     }
   },
-  // computed: {
-  //   user () {
-  //     return this.users.find(user => user.id === this.id)
-  //   },
-  //   relatedUsers () {
-  //     return this.users.filter(user => user.id !== this.id)
-  //   }
-  // }
+  ayncData(context, callback) {
+    setTimeout (() => {
+      callback(new Error (), {
+        loadedInfos: [
+          {
+            idUser: "8",
+            username: "Franck Sinatra",
+            sex: "Woman",
+            description: "blablabla il fait beau today"
+          },
+          {
+            idUser: "007",
+            username: "Bond, James Bond",
+            sex: "Man",
+            description: "Retraité et acteur porno à mes heures perdues, contactez-moi au 07 07 007 007 pour plus d'infos"
+          }
+        ]
+      })
+    })
+  },
+  created () {
+    this.$store.dispatch('setInfos', this.loadedInfos)
+
+    // console.log (this.$store.getters.loadedInfo)
+  },
+  computed: {
+    loadedInfos() {
+      return this.$store.getters.loadedInfos
+    }
+
+    // user () {
+    //   return this.users.find(user => user.id === this.id)
+    // },
+    // relatedUsers () {
+    //   return this.users.filter(user => user.id !== this.id)
+    // }
+  }
 }
 </script>
 

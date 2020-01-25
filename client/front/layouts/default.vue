@@ -1,23 +1,26 @@
 <template>
   <div class="ccontainer">
-    <!-- <TheBackground /> -->
     <TheNavbar />
+    <!-- <AuthList /> -->
     <nuxt />
     <TheFooter />
   </div>
 </template>
 
 <script>
+
 import TheNavbar from '@/components/layout/TheNavbar'
+// import AuthList from '@/components/users/AuthList'
 import TheFooter from '@/components/layout/TheFooter'
 // import TheBackground from '@/components/TheBackground'
 
 export default {
   components: {
     TheNavbar,
+    // AuthList,
     TheFooter,
     // TheBackground
-  }
+  },
 }
 </script>
 
