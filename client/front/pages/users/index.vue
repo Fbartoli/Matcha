@@ -1,12 +1,11 @@
 <template>
   <div>
-
     <!-- <p v-if="userId == ''">To access a specific user, enter a userId and click the button:</p>
     <p v-else>Type a userId first before to press the button</p> -->
-    <input
-      type="text"
+    <!-- <input
       v-model="userId"
-    />
+      type="text"
+    /> -->
     <button
       v-on="listeners"
       @click="OnLoadUser"
@@ -24,7 +23,7 @@ export default {
     }
   },
   computed: {
-    listeners() {
+    listeners () {
       if (this.userId !== '') {
         return { click: this.OnLoadUser }
       }

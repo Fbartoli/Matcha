@@ -1,5 +1,5 @@
 <template>
   <div class="settingsPage">
-    <section></section>
+    <section />>
   </div>
 </template>

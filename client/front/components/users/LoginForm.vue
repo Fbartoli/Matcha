@@ -1,13 +1,25 @@
 <template>
   <form @submit.prevent="onSave">
-    <AppControlInput v-model="checkAuth.username">Username</AppControlInput>
-    <AppControlInput v-model="checkAuth.password">Password</AppControlInput>
-    <AppButton type="submit">Valid</AppButton>
+    <AppControlInput
+      v-model="checkAuth.username"
+    >
+      Username
+    </AppControlInput>
+    <AppControlInput
+      v-model="checkAuth.password"
+    >
+      Password
+    </AppControlInput>
     <AppButton
+      type="submit"
+    >
+      Valid
+    </AppButton>
+    <AppButton
+      @click="onCancel"
       type="button"
       style="margin-left: 10px"
       btn-style="cancel"
-      @click="onCancel"
     >
       Cancel
     </AppButton>
@@ -15,8 +27,8 @@
 </template>
 
 <script>
-import AppControlInput from "@/components/UI/AppControlInput";
-import AppButton from "@/components/UI/AppButton";
+import AppControlInput from '@/components/UI/AppControlInput'
+import AppButton from '@/components/UI/AppButton'
 
 export default {
   components: {
@@ -31,21 +43,22 @@ export default {
       }
     }
   },
-  data() {
+  data () {
     return {
-      checkAuth: this.logging
-
-      // spread operator: pull out all the properties of the bound object
-      // we'receiving and past it in a new object, else defaut object given.
-        ? { ...this.logging }
-        : {
-            username: "",
-            password: ""
-          }
-    };
+      checkAuth:
+      {
+        username: 'username2',
+        password: 'password2'
+      }
+      // this.logging
+      //
+      // // spread operator: pull out all the properties of the bound object
+      // // we'receiving and past it in a new object, else defaut object given.
+      //   ? { ...this.logging }
+    }
   },
   methods: {
-    onSave() {
+    onSave () {
       // Save the post
       /* eslint-disable */
       // console.log(this.checkAuth)
@@ -53,7 +66,7 @@ export default {
     },
     onCancel() {
       // Navigate back
-      this.$router.push("/");
+      this.$router.push('/');
     }
   }
 };

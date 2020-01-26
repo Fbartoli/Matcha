@@ -2,7 +2,7 @@ import Vuex from 'vuex'
 import axios from 'axios'
 
 const createStore = () => {
-  return new Vuex.Store ({
+  return new Vuex.Store({
     state: {
       loadedAuths: [],
       loadedInfos: []
@@ -15,7 +15,7 @@ const createStore = () => {
         state.loadedAuths.push(auth)
       },
       editAuths (state, editedAuth) {
-        const authIndex = state.loadedAuths.findIndex (
+        const authIndex = state.loadedAuths.findIndex(
           auth => auth.id === editedAuth.id
         )
         state.loadedAuths[authIndex] = editedAuth
@@ -26,17 +26,16 @@ const createStore = () => {
     },
     actions: {
       nuxtServerInit (vuexContext, context) {
-
         // add URL of the DATABASE, return an object with the properties so we need to convert it in array
-        return axios.get ()
-          .then (res => {
+        return axios.get()
+          .then((res) => {
             const authsArray = []
             for (const key in res.data) {
-              authsArray.push ({ ...res.data[key], id: key })
+              authsArray.push({ ...res.data[key], id: key })
             }
-            vuexContext.commit ('setAuths', authsArray)
+            vuexContext.commit('setAuths', authsArray)
           })
-          .catch (e => context.error (e))
+          .catch(e => context.error(e))
         // return new Promise ((resolve, reject) => {
         //   vuexContext.commit("setAuths", [
         //     {
@@ -60,18 +59,18 @@ const createStore = () => {
           ...auth
         }
         return axios
-        .auth("URL.json", createdAuth)
-        .then(result => {
-          vuexContext.commit ('addAuth', {...createdAuth, id: result.data})//.name})
-        })
+          .auth('', createdAuth)
+          .then((result) => {
+            vuexContext.commit('addAuth', { ...createdAuth, id: result.data })
+          })
         // eslint-disable-next-line
         .catch(e => console.log (e))
       },
       editAuth (vuexContext, editedAuth) {
-        return axios.put ("URL.json")
-        .then (res => {
-          vuexContext.commit('editAuth', editedAuth)
-        })
+        return axios.put('URL.json')
+          .then((res) => {
+            vuexContext.commit('editAuth', editedAuth)
+          })
         // eslint-disable-next-line
         .catch(e => console.log (e))
       },
