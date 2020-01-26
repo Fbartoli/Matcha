@@ -18,15 +18,11 @@ const jwtExpirySeconds = CONFIG.jwt_expiration;
 // create class
 const User = {
   getAllusers: function(req, res) {
-    const pathname = req._parsedUrl.pathname.split('/');
-    const section = pathname[1];
     usermodel.getAllusers(req, function(err, result) {
       let apiResult = {};
       if (err) {
         apiResult.meta = {
-          table: section,
-          type: 'collection',
-          total: 0,
+          error: err,
         };
         apiResult.data = [];
       } else {
@@ -34,8 +30,6 @@ const User = {
       resultJson = JSON.parse(resultJson);
       apiResult.meta = {
         table: 'user',
-        type: 'collection',
-        total: 1,
         total_entries: 0,
       };
       apiResult.data = resultJson;
@@ -75,8 +69,6 @@ const User = {
       usermodel.findOneEmail(email, function(err, result) {
         if (err) {
           apiResult.meta = {
-            type: 'collection',
-            total: 0,
             error: err,
           };
           apiResult.data = [];
@@ -94,8 +86,6 @@ const User = {
             usermodel.findOneUser(username, function(err, result) {
               if (err) {
                 apiResult.meta = {
-                  type: 'collection',
-                  total: 0,
                   error: err,
                 };
                 apiResult.data = [];
@@ -113,8 +103,6 @@ const User = {
                   usermodel.addUser(post, function(err, result) {
                     if (err) {
                       apiResult.meta = {
-                        type: 'collection',
-                        total: 0,
                         error: err,
                       };
                       apiResult.data = [];
@@ -123,7 +111,6 @@ const User = {
                       resultJson = JSON.parse(resultJson);
                       apiResult.meta = {
                         table: 'user',
-                        type: 'collection',
                       };
                       apiResult.data = resultJson;
                       mail(email, 'activation link matcha', 'http://localhost:8080/activate?id' + confirmation + 'username' + username, null);
@@ -192,9 +179,24 @@ const User = {
   activate: function(req, res) {
     const id = req.query.id;
     const username = req.query.id;
+    let apiResult = {};
     if (!(username || id)) {
      return res.send('Invalid').redirect('/login');
     }
+    usermodel.findOneConfirmation(id, function(err, result) {
+      let resultJson = JSON.stringify(result);
+      resultJson = JSON.parse(resultJson);
+      if (err) {
+        apiResult.meta = {
+          error: err,
+        };
+        apiResult.data = [];
+
+        return res.send(apiResult);
+      }
+
+      return res.send(apiResult);
+    });
   }
 };
 

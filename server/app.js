@@ -9,16 +9,23 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const port = CONFIG.port;
 
+// middlewares
+
 app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+
+// routes
+
 app.get('/', function(req, res) {
   res.send('Welcome to the Matcha API');
 });
+
 app.get('/activate', function(req, res) {
   user.activate(req, res);
 });
+
 app.route('/register')
     .get(function(req, res) {
       res.sendFile('index.html', {root: path.join(__dirname)});
@@ -36,6 +43,7 @@ app.route('/users')
       jwtcheck(req, res, user.getAllusers);
     });
 
+// start server
 app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);
 });

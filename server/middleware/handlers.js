@@ -20,17 +20,17 @@ const jwtCheck = (req, res, callback) => {
       if (err instanceof jwt.JsonWebTokenError) {
        console.log(err);
 
-	  return res.status(401).redirect('/login')
-	   .end();
-	}
+       return res.status(401).redirect('/login')
+    .end();
+  }
 
-	return res.status(400).redirect('/login')
-	.end();
+  return res.status(400).redirect('/login')
+  .end();
   }
   const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
   if (payload.exp - nowUnixSeconds > 30) {
-	  return res.status(400).redirect('/login')
-	  .end();
+    return res.status(400).redirect('/login')
+    .end();
   }
   const newToken = jwt.sign({username: payload.username}, jwtKey, {
     algorithm: 'HS256',

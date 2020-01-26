@@ -38,5 +38,23 @@ module.exports = {
 
       return callback(error, result);
     });
+  },
+  findOneConfirmation: (confirmation, callback) => {
+    db.query('SELECT COUNT(username) FROM users WHERE =?', [confirmation], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  activate: (confirmation, callback) => {
+    db.query('UPDATE users SET active = `1` WHERE confirmation = ?', [confirmation], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
   }
 };
