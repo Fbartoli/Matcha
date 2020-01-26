@@ -27,9 +27,21 @@
           <br>
           <br>
         </div>
-        <AppControlInput type="text">test_A</AppControlInput>
-        <AppControlInput type="password">test_B</AppControlInput>
-        <AppButton type="submit">test_Valid</AppButton>
+        <AppControlInput
+          type="text"
+        >
+          test_A
+        </AppControlInput>
+        <AppControlInput
+          type="password"
+        >
+          test_B
+        </AppControlInput>
+        <AppButton
+          type="submit"
+        >
+          test_Valid
+        </AppButton>
         <AppButton
           type="button"
           btn-style="inverted"
@@ -42,7 +54,6 @@
   </div>
 </template>
 
-
 <script>
 import AppControlInput from '@/components/UI/AppControlInput'
 import AppButton from '@/components/UI/AppButton'
@@ -52,29 +63,29 @@ export default {
     AppControlInput,
     AppButton
   },
-  asyncData(context, callback) {
+  asyncData (context, callback) {
     callback(null, {
       loadedAuth: {
-        id: "888",
-        username: "user_888",
-        password: "secretcryptomagicpass",
-        name: "name_888",
-        surname: "surname_888",
-        token: "token_888",
-        email: "email888@888_testmatcha.fr",
-        birth_date: "01/04/2000",
-        location: "",
-        photo: "",
+        id: '888',
+        username: 'user_888',
+        password: 'secretcryptomagicpass',
+        name: 'name_888',
+        surname: 'surname_888',
+        token: 'token_888',
+        email: 'email888@888_testmatcha.fr',
+        birth_date: '01/04/2000',
+        location: '',
+        photo: ''
       }
     })
   }
 }
 
-  // data() {
-  //   return {
-  //     isLogin: true
-  //   }
-  // }
+// data() {
+//   return {
+//     isLogin: true
+//   }
+// }
 </script>
 
 <style scoped>
@@ -92,4 +103,3 @@ export default {
   box-sizing: border-box;
 }
 </style>
-

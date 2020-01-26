@@ -18,9 +18,9 @@ export default {
   components: {
     TheNavbar,
     // AuthList,
-    TheFooter,
+    TheFooter
     // TheBackground
-  },
+  }
 }
 </script>
 

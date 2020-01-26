@@ -31,12 +31,12 @@
 </template>
 
 <script>
-  export default {
+export default {
 }
-  // control doesnt' work?? ==> to review validate (data) {}
-  // validate (data) {
-  //   return /^\d+$/.test(data.params.id)
-  // }
+// control doesnt' work?? ==> to review validate (data) {}
+// validate (data) {
+//   return /^\d+$/.test(data.params.id)
+// }
 
 </script>
 <style scoped>
