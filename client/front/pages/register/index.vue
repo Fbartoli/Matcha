@@ -1,21 +1,34 @@
 <template>
   <div class="admin-page">
     <section class="new-post">
-      <AppButton
-        @click="$router.push('/login/auth')"
-      >
-        Go directly to the Post Login page
-      </AppButton>
       <br>
       <br>
       <form @submit.prevent="onPostLogin">
         <AppControlInput
-          v-model="checkAuth.username"
+          v-model="checkRegister.username"
         >
           Username
         </AppControlInput>
         <AppControlInput
-          v-model="checkAuth.password"
+          v-model="checkRegister.surname"
+        >
+          Surname
+        </AppControlInput>
+        <br>
+        <AppControlInput
+          v-model="checkRegister.name"
+        >
+          Name
+        </AppControlInput>
+        <br>
+        <AppControlInput
+          v-model="checkRegister.email"
+        >
+          Email
+        </AppControlInput>
+        <br>
+        <AppControlInput
+          v-model="checkRegister.password"
         >
           Password
         </AppControlInput>
@@ -32,40 +45,42 @@
 </template>
 
 <script>
-// import axios from 'axios'
-// import LoginForm from '@/components/users/LoginForm'
 import AppControlInput from '@/components/UI/AppControlInput'
 import AppButton from '@/components/UI/AppButton'
+/* eslint-disable */
 
 export default {
   components: {
     AppControlInput,
-    // axios,
-    // LoginForm,
     AppButton
   },
   data () {
     return {
-      checkAuth:
+      checkRegister:
       {
         username: '',
+        name: '',
+        surname: '',
+        email: '',
         password: ''
       }
     }
   },
   // computed: {
-  //   loadedAuths() {
-  //     return this.$store.getters.loadedAuths
+  //   loadedRegisters() {
+  //     return this.$store.getters.loadedRegisters
   //   }
   // },
   methods: {
     onPostLogin () {
       this.$axios
         // .$post('https://api.github.com/users/mapbox', {
-        // Motherlode2a. florent2a
-        .$post('http://10.13.11.22:8080/login', {
-          username: this.checkAuth.username,
-          password: this.checkAuth.password
+        .$post('http://10.13.11.22:8080/register', {
+          username: this.checkRegister.username,
+          name: this.checkRegister.name,
+          surname: this.checkRegister.surname,
+          email: this.checkRegister.email,
+          password: this.checkRegister.password,
         })
         .then(function (res) {
         /* eslint-disable */
@@ -79,31 +94,9 @@ export default {
         .catch(function (error) {
           console.log(error)
         })
-      //   .then(result => {
-      // /* eslint-disable */
-      //     console.log(result);
-      //   })
-      /* eslint-disable */
-      // .catch(e => console.log(e));
     }
   }
-      //
-      // this.$store.dispatch ('addAuth', authData)
-      //   .then (() => {
-      //     this.$router.push("/")
-      //   })
-      //
-      // // URL to send data + node to store the data
-      // axios
-      //   .post ('', authData)
-      //   // eslint-disable-next-line
-      //   .then (result => console.log (result))
-      //   // eslint-disable-next-line
-      //   // .then (result => this.$router.push('/')
-      //   // eslint-disable-next-line
-      //   .catch (e => console.log (e))
 }
-
 </script>
 
 <style scoped>
@@ -121,4 +114,3 @@ export default {
   text-align: center;
 }
 </style>
-
