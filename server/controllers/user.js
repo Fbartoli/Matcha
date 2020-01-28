@@ -39,6 +39,7 @@ const User = {
   },
   addUser: function(req, res) {
     let {username, name, surname, email, password} = req.body;
+    console.log(req.body);
     const confirmation = uniqid();
     if (!(username || name || surname || email || password)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
@@ -110,7 +111,7 @@ const User = {
                       let resultJson = JSON.stringify(result);
                       resultJson = JSON.parse(resultJson);
                       apiResult.meta = {
-                        table: 'user',
+                        msg: 'user created',
                       };
                       apiResult.data = resultJson;
                       mail(email, 'activation link matcha', 'http://localhost:8080/activate?id=' + confirmation + '&username=' + username, null);
