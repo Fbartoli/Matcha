@@ -15,11 +15,7 @@ const port = CONFIG.port;
 app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cookieParser());
-
-const corsOptions = {
-  origin: 'http://10.13.11.21:3000/',
-  optionsSuccessStatus: 200,
-};
+app.use(cors());
 
 // routes
 
@@ -38,7 +34,7 @@ app.route('/register')
     .post(user.addUser);
 
 app.route('/login')
-    .get(cors(corsOptions), function(req, res) {
+    .get(function(req, res) {
       res.sendFile('login.html', {root: path.join(__dirname)});
     })
     .post(user.checkPassword);

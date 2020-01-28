@@ -153,14 +153,15 @@ const User = {
           };
           res.status(401);
         } else if (bcrypt.compareSync(password, resultJson[0].password)) {
-          apiResult.meta = {
-            access: 'granted',
-          };
-          apiResult.data = resultJson;
           const token = jwt.sign({username}, jwtkey, {
             algorithm: 'HS256',
             expiresIn: jwtExpirySeconds
           });
+          apiResult.meta = {
+            access: 'granted',
+            token: token
+          };
+          apiResult.data = resultJson;
           res.cookie('token', token, {
             maxAge: jwtExpirySeconds * 1000
           });
