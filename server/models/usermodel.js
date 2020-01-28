@@ -21,26 +21,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  findOneUser: (username, callback) => {
-    db.query('SELECT * FROM users WHERE username=?', [username], function(error, result) {
-      if (error) {
-        return callback(error, null);
-      }
-
-      return callback(error, result);
-    });
-  },
-  findOneEmail: (email, callback) => {
-    db.query('SELECT * FROM users WHERE email=?', [email], function(error, result) {
-      if (error) {
-        return callback(error, null);
-      }
-
-      return callback(error, result);
-    });
-  },
-  findOneConfirmation: (confirmation, callback) => {
-    db.query('SELECT COUNT(username) AS nb FROM users WHERE confirmation =?', [confirmation], function(error, result) {
+  findOneUser: (field, info, callback) => {
+    db.query('SELECT * FROM users WHERE ??=?', [field, info], function(error, result) {
       if (error) {
         return callback(error, null);
       }

@@ -66,7 +66,7 @@ const User = {
       }
       const post = [username, name, surname, email, hash, confirmation];
       let apiResult = {};
-      usermodel.findOneEmail(email, function(err, result) {
+      usermodel.findOneUser('email', email, function(err, result) {
         if (err) {
           apiResult.meta = {
             error: err,
@@ -83,7 +83,7 @@ const User = {
 
            return res.json(apiResult);
           } else {
-            usermodel.findOneUser(username, function(err, result) {
+            usermodel.findOneUser('username', username, function(err, result) {
               if (err) {
                 apiResult.meta = {
                   error: err,
@@ -128,7 +128,7 @@ const User = {
   },
   checkPassword: function(req, res) {
     let {username, password} = req.body;
-    usermodel.findOneUser(username, function(err, result) {
+    usermodel.findOneUser('username', username, function(err, result) {
       let apiResult = {};
       if (err) {
         apiResult.meta = {
@@ -161,10 +161,9 @@ const User = {
             algorithm: 'HS256',
             expiresIn: jwtExpirySeconds
           });
-          console.log('token:', token);
           res.cookie('token', token, {
-            maxAge: jwtExpirySeconds * 1000,
-            user_id: resultJson[0].id});
+            maxAge: jwtExpirySeconds * 1000
+          });
         } else {
           apiResult.meta = {
             access: 'denied',
@@ -185,7 +184,7 @@ const User = {
     if (!(username || id)) {
      return res.send('Invalid').redirect('/login');
     }
-    usermodel.findOneConfirmation(id, function(err, result) {
+    usermodel.findOneUser('confirmation', id, function(err, result) {
       let resultJson = JSON.stringify(result);
       resultJson = JSON.parse(resultJson);
       if (err) {
@@ -195,9 +194,9 @@ const User = {
 
         return res.send(apiResult);
       }
-      if (resultJson[0].nb === 0) {
+      if (!resultJson[0]) {
         apiResult.meta = {
-          error: 'User already acivated',
+          error: 'User already activated or wrong link',
         };
 
         return res.send(apiResult);
