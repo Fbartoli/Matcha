@@ -113,7 +113,7 @@ const User = {
                         table: 'user',
                       };
                       apiResult.data = resultJson;
-                      mail(email, 'activation link matcha', 'http://localhost:8080/activate?id' + confirmation + 'username' + username, null);
+                      mail(email, 'activation link matcha', 'http://localhost:8080/activate?id=' + confirmation + '&username=' + username, null);
                     }
 
                     return res.json(apiResult);
@@ -162,7 +162,9 @@ const User = {
             expiresIn: jwtExpirySeconds
           });
           console.log('token:', token);
-          res.cookie('token', token, {maxAge: jwtExpirySeconds * 1000});
+          res.cookie('token', token, {
+            maxAge: jwtExpirySeconds * 1000,
+            user_id: resultJson[0].id});
         } else {
           apiResult.meta = {
             access: 'denied',
@@ -190,12 +192,40 @@ const User = {
         apiResult.meta = {
           error: err,
         };
-        apiResult.data = [];
 
         return res.send(apiResult);
       }
+      if (resultJson[0].nb === 0) {
+        apiResult.meta = {
+          error: 'User already acivated',
+        };
 
-      return res.send(apiResult);
+        return res.send(apiResult);
+      }
+      usermodel.activate(id, function(err) {
+        if (err) {
+          apiResult.meta = {
+            error: err,
+          };
+          apiResult.data = [];
+
+          return res.send(apiResult);
+        }
+        usermodel.updateConfirmation(id, function(err, result) {
+          let resultJson = JSON.stringify(result);
+          resultJson = JSON.parse(resultJson);
+          if (err) {
+            apiResult.meta = {
+              error: err,
+            };
+            apiResult.data = [];
+
+            return res.send(apiResult);
+          }
+
+          return res.redirect('/login');
+        });
+      });
     });
   }
 };

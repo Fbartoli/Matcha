@@ -40,7 +40,7 @@ module.exports = {
     });
   },
   findOneConfirmation: (confirmation, callback) => {
-    db.query('SELECT COUNT(username) FROM users WHERE =?', [confirmation], function(error, result) {
+    db.query('SELECT COUNT(username) AS nb FROM users WHERE confirmation =?', [confirmation], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -49,12 +49,30 @@ module.exports = {
     });
   },
   activate: (confirmation, callback) => {
-    db.query('UPDATE users SET active = `1` WHERE confirmation = ?', [confirmation], function(error, result) {
+    db.query('UPDATE users SET active = ? WHERE confirmation = ?', [1, confirmation], function(error, result) {
       if (error) {
         return callback(error, null);
       }
 
       return callback(error, result);
     });
-  }
+  },
+  updateUser: (id, info, callback) => {
+    db.query('INSERT INTO users (mobile, bio, birth_date, country, city, postal_code, gender_id, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', info, function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  updateConfirmation: (confirmation, callback) => {
+    db.query('UPDATE users SET confirmation = ? WHERE confirmation =?', ['0', confirmation], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
 };
