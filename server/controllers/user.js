@@ -39,6 +39,7 @@ const User = {
   },
   addUser: function(req, res) {
     let {username, name, surname, email, password} = req.body;
+    console.log(req.body);
     const confirmation = uniqid();
     if (!(username || name || surname || email || password)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
@@ -66,7 +67,7 @@ const User = {
       }
       const post = [username, name, surname, email, hash, confirmation];
       let apiResult = {};
-      usermodel.findOneEmail(email, function(err, result) {
+      usermodel.findOneUser('email', email, function(err, result) {
         if (err) {
           apiResult.meta = {
             error: err,
@@ -83,7 +84,7 @@ const User = {
 
            return res.json(apiResult);
           } else {
-            usermodel.findOneUser(username, function(err, result) {
+            usermodel.findOneUser('username', username, function(err, result) {
               if (err) {
                 apiResult.meta = {
                   error: err,
@@ -110,10 +111,10 @@ const User = {
                       let resultJson = JSON.stringify(result);
                       resultJson = JSON.parse(resultJson);
                       apiResult.meta = {
-                        table: 'user',
+                        msg: 'user created',
                       };
                       apiResult.data = resultJson;
-                      mail(email, 'activation link matcha', 'http://localhost:8080/activate?id' + confirmation + 'username' + username, null);
+                      mail(email, 'activation link matcha', 'http://localhost:8080/activate?id=' + confirmation + '&username=' + username, null);
                     }
 
                     return res.json(apiResult);
@@ -128,7 +129,7 @@ const User = {
   },
   checkPassword: function(req, res) {
     let {username, password} = req.body;
-    usermodel.findOneUser(username, function(err, result) {
+    usermodel.findOneUser('username', username, function(err, result) {
       let apiResult = {};
       if (err) {
         apiResult.meta = {
@@ -153,16 +154,18 @@ const User = {
           };
           res.status(401);
         } else if (bcrypt.compareSync(password, resultJson[0].password)) {
-          apiResult.meta = {
-            access: 'granted',
-          };
-          apiResult.data = resultJson;
           const token = jwt.sign({username}, jwtkey, {
             algorithm: 'HS256',
             expiresIn: jwtExpirySeconds
           });
-          console.log('token:', token);
-          res.cookie('token', token, {maxAge: jwtExpirySeconds * 1000});
+          apiResult.meta = {
+            access: 'granted',
+            token: token
+          };
+          apiResult.data = resultJson;
+          res.cookie('token', token, {
+            maxAge: jwtExpirySeconds * 1000
+          });
         } else {
           apiResult.meta = {
             access: 'denied',
@@ -183,17 +186,25 @@ const User = {
     if (!(username || id)) {
      return res.send('Invalid').redirect('/login');
     }
-    usermodel.findOneConfirmation(id, function(err, result) {
+    usermodel.findOneUser('confirmation', id, function(err, result) {
+      let resultJson = JSON.stringify(result);
+      resultJson = JSON.parse(resultJson);
       if (err) {
         apiResult.meta = {
           error: err,
         };
-        apiResult.data = [];
 
         return res.send(apiResult);
       }
-      let username = result[0].username;
-      usermodel.activate(username, function(err, result) {
+
+      if (!resultJson[0]) {
+        apiResult.meta = {
+          error: 'User already activated or wrong link',
+        };
+
+        return res.send(apiResult);
+      }
+      usermodel.activate(id, function(err) {
         if (err) {
           apiResult.meta = {
             error: err,
@@ -202,13 +213,20 @@ const User = {
 
           return res.send(apiResult);
         }
-        apiResult.meta = {
-          msg: 'User activated',
-          user: username,
-        };
-        apiResult.data = result;
+        usermodel.updateConfirmation(id, function(err, result) {
+          let resultJson = JSON.stringify(result);
+          resultJson = JSON.parse(resultJson);
+          if (err) {
+            apiResult.meta = {
+              error: err,
+            };
+            apiResult.data = [];
 
-        return res.send(apiResult);
+            return res.send(apiResult);
+          }
+
+          return res.redirect('/login');
+        });
       });
     });
   }

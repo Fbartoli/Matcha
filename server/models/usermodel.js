@@ -21,8 +21,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  findOneUser: (username, callback) => {
-    db.query('SELECT * FROM users WHERE username=?', [username], function(error, result) {
+  findOneUser: (field, info, callback) => {
+    db.query('SELECT * FROM users WHERE ??=?', [field, info], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -30,8 +30,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  findOneEmail: (email, callback) => {
-    db.query('SELECT * FROM users WHERE email=?', [email], function(error, result) {
+  activate: (confirmation, callback) => {
+    db.query('UPDATE users SET active = ? WHERE confirmation = ?', [1, confirmation], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -39,8 +39,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  findOneConfirmation: (confirmation, callback) => {
-    db.query('SELECT username FROM users WHERE confirmation =?', [confirmation], function(error, result) {
+  updateUser: (id, info, callback) => {
+    db.query('INSERT INTO users (mobile, bio, birth_date, country, city, postal_code, gender_id, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -48,13 +48,13 @@ module.exports = {
       return callback(error, result);
     });
   },
-  activate: (username, callback) => {
-    db.query('UPDATE users SET active = 1 WHERE username =?', [username], function(error, result) {
+  updateConfirmation: (confirmation, callback) => {
+    db.query('UPDATE users SET confirmation = ? WHERE confirmation =?', ['0', confirmation], function(error, result) {
       if (error) {
         return callback(error, null);
       }
 
       return callback(error, result);
     });
-  }
+  },
 };

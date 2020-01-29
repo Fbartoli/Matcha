@@ -2,6 +2,7 @@ const express = require('express');
 const CONFIG = require('./config/config');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
 
 const {addUser, removeUser, getUser, getUsersInRoom} = require('./controllers/chat');
 
@@ -22,6 +23,7 @@ app.use(router);
 let server = app.listen(port, '192.168.0.19', () => {
   console.log('Matcha API server started on: ' + port);
 });
+app.use(cors());
 
 const io = require('socket.io').listen(server);
 

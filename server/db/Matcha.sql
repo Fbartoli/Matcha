@@ -1,8 +1,8 @@
 
 
 CREATE TABLE `users` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
-  `mobile` int,
+  `id` binary(16) PRIMARY KEY DEFAULT(UUID_TO_BIN(UUID())),
+  `mobile` int(10) UNIQUE,
   `username` varchar(255) UNIQUE,
   `name` varchar(255),
   `surname` varchar(255),
@@ -32,7 +32,7 @@ CREATE TABLE `gender` (
 
 CREATE TABLE `interested_in_gender` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` binary(16),
   `gender_id` int
 );
 
@@ -43,13 +43,13 @@ CREATE TABLE `relationship_types` (
 
 CREATE TABLE `interested_in_relationship` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` binary(16),
   `relation_types_id` int
 );
 
 CREATE TABLE `photo` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` binary(16),
   `details` varchar(255),
   `link` varchar(255),
   `time_added` timestamp DEFAULT (now()),
@@ -63,7 +63,7 @@ CREATE TABLE `match` (
 
 CREATE TABLE `match_user` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` binary(16),
   `match_id` int
 );
 
@@ -76,13 +76,13 @@ INSERT INTO hobbies (name) VALUES ('#poney'), ('#league_of_legends'), ('#escalad
 
 CREATE TABLE `interested_in_hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` binary(16),
   `hobbies_id` int
 );
 
 CREATE TABLE `conversation` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` binary(16),
   `time_started` timestamp DEFAULT (now()),
   `active` boolean DEFAULT (1)
 );
@@ -90,7 +90,7 @@ CREATE TABLE `conversation` (
 CREATE TABLE `participant` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `conversation_id` int,
-  `user_id` int,
+  `user_id` binary(16),
   `time_joined` timestamp DEFAULT (now()),
   `time_left` timestamp DEFAULT null
 );

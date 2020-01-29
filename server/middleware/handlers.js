@@ -10,7 +10,8 @@ const jwtCheck = (req, res, callback) => {
 
   // if the cookie is not set, return an unauthorized error
   if (!token) {
-    return res.status(401).end();
+    res.set('Content-Type', 'text/html');
+    res.status(401).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
   }
 
   let payload = 0;
@@ -18,19 +19,18 @@ const jwtCheck = (req, res, callback) => {
   payload = jwt.verify(token, jwtKey);
   } catch (err) {
       if (err instanceof jwt.JsonWebTokenError) {
-       console.log(err);
-
-       return res.status(401).redirect('/login')
-    .end();
+        // console.log(err);
+        res.set('Content-Type', 'text/html');
+        res.status(401).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
   }
 
-  return res.status(400).redirect('/login')
+  return res.redirect(400, '/login')
   .end();
   }
   const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
   if (payload.exp - nowUnixSeconds > 30) {
-    return res.status(400).redirect('/login')
-    .end();
+    res.set('Content-Type', 'text/html');
+    res.status(400).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
   }
   const newToken = jwt.sign({username: payload.username}, jwtKey, {
     algorithm: 'HS256',
