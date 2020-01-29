@@ -1,7 +1,4 @@
-DROP DATABASE IF EXISTS matcha;
-CREATE DATABASE IF NOT EXISTS matcha;
 
-USE matcha;
 
 CREATE TABLE `users` (
   `id` binary(16) PRIMARY KEY DEFAULT(UUID_TO_BIN(UUID())),
@@ -23,7 +20,7 @@ CREATE TABLE `users` (
   `location` json,
   `confirmation` varchar(255),
   `notification` boolean DEFAULT (1),
-  `score` int DEFAULT (0),
+  `score` int DEFAULT (100),
   `isOnline` boolean DEFAULT (0),
   `photo` json
 );
@@ -74,6 +71,8 @@ CREATE TABLE `hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255) UNIQUE
 );
+
+INSERT INTO hobbies (name) VALUES ('#poney'), ('#league_of_legends'), ('#escalade'), ('#balade'), ('#witcher'), ('#gaming'), ('#coding'), ('#threesome'), ('#lollipop'), ('#tentacles');
 
 CREATE TABLE `interested_in_hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,

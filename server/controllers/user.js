@@ -196,6 +196,7 @@ const User = {
 
         return res.send(apiResult);
       }
+
       if (!resultJson[0]) {
         apiResult.meta = {
           error: 'User already activated or wrong link',
