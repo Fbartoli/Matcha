@@ -16,11 +16,11 @@ const router = require('./router');
 
 app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use(cookieParser());
+app.use(cookieParser(CONFIG.jwt_secret));
 app.use(router);
 
 // start server
-let server = app.listen(port, '192.168.0.19', () => {
+let server = app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);
 });
 app.use(cors());

@@ -26,14 +26,33 @@ const User = {
         };
         apiResult.data = [];
       } else {
-      let resultJson = JSON.stringify(result);
-      resultJson = JSON.parse(resultJson);
-      apiResult.meta = {
-        table: 'user',
-        total_entries: 0,
-      };
-      apiResult.data = resultJson;
-      res.json(apiResult);
+        let resultJson = JSON.stringify(result);
+        resultJson = JSON.parse(resultJson);
+        apiResult.meta = {
+          table: 'user',
+          total_entries: 0,
+        };
+        apiResult.data = resultJson;
+        res.json(apiResult);
+      }
+    });
+  },
+  getUser: function(req, res) {
+    usermodel.findOneUser('id', req.cookies.user_id, function(err, result) {
+      let apiResult = {};
+      if (err) {
+        apiResult.meta = {
+          error: err,
+        };
+        apiResult.data = [];
+      } else {
+        let resultJson = JSON.stringify(result);
+        resultJson = JSON.parse(resultJson);
+        apiResult.meta = {
+          table: 'user',
+        };
+        apiResult.data = resultJson;
+        res.json(apiResult);
       }
     });
   },
@@ -79,10 +98,10 @@ const User = {
           if (resultJson[0]) {
             apiResult.meta = {
               error: 'email already exists'
-           };
-           apiResult.data = [];
+            };
+            apiResult.data = [];
 
-           return res.json(apiResult);
+            return res.json(apiResult);
           } else {
             usermodel.findOneUser('username', username, function(err, result) {
               if (err) {
@@ -96,10 +115,10 @@ const User = {
                 if (resultJson[0]) {
                   apiResult.meta = {
                     error: 'Username already exists'
-                 };
-                 apiResult.data = [];
+                  };
+                  apiResult.data = [];
 
-                 return res.json(apiResult);
+                  return res.json(apiResult);
                 } else {
                   usermodel.addUser(post, function(err, result) {
                     if (err) {
@@ -125,6 +144,74 @@ const User = {
           }
         }
       });
+    });
+  },
+  addUserInfo: function(req, res) {
+    let {username, name, surname, email, password} = req.body;
+    console.log(req.body);
+    const confirmation = uniqid();
+    if (!(username || name || surname || email || password)) {
+      return res.status(400).json({error: "Missing informations, fill the form"});
+    }
+    const post = [username, name, surname, email, confirmation];
+    let apiResult = {};
+    usermodel.findOneUser('id', req.cookies.user_id, function(err, result) {
+      if (err) {
+        apiResult.meta = {
+          error: err,
+        };
+        apiResult.data = [];
+      } else {
+        let resultJson = JSON.stringify(result);
+        resultJson = JSON.parse(resultJson);
+        if (resultJson[0]) {
+          apiResult.meta = {
+            error: 'email already exists'
+          };
+          apiResult.data = [];
+
+          return res.json(apiResult);
+        } else {
+          usermodel.findOneUser('username', username, function(err, result) {
+            if (err) {
+              apiResult.meta = {
+                error: err,
+              };
+              apiResult.data = [];
+            } else {
+              let resultJson = JSON.stringify(result);
+              resultJson = JSON.parse(resultJson);
+              if (resultJson[0]) {
+                apiResult.meta = {
+                  error: 'Username already exists'
+                };
+                apiResult.data = [];
+
+                return res.json(apiResult);
+              } else {
+                usermodel.addUser(post, function(err, result) {
+                  if (err) {
+                    apiResult.meta = {
+                      error: err,
+                    };
+                    apiResult.data = [];
+                  } else {
+                    let resultJson = JSON.stringify(result);
+                    resultJson = JSON.parse(resultJson);
+                    apiResult.meta = {
+                      msg: 'user created',
+                    };
+                    apiResult.data = resultJson;
+                    mail(email, 'activation link matcha', 'http://localhost:8080/activate?id=' + confirmation + '&username=' + username, null);
+                  }
+
+                  return res.json(apiResult);
+                });
+              }
+            }
+          });
+        }
+      }
     });
   },
   checkPassword: function(req, res) {
@@ -164,7 +251,12 @@ const User = {
           };
           apiResult.data = resultJson;
           res.cookie('token', token, {
-            maxAge: jwtExpirySeconds * 1000
+            maxAge: jwtExpirySeconds,
+            signed: true
+          });
+          res.cookie('user_id', resultJson[0].id, {
+            maxAge: jwtExpirySeconds,
+            signed: true
           });
         } else {
           apiResult.meta = {
@@ -184,7 +276,7 @@ const User = {
     const username = req.query.id;
     let apiResult = {};
     if (!(username || id)) {
-     return res.send('Invalid').redirect('/login');
+      return res.send('Invalid').redirect('/login');
     }
     usermodel.findOneUser('confirmation', id, function(err, result) {
       let resultJson = JSON.stringify(result);

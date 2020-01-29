@@ -29,4 +29,9 @@ router.route('/users')
   jwtcheck(req, res, user.getAllusers);
   });
 
+router.route('/user')
+  .get(function(req, res) {
+  jwtcheck(req, res, user.getUser);
+});
+
 module.exports = router;

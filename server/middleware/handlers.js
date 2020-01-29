@@ -18,14 +18,11 @@ const jwtCheck = (req, res, callback) => {
   try {
   payload = jwt.verify(token, jwtKey);
   } catch (err) {
-      if (err instanceof jwt.JsonWebTokenError) {
-        // console.log(err);
-        res.set('Content-Type', 'text/html');
-        res.status(401).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
-  }
-
-  return res.redirect(400, '/login')
-  .end();
+    if (err instanceof jwt.JsonWebTokenError) {
+      // console.log(err);
+      res.set('Content-Type', 'text/html');
+      res.send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
+    }
   }
   const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
   if (payload.exp - nowUnixSeconds > 30) {
@@ -38,7 +35,8 @@ const jwtCheck = (req, res, callback) => {
   });
 
   // Set the new token as the users `token` cookie
-  res.cookie('token', newToken, {maxAge: jwtExpirySeconds * 1000});
+  res.cookie('token', newToken, {maxAge: jwtExpirySeconds,
+  signed: true});
   callback(req, res);
 };
 
