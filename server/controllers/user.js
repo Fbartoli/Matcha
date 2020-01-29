@@ -184,8 +184,6 @@ const User = {
      return res.send('Invalid').redirect('/login');
     }
     usermodel.findOneConfirmation(id, function(err, result) {
-      let resultJson = JSON.stringify(result);
-      resultJson = JSON.parse(resultJson);
       if (err) {
         apiResult.meta = {
           error: err,
@@ -194,8 +192,24 @@ const User = {
 
         return res.send(apiResult);
       }
+      let username = result[0].username;
+      usermodel.activate(username, function(err, result) {
+        if (err) {
+          apiResult.meta = {
+            error: err,
+          };
+          apiResult.data = [];
 
-      return res.send(apiResult);
+          return res.send(apiResult);
+        }
+        apiResult.meta = {
+          msg: 'User activated',
+          user: username,
+        };
+        apiResult.data = result;
+
+        return res.send(apiResult);
+      });
     });
   }
 };

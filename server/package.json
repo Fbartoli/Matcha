@@ -4,11 +4,11 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint .",
     "rebuild": "rm -rf node_modules && npm install",
     "start": "nodemon app.js",
-    "data": "node db/setup.js"
+    "data": "node db/setup.js",
+    "test": "mocha spec.js"
   },
   "author": "",
   "license": "ISC",
@@ -30,6 +30,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
+    "socketio": "^1.0.0",
     "uniqid": "^5.2.0"
   }
 }

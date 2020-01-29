@@ -8,8 +8,10 @@ const connection = mysql.createConnection({
   password: CONFIG.db_password,
   database: CONFIG.db_name,
 });
-connection.connect(function(err) {
-  if (err) throw err;
+connection.connect(function(res, err) {
+  if (err) {
+    res.send(err);
+  }
   console.log('Connected!');
 });
 module.exports = connection;

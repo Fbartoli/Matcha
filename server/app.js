@@ -1,49 +1,56 @@
 const express = require('express');
 const CONFIG = require('./config/config');
-const path = require('path');
-const user = require('./controllers/user');
-const jwtcheck = require('./middleware/handlers');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
-const app = express();
+const {addUser, removeUser, getUser, getUsersInRoom} = require('./controllers/chat');
+
 const port = CONFIG.port;
+
+const app = express();
+const router = require('./router');
+
 
 // middlewares
 
 app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cookieParser());
-
-
-// routes
-
-app.get('/', function(req, res) {
-  res.send('Welcome to the Matcha API');
-});
-
-app.get('/activate', function(req, res) {
-  user.activate(req, res);
-});
-
-app.route('/register')
-    .get(function(req, res) {
-      res.sendFile('index.html', {root: path.join(__dirname)});
-    })
-    .post(user.addUser);
-
-app.route('/login')
-    .get(function(req, res) {
-      res.sendFile('login.html', {root: path.join(__dirname)});
-    })
-    .post(user.checkPassword);
-
-app.route('/users')
-    .get(function(req, res) {
-      jwtcheck(req, res, user.getAllusers);
-    });
+app.use(router);
 
 // start server
-app.listen(port, () => {
+let server = app.listen(port, '192.168.0.19', () => {
   console.log('Matcha API server started on: ' + port);
+});
+
+const io = require('socket.io').listen(server);
+
+io.on('connection', (socket) => {
+  console.log('Connected !');
+
+  socket.on('join', ({name, room}, callback) => {
+    const {error, user} = addUser({id:socket.id, name, room});
+
+    if (error) {
+      return callback(error);
+    }
+
+    socket.emit('message', {user: 'admin', text: `${user.name}, Welcome to the room ${user.room}]`});
+    socket.join(user.room);
+    socket.broadcast.to(user.room).emit('message', {user: 'admin', text: `${user.name}, has joined`});
+
+    callback();
+  });
+
+  socket.on('sendMessage', (message, callback) => {
+    const user = getUser(socket, id);
+
+    io.to(user.room).emit('message', {user: user.name, text: message});
+
+    callback();
+  });
+
+  socket.on('disconnect', () => {
+    console.log('disconnected');
+  });
 });

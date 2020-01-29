@@ -1,17 +1,14 @@
--- DROP DATABASE IF EXISTS matcha;
--- CREATE DATABASE IF NOT EXISTS matcha;
 
--- USE matcha;
 
 CREATE TABLE `users` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `mobile` int,
-  `username` varchar(255),
+  `username` varchar(255) UNIQUE,
   `name` varchar(255),
   `surname` varchar(255),
   `bio` varchar(255),
   `registration_date` date DEFAULT (now()),
-  `email` varchar(255),
+  `email` varchar(255) UNIQUE,
   `birth_date` date,
   `created_at` timestamp,
   `country` varchar(255),
@@ -23,7 +20,7 @@ CREATE TABLE `users` (
   `location` json,
   `confirmation` varchar(255),
   `notification` boolean DEFAULT (1),
-  `score` int DEFAULT (0),
+  `score` int DEFAULT (100),
   `isOnline` boolean DEFAULT (0),
   `photo` json
 );
@@ -74,6 +71,8 @@ CREATE TABLE `hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255) UNIQUE
 );
+
+INSERT INTO hobbies (name) VALUES ('#poney'), ('#league_of_legends'), ('#escalade'), ('#balade'), ('#witcher'), ('#gaming'), ('#coding'), ('#threesome'), ('#lollipop'), ('#tentacles');
 
 CREATE TABLE `interested_in_hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
