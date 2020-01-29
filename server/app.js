@@ -24,7 +24,6 @@ app.use(cors());
 let server = app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);
 });
-app.use(cors());
 
 const io = require('socket.io').listen(server);
 
