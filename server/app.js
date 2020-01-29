@@ -18,6 +18,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cookieParser(CONFIG.jwt_secret));
 app.use(router);
+app.use(cors());
 
 // start server
 let server = app.listen(port, () => {
