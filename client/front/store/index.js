@@ -4,21 +4,21 @@ import axios from 'axios'
 const createStore = () => {
   return new Vuex.Store({
     state: {
-      loadedAuths: [],
+      loadedUsers: [],
       loadedInfos: []
     },
     mutations: {
-      setAuths (state, auths) {
-        state.loadedAuths = auths
+      setUsers (state, users) {
+        state.loadedUsers = users
       },
-      addAuths (state, auth) {
-        state.loadedAuths.push(auth)
+      addUsers (state, user) {
+        state.loadedUsers.push(user)
       },
-      editAuths (state, editedAuth) {
-        const authIndex = state.loadedAuths.findIndex(
-          auth => auth.id === editedAuth.id
+      editUsers (state, editedUser) {
+        const userIndex = state.loadedUsers.findIndex(
+          user => user.id === editedUser.id
         )
-        state.loadedAuths[authIndex] = editedAuth
+        state.loadedUsers[userIndex] = editedUser
       },
       setInfos (state, infos) {
         state.loadedInfos = infos
@@ -29,15 +29,15 @@ const createStore = () => {
         // add URL of the DATABASE, return an object with the properties so we need to convert it in array
         return axios.get()
           .then((res) => {
-            const authsArray = []
+            const usersArray = []
             for (const key in res.data) {
-              authsArray.push({ ...res.data[key], id: key })
+              usersArray.push({ ...res.data[key], id: key })
             }
-            vuexContext.commit('setAuths', authsArray)
+            vuexContext.commit('setUsers', usersArray)
           })
           .catch(e => context.error(e))
         // return new Promise ((resolve, reject) => {
-        //   vuexContext.commit("setAuths", [
+        //   vuexContext.commit("setUsers", [
         //     {
         //       id: "888",
         //       username: "user_888",
@@ -54,36 +54,36 @@ const createStore = () => {
         //   resolve ()
         // })
       },
-      addAuth (vuexContext, auth) {
-        const createdAuth = {
-          ...auth
+      addUser (vuexContext, user) {
+        const createdUser = {
+          ...user
         }
         return axios
-          .auth('', createdAuth)
+          .user('', createdUser)
           .then((result) => {
-            vuexContext.commit('addAuth', { ...createdAuth, id: result.data })
+            vuexContext.commit('addUser', { ...createdUser, id: result.data })
           })
         // eslint-disable-next-line
         .catch(e => console.log (e))
       },
-      editAuth (vuexContext, editedAuth) {
+      editUser (vuexContext, editedUser) {
         return axios.put('URL.json')
           .then((res) => {
-            vuexContext.commit('editAuth', editedAuth)
+            vuexContext.commit('editUser', editedUser)
           })
         // eslint-disable-next-line
         .catch(e => console.log (e))
       },
-      setAuths (vuexContext, auths) {
-        vuexContext.commit('setAuths', auths)
+      setUsers (vuexContext, users) {
+        vuexContext.commit('setUsers', users)
       },
       setInfos (vuexContext, infos) {
         vuexContext.commit('setInfos', infos)
       }
     },
     getters: {
-      loadedAuths (state) {
-        return state.loadedAuths
+      loadedUsers (state) {
+        return state.loadedUsers
       },
       loadedInfos (state) {
         return state.loadedInfos
