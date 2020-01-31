@@ -150,7 +150,6 @@ module.exports = {
         "no-multi-str": "error",
         "no-multiple-empty-lines": "error",
         "no-native-reassign": "error",
-        "no-negated-condition": "error",
         "no-negated-in-lhs": "error",
         "no-nested-ternary": "error",
         "no-new": "error",

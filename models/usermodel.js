@@ -41,7 +41,7 @@ module.exports = {
     });
   },
   updateUser: (id, info, callback) => {
-    db.connection.query('INSERT INTO users (mobile, bio, birth_date, country, city, postal_code, gender_id, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', info, function(error, result) {
+    db.connection.query('INSERT INTO users (mobile, bio, birth_date, country, city, postal_code, gender_id, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?) where id =' + id, info, function(error, result) {
       if (error) {
         return callback(error, null);
       }

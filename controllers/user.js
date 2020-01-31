@@ -5,6 +5,7 @@ const CONFIG = require('../config/config');
 const usermodel = require('../models/usermodel');
 const jwt = require('jsonwebtoken');
 const mail = require('../utils/mail');
+const sanitize = require('sanitize-html');
 
 
 const MAIL_REGEX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
@@ -153,7 +154,7 @@ const User = {
     if (!(username || name || surname || email || password)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
-    const post = [username, name, surname, email, confirmation];
+    const info = [sanitize(username), sanitize(name), sanitize(surname), sanitize(email), sanitize(confirmation)];
     let apiResult = {};
     usermodel.findOneUser('id', req.cookies.user_id, function(err, result) {
       if (err) {
@@ -164,15 +165,15 @@ const User = {
       } else {
         let resultJson = JSON.stringify(result);
         resultJson = JSON.parse(resultJson);
-        if (resultJson[0]) {
+        if (!resultJson[0]) {
           apiResult.meta = {
-            error: 'email already exists'
+            error: 'User not found'
           };
           apiResult.data = [];
 
           return res.json(apiResult);
         } else {
-          usermodel.findOneUser('username', username, function(err, result) {
+          usermodel.updateUser(req.cookies.user_id, info, function(err, result) {
             if (err) {
               apiResult.meta = {
                 error: err,
@@ -181,33 +182,12 @@ const User = {
             } else {
               let resultJson = JSON.stringify(result);
               resultJson = JSON.parse(resultJson);
-              if (resultJson[0]) {
-                apiResult.meta = {
-                  error: 'Username already exists'
-                };
-                apiResult.data = [];
+              apiResult.meta = {
+                msg: 'user created',
+              };
+              apiResult.data = resultJson;
 
-                return res.json(apiResult);
-              } else {
-                usermodel.addUser(post, function(err, result) {
-                  if (err) {
-                    apiResult.meta = {
-                      error: err,
-                    };
-                    apiResult.data = [];
-                  } else {
-                    let resultJson = JSON.stringify(result);
-                    resultJson = JSON.parse(resultJson);
-                    apiResult.meta = {
-                      msg: 'user created',
-                    };
-                    apiResult.data = resultJson;
-                    mail(email, 'activation link matcha', 'http://localhost:8080/activate?id=' + confirmation + '&username=' + username, null);
-                  }
-
-                  return res.json(apiResult);
-                });
-              }
+              return res.json(apiResult);
             }
           });
         }
