@@ -11,23 +11,28 @@ const jwtCheck = (req, res, callback) => {
   // if the cookie is not set, return an unauthorized error
   if (!token) {
     res.set('Content-Type', 'text/html');
-    res.status(401).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
+
+    return res.status(401).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
   }
 
   let payload = 0;
   try {
   payload = jwt.verify(token, jwtKey);
+  console.log(payload);
+  console.log(payload.exp - Math.round(Number(new Date()) / 1000));
   } catch (err) {
     if (err instanceof jwt.JsonWebTokenError) {
-      // console.log(err);
+      console.log(err);
       res.set('Content-Type', 'text/html');
-      res.send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
+
+      return res.send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
     }
   }
   const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
-  if (payload.exp - nowUnixSeconds > 30) {
+  if (payload.exp - nowUnixSeconds < 30) {
     res.set('Content-Type', 'text/html');
-    res.status(400).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
+
+    return res.status(400).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/login"></head></html>');
   }
   const newToken = jwt.sign({username: payload.username}, jwtKey, {
     algorithm: 'HS256',
@@ -35,8 +40,7 @@ const jwtCheck = (req, res, callback) => {
   });
 
   // Set the new token as the users `token` cookie
-  res.cookie('token', newToken, {maxAge: jwtExpirySeconds,
-  signed: true});
+  res.cookie('token', newToken, {maxAge: jwtExpirySeconds});
   callback(req, res);
 };
 

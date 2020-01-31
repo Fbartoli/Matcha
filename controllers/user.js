@@ -251,12 +251,10 @@ const User = {
           };
           apiResult.data = resultJson;
           res.cookie('token', token, {
-            maxAge: jwtExpirySeconds,
-            signed: true
+            maxAge: jwtExpirySeconds
           });
           res.cookie('user_id', resultJson[0].id, {
-            maxAge: jwtExpirySeconds,
-            signed: true
+            maxAge: jwtExpirySeconds
           });
         } else {
           apiResult.meta = {
