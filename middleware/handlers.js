@@ -40,8 +40,6 @@ const jwtCheck = (req, res, callback) => {
     });
     res.cookie('token', newToken, { maxAge: jwtExpirySeconds });
   }
-
-
   // Set the new token as the users `token` cookie
 
   callback(req, res);
