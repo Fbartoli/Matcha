@@ -11,9 +11,8 @@ const jwtCheck = (req, res, callback) => {
 
   // if the cookie is not set, return an unauthorized error
   if (!token) {
-    console.log(err);
     apiResult.meta = {
-      error: err,
+      error: "Login first",
     };
     apiResult.data = [];
 
