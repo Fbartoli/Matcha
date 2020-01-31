@@ -34,20 +34,16 @@ const jwtCheck = (req, res, callback) => {
   }
   const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
   if (payload.exp - nowUnixSeconds < 30) {
-    apiResult.meta = {
-      error: 'Token expired',
-    };
-    apiResult.data = [];
-
-    return res.send(apiResult);
+    const newToken = jwt.sign({ username: payload.username }, jwtKey, {
+      algorithm: 'HS256',
+      expiresIn: jwtExpirySeconds
+    });
+    res.cookie('token', newToken, { maxAge: jwtExpirySeconds });
   }
-  const newToken = jwt.sign({ username: payload.username }, jwtKey, {
-    algorithm: 'HS256',
-    expiresIn: jwtExpirySeconds
-  });
+
 
   // Set the new token as the users `token` cookie
-  res.cookie('token', newToken, { maxAge: jwtExpirySeconds });
+
   callback(req, res);
 };
 
