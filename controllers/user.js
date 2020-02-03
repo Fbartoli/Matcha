@@ -134,7 +134,7 @@ const User = {
                         msg: 'user created',
                       };
                       apiResult.data = resultJson;
-                      mail(email, 'activation link matcha', 'http://localhost:8080/activate?id=' + confirmation + '&username=' + username, null);
+                      mail(email, 'activation link matcha', 'http://' + req.get("host") + '/activate?id=' + confirmation + '&username=' + username, null);
                     }
 
                     return res.json(apiResult);
