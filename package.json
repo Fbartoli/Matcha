@@ -1,7 +1,7 @@
 {
   "name": "matcha-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "lol",
   "main": "app.js",
   "scripts": {
     "lint": "eslint .",
@@ -35,5 +35,13 @@
     "sanitize-html": "^1.21.1",
     "socketio": "^1.0.0",
     "uniqid": "^5.2.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fbartoli/Matcha.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Fbartoli/Matcha/issues"
+  },
+  "homepage": "https://github.com/Fbartoli/Matcha#readme"
 }
