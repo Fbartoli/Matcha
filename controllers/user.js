@@ -19,9 +19,12 @@ const jwtExpirySeconds = CONFIG.jwt_expiration;
 
 // create class
 const User = {
-  getAllusers: async(req, res) =>{
+  getAllusers: async(req, res) => {
     const getAllUsers = util.promisify(usermodel.getAllusers);
-    const allUsers = await getAllUsers(req).then(data => data).catch(err => { res.status(303).json({ error: err.error }); });
+    const allUsers = await getAllUsers(req).then((data) => data)
+      .catch((err) => {
+        res.status(303).json({error: err.error});
+      });
     console.log(allUsers);
     let apiResult = {};
     let resultJson = JSON.stringify(allUsers);
@@ -35,8 +38,11 @@ const User = {
   },
   getUser: async(req, res) => {
     console.log(req);
-    const getUser = util.promisify(usermodel.findOneUser)
-    const user = await getUser('id', req.cookies.user_id).then(data => data).catch(err => { res.status(303).json({ error: err.error }); });
+    const getUser = util.promisify(usermodel.findOneUser);
+    const user = await getUser('id', req.cookies.user_id).then((data) => data)
+      .catch((err) => {
+        res.status(303).json({error: err.error});
+      });
     console.log(user);
     let apiResult = {};
     let resultJson = JSON.stringify(user);
@@ -71,18 +77,25 @@ const User = {
     }
     let apiResult = {};
     let getUser = util.promisify(usermodel.findOneUser);
-    let user = await getUser('email', email).then(data => data).catch(error => { throw new Error(error)});
+    let user = await getUser('email', email).then((data) => data)
+      .catch((error) => {
+        throw new Error(error);
+      });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (resultJson[0]) {
       apiResult.meta = {
         error: 'Email already exists'
       };
-    apiResult.data = [];
-    return res.status(303).json(apiResult);
-    };
+      apiResult.data = [];
+
+      return res.status(303).json(apiResult);
+    }
     getUser = util.promisify(usermodel.findOneUser);
-    user = await getUser('username', username).then(data => data).catch(error => { throw new error(error) });
+    user = await getUser('username', username).then((data) => data)
+      .catch((error) => {
+        throw new error(error);
+      });
     resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (resultJson[0]) {
@@ -90,17 +103,22 @@ const User = {
         error: 'Username already exists'
       };
       apiResult.data = [];
+
       return res.status(303).json(apiResult);
-    };
+    }
     const hashFct = util.promisify(bcrypt.hash);
-    const hash = await hashFct(password, 2).then(data => data).catch(error => { throw new Error(error)});
+    const hash = await hashFct(password, 2).then((data) => data)
+      .catch((error) => {
+        throw new Error(error);
+      });
     const post = [username, name, surname, email, hash, confirmation];
     const addUser = util.promisify(usermodel.addUser);
-    await addUser(post).then(data => data).catch(error => {return res.status(500).json({error: error})});
+    await addUser(post).then((data) => data)
+      .catch((error) => res.status(500).json({error: error}));
     mail(email, 'activation link matcha', 'http://' + req.get("host") + '/activate?id=' + confirmation + '&username=' + username, null);
+
     return res.status(200).json({message: 'accepted'});
   },
-  // async await needed
   addUserInfo: async(req, res) => {
     let {username, name, surname, email, password} = req.body;
     console.log(req.body);
@@ -110,51 +128,43 @@ const User = {
     }
     const info = [sanitize(username), sanitize(name), sanitize(surname), sanitize(email), sanitize(confirmation)];
     let apiResult = {};
-    usermodel.findOneUser('id', req.cookies.user_id, function(err, result) {
-      if (err) {
-        apiResult.meta = {
-          error: err,
-        };
-        apiResult.data = [];
-      } else {
-        let resultJson = JSON.stringify(result);
-        resultJson = JSON.parse(resultJson);
-        if (!resultJson[0]) {
-          apiResult.meta = {
-            error: 'User not found'
-          };
-          apiResult.data = [];
+    const getUser = util.promisify(usermodel.findOneUser);
+    const user = await getUser('id', req.cookie.user_id).then((data) => data)
+      .catch((err) => {
+        res.status(303).json({error: err.error});
+      });
+    let resultJson = JSON.stringify(user);
+    resultJson = JSON.parse(resultJson);
+    if (!resultJson[0]) {
+      apiResult.meta = {
+        error: 'User not found'
+      };
+      apiResult.data = [];
 
-          return res.json(apiResult);
-        } else {
-          usermodel.updateUser(req.cookies.user_id, info, function(err, result) {
-            if (err) {
-              apiResult.meta = {
-                error: err,
-              };
-              apiResult.data = [];
-            } else {
-              let resultJson = JSON.stringify(result);
-              resultJson = JSON.parse(resultJson);
-              apiResult.meta = {
-                msg: 'user created',
-              };
-              apiResult.data = resultJson;
+      return res.json(apiResult);
+    } else {
+      const updateUser = util.promisify(usermodel.updateUser);
+      await updateUser(req.cookie.user_id, info).then((data) => data)
+        .catch((err) => {
+          res.status(303).json({error: err.error});
+        });
+      apiResult.meta = {
+        msg: 'user created',
+      };
 
-              return res.json(apiResult);
-            }
-          });
-        }
-      }
-    });
+      return res.status(200).json(apiResult);
+    }
   },
   checkPassword: async(req, res) => {
     let {username, password} = req.body;
     let getUser = util.promisify(usermodel.findOneUser);
-    let user = await getUser('username', username).then(data => data).catch(error => { throw new Error(error)});
+    let user = await getUser('username', username).then((data) => data)
+      .catch((error) => {
+        throw new Error(error);
+      });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
-    let apiResult = {}
+    let apiResult = {};
     if (!resultJson[0]) {
       apiResult.meta = {
         access: 'denied',
@@ -205,12 +215,11 @@ const User = {
       return res.send('Invalid').redirect('/login');
     }
     let findUser = util.promisify(usermodel.findOneUser);
-    let user = await findUser('confirmation', id).then(data => data).catch(error => { return res.status(500).json(
-      apiResult.meta = {
+    let user = await findUser('confirmation', id).then((data) => data)
+      .catch((error) => res.status(500).json(apiResult.meta = {
         error: error,
         info: user,
-      });
-    });
+      }));
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (!resultJson[0]) {
@@ -221,19 +230,17 @@ const User = {
       return res.status(500).json(apiResult);
     }
     let activate = util.promisify(usermodel.activate);
-    await activate(id).then(data => data).catch(error => {return res.status(500).json(
-      apiResult.meta = {
+    await activate(id).then((data) => data)
+      .catch((error) => res.status(500).json(apiResult.meta = {
         error: error,
         info: user,
-      });
-    });
+      }));
     let updateConfirmation = util.promisify(usermodel.updateConfirmation);
-    await updateConfirmation(id).then(data => data).catch(error => {return res.status(500).json(
-      apiResult.meta = {
+    await updateConfirmation(id).then((data) => data)
+      .catch((error) => res.status(500).json(apiResult.meta = {
         error: error,
         info: user,
-      });
-    });
+      }));
 
     return res.status(200).json({message: 'User activated'});
   },
@@ -244,10 +251,13 @@ const User = {
     }
     let apiResult = {};
     if (!id) {
-      return res.status(401).json(apiResult)
+      return res.status(401).json(apiResult);
     }
     const getUser = util.promisify(usermodel.findOneUser);
-    const user = await getUser('id', id).then(data => data).catch(err => {res.status(500).json({error: err}); });
+    const user = await getUser('id', id).then((data) => data)
+      .catch((err) => {
+        res.status(500).json({error: err});
+      });
     console.log(user);
     res.status(200).send('OK');
   }
