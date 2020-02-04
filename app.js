@@ -9,16 +9,20 @@ const {addUser, removeUser, getUser, getUsersInRoom} = require('./controllers/ch
 const port = CONFIG.port;
 
 const app = express();
-const router = require('./router');
+const router = require('./routes/router');
 
 
 // middlewares
 
+app.use(cors({
+  credentials: true,
+  origin: 'http://localhost:3000'
+}));
 app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cookieParser(CONFIG.jwt_secret));
 app.use(router);
-app.use(cors());
+
 
 // start server
 let server = app.listen(port, () => {

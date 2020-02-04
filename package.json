@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "rebuild": "rm -rf node_modules && npm install",
+    "nodemon": "nodemon app.js",
     "start": "node app.js",
     "data": "node db/setup.js",
     "test": "mocha spec.js"

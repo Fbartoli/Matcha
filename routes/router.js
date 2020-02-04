@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const user = require('./controllers/user');
+const user = require('../controllers/user');
 const path = require('path');
-const jwtcheck = require('./middleware/handlers');
+const jwtcheck = require('../middleware/handlers');
 
 router.get('/', function (req, res) {
   res.send({ msg: 'Welcome to the Matcha API' });
@@ -12,15 +12,20 @@ router.get('/activate', function (req, res) {
   user.activate(req, res);
 });
 
+router.route('/reset')
+  .get(function (req, res) {
+    jwtcheck(req, res, user.resetPassword);
+  });
+
 router.route('/register')
   .get(function (req, res) {
-    res.sendFile('index.html', { root: path.join(__dirname) });
+    res.sendFile('/index.html', { root: path.join(__dirname) });
   })
   .post(user.addUser);
 
 router.route('/login')
   .get(function (req, res) {
-    res.sendFile('login.html', { root: path.join(__dirname) });
+    res.sendFile('/login.html', { root: path.join(__dirname) });
   })
   .post(user.checkPassword);
 

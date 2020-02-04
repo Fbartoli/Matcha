@@ -16,7 +16,7 @@ const jwtCheck = (req, res, callback) => {
     };
     apiResult.data = [];
 
-    return res.send(apiResult);
+    return res.status(401).json(apiResult);
   }
 
   let payload = 0;
@@ -33,7 +33,7 @@ const jwtCheck = (req, res, callback) => {
       };
       apiResult.data = [];
 
-      return res.send(apiResult);
+      return res.status(401).json(apiResult);
     }
   }
   const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
