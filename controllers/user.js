@@ -199,7 +199,6 @@ const User = {
         access: 'denied',
         error: 'Wrong password',
       };
-      apiResult.data = resultJson;
       res.status(401);
     }
 
@@ -258,7 +257,8 @@ const User = {
       .catch((err) => {
         res.status(500).json({error: err});
       });
-    console.log(user);
+    if (user)
+
     res.status(200).send('OK');
   }
 };
