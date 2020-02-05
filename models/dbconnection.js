@@ -14,8 +14,8 @@ let pool = mysql.createPool(config_db);
 exports.connection = {
   query: function () {
     const queryArgs = Array.prototype.slice.call(arguments),
-    events = [],
-    eventNameIndex = {};
+      events = [],
+      eventNameIndex = {};
     pool.getConnection(function (err, conn) {
       if (err) {
         if (eventNameIndex.error) {
@@ -35,9 +35,10 @@ exports.connection = {
 
     return {
       on: function (eventName, callback) {
-      events.push(Array.prototype.slice.call(arguments));
-      eventNameIndex[eventName] = callback;
-      return this;
+        events.push(Array.prototype.slice.call(arguments));
+        eventNameIndex[eventName] = callback;
+
+        return this;
       }
     };
   }

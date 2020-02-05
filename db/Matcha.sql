@@ -17,6 +17,7 @@ CREATE TABLE `users` (
   `gender_id` int,
   `password` varchar(255),
   `active` boolean DEFAULT (false),
+  `password_reset` boolean DEFAULT (false),
   `location` json,
   `confirmation` varchar(255),
   `notification` boolean DEFAULT (1),
@@ -32,7 +33,7 @@ CREATE TABLE `gender` (
 
 CREATE TABLE `interested_in_gender` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` varchar(255),
   `gender_id` int
 );
 
@@ -43,13 +44,13 @@ CREATE TABLE `relationship_types` (
 
 CREATE TABLE `interested_in_relationship` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` varchar(255),
   `relation_types_id` int
 );
 
 CREATE TABLE `photo` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` varchar(255),
   `details` varchar(255),
   `link` varchar(255),
   `time_added` timestamp DEFAULT (now()),
@@ -63,7 +64,7 @@ CREATE TABLE `match` (
 
 CREATE TABLE `match_user` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` varchar(255),
   `match_id` int
 );
 
@@ -76,13 +77,13 @@ INSERT INTO hobbies (name) VALUES ('#poney'), ('#league_of_legends'), ('#escalad
 
 CREATE TABLE `interested_in_hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` varchar(255),
   `hobbies_id` int
 );
 
 CREATE TABLE `conversation` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` int,
+  `user_id` varchar(255),
   `time_started` timestamp DEFAULT (now()),
   `active` boolean DEFAULT (1)
 );
@@ -90,7 +91,7 @@ CREATE TABLE `conversation` (
 CREATE TABLE `participant` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `conversation_id` int,
-  `user_id` int,
+  `user_id` varchar(255),
   `time_joined` timestamp DEFAULT (now()),
   `time_left` timestamp DEFAULT null
 );

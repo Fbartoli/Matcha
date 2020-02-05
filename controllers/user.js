@@ -8,6 +8,15 @@ const mail = require('../utils/mail');
 const sanitize = require('sanitize-html');
 const util = require('util');
 
+const getUser = util.promisify(usermodel.findOneUser);
+const getAllUsers = util.promisify(usermodel.getAllusers);
+const hashFct = util.promisify(bcrypt.hash);
+const addUser = util.promisify(usermodel.addUser);
+const updateUser = util.promisify(usermodel.updateUser);
+let activate = util.promisify(usermodel.activate);
+let updateConfirmation = util.promisify(usermodel.updateConfirmation);
+let updateFieldUser = util.promisify(usermodel.updateFieldUser);
+let getUserCriteri = util.promisify(usermodel.findOneUserCriteri);
 
 const MAIL_REGEX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{6,}/;
@@ -20,7 +29,6 @@ const jwtExpirySeconds = CONFIG.jwt_expiration;
 // create class
 const User = {
   getAllusers: async(req, res) => {
-    const getAllUsers = util.promisify(usermodel.getAllusers);
     const allUsers = await getAllUsers(req).then((data) => data)
       .catch((err) => {
         res.status(303).json({error: err.error});
@@ -37,13 +45,10 @@ const User = {
     res.json(apiResult);
   },
   getUser: async(req, res) => {
-    console.log(req);
-    const getUser = util.promisify(usermodel.findOneUser);
-    const user = await getUser('id', req.cookies.user_id).then((data) => data)
+    const user = await getUser('id', req.header('user_id')).then((data) => data)
       .catch((err) => {
         res.status(303).json({error: err.error});
       });
-    console.log(user);
     let apiResult = {};
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
@@ -76,7 +81,6 @@ const User = {
       return res.status(400).json({error: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
     let apiResult = {};
-    let getUser = util.promisify(usermodel.findOneUser);
     let user = await getUser('email', email).then((data) => data)
       .catch((error) => {
         throw new Error(error);
@@ -91,7 +95,6 @@ const User = {
 
       return res.status(303).json(apiResult);
     }
-    getUser = util.promisify(usermodel.findOneUser);
     user = await getUser('username', username).then((data) => data)
       .catch((error) => {
         throw new error(error);
@@ -106,29 +109,25 @@ const User = {
 
       return res.status(303).json(apiResult);
     }
-    const hashFct = util.promisify(bcrypt.hash);
     const hash = await hashFct(password, 2).then((data) => data)
       .catch((error) => {
         throw new Error(error);
       });
     const post = [username, name, surname, email, hash, confirmation];
-    const addUser = util.promisify(usermodel.addUser);
     await addUser(post).then((data) => data)
       .catch((error) => res.status(500).json({error: error}));
-    mail(email, 'activation link matcha', 'http://' + req.get("host") + '/activate?id=' + confirmation + '&username=' + username, null);
+    mail(email, 'activation link matcha', 'http://' + req.get("host") + '/activate?id=' + confirmation, null);
 
     return res.status(200).json({message: 'accepted'});
   },
   addUserInfo: async(req, res) => {
     let {username, name, surname, email, password} = req.body;
-    console.log(req.body);
     const confirmation = uniqid();
     if (!(username || name || surname || email || password)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
     const info = [sanitize(username), sanitize(name), sanitize(surname), sanitize(email), sanitize(confirmation)];
     let apiResult = {};
-    const getUser = util.promisify(usermodel.findOneUser);
     const user = await getUser('id', req.cookie.user_id).then((data) => data)
       .catch((err) => {
         res.status(303).json({error: err.error});
@@ -143,7 +142,6 @@ const User = {
 
       return res.json(apiResult);
     } else {
-      const updateUser = util.promisify(usermodel.updateUser);
       await updateUser(req.cookie.user_id, info).then((data) => data)
         .catch((err) => {
           res.status(303).json({error: err.error});
@@ -157,7 +155,6 @@ const User = {
   },
   checkPassword: async(req, res) => {
     let {username, password} = req.body;
-    let getUser = util.promisify(usermodel.findOneUser);
     let user = await getUser('username', username).then((data) => data)
       .catch((error) => {
         throw new Error(error);
@@ -177,7 +174,7 @@ const User = {
         access: 'denied',
         error: 'Account not activated',
       };
-      res.status(401).json(apiResult);
+      res.status(401);
     } else if (bcrypt.compareSync(password, resultJson[0].password)) {
       const token = jwt.sign({username}, jwtkey, {
         algorithm: 'HS256',
@@ -185,7 +182,8 @@ const User = {
       });
       apiResult.meta = {
         access: 'granted',
-        token: token
+        token: token,
+        user_id: resultJson[0].id
       };
       apiResult.data = resultJson;
       res.cookie('token', token, {
@@ -205,16 +203,15 @@ const User = {
     return res.json(apiResult).end();
   },
   activate: async(req, res) => {
-    const id = req.query.id;
-    if (id === '0') {
+    const confirmation = req.query.id;
+    if (confirmation === '0') {
       return res.status(403).json({message: "User doesn't exist"});
     }
     let apiResult = {};
-    if (!id) {
+    if (!confirmation) {
       return res.send('Invalid').redirect('/login');
     }
-    let findUser = util.promisify(usermodel.findOneUser);
-    let user = await findUser('confirmation', id).then((data) => data)
+    let user = await getUser('confirmation', confirmation).then((data) => data)
       .catch((error) => res.status(500).json(apiResult.meta = {
         error: error,
         info: user,
@@ -228,14 +225,13 @@ const User = {
 
       return res.status(500).json(apiResult);
     }
-    let activate = util.promisify(usermodel.activate);
-    await activate(id).then((data) => data)
+    await activate('1', confirmation).then((data) => data)
       .catch((error) => res.status(500).json(apiResult.meta = {
         error: error,
         info: user,
       }));
-    let updateConfirmation = util.promisify(usermodel.updateConfirmation);
-    await updateConfirmation(id).then((data) => data)
+    const string = uniqid();
+    await updateConfirmation(string, confirmation).then((data) => data)
       .catch((error) => res.status(500).json(apiResult.meta = {
         error: error,
         info: user,
@@ -243,23 +239,47 @@ const User = {
 
     return res.status(200).json({message: 'User activated'});
   },
-  resetPassword: async(req, res) => {
-    const id = req.cookies.user_id;
-    if (id === '0') {
-      return res.status(401).json({message: "User doesn't exist"});
+  resetPasswordEmail: async(req, res) => {
+    const email = req.body.email;
+    if (!email) {
+      return res.status(401).json({message: "Email not provided"});
     }
-    let apiResult = {};
-    if (!id) {
-      return res.status(401).json(apiResult);
-    }
-    const getUser = util.promisify(usermodel.findOneUser);
-    const user = await getUser('id', id).then((data) => data)
-      .catch((err) => {
-        res.status(500).json({error: err});
-      });
-    if (user)
+    console.log(email);
+    const user = await getUser('email', email).then((data) => data)
+      .catch((err) => res.status(500).json({error: err}));
+    let resultJson = JSON.stringify(user);
+    resultJson = JSON.parse(resultJson);
+    if (resultJson[0]) {
+      await updateFieldUser(1, 'password_reset', resultJson[0].id).then((data) => data)
+        .catch((err) => {
+          console.log(err);
 
-    res.status(200).send('OK');
+          return res.status(500).json({error: err});
+        });
+      // proteger contre les whitespaces;
+      mail(email, 'reset link matcha', 'lien pour changer votre mot de passe : http://' + req.get("host") +
+      '/password?id=' + resultJson[0].confirmation + '&username=' + resultJson[0].username, null);
+
+      return res.status(200).json({message: 'OK'});
+    }
+
+    return res.status(401).json({message: 'User not found'});
+  },
+  resetPassword: async(req, res) => {
+    const confirmation = req.query.id;
+    const username = req.query.username;
+    let user = await getUserCriteri(username, confirmation).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
+    let resultJson = JSON.stringify(user);
+    resultJson = JSON.parse(resultJson);
+    if (resultJson[0].nb !== 1) {
+      res.status(401).json({error: 'The contact the website administrator'});
+    }
+    res.status(200).json({error: 'The contact the website administrator'});
   }
 };
 
