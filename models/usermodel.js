@@ -1,5 +1,4 @@
 const db = require('../models/dbconnection');
-const uniq = require('uniqid');
 
 module.exports = {
   getAllusers: (req, callback) => {
@@ -95,9 +94,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  updatePasswordEmail: (email, callback) => {
-    const tempPassword = uniq();
-    db.connection.query('UPDATE users SET password = ? WHERE  email =?', [tempPassword, email], function(error, result) {
+  updatePasswordUsername: (username, hash, callback) => {
+    db.connection.query('UPDATE users SET password = ? WHERE  email =?', [hash, username], function(error, result) {
       if (error) {
         return callback(error, null);
       }

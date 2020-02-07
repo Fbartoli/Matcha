@@ -13,10 +13,11 @@ const getAllUsers = util.promisify(usermodel.getAllusers);
 const hashFct = util.promisify(bcrypt.hash);
 const addUser = util.promisify(usermodel.addUser);
 const updateUser = util.promisify(usermodel.updateUser);
-let activate = util.promisify(usermodel.activate);
-let updateConfirmation = util.promisify(usermodel.updateConfirmation);
-let updateFieldUser = util.promisify(usermodel.updateFieldUser);
-let getUserCriteri = util.promisify(usermodel.findOneUserCriteri);
+const activate = util.promisify(usermodel.activate);
+const updateConfirmation = util.promisify(usermodel.updateConfirmation);
+const updateFieldUser = util.promisify(usermodel.updateFieldUser);
+const getUserCriteri = util.promisify(usermodel.findOneUserCriteri);
+const updatePasswordUsername = util.promisify(usermodel.updatePasswordUsername);
 
 const MAIL_REGEX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{6,}/;
@@ -265,21 +266,52 @@ const User = {
 
     return res.status(401).json({message: 'User not found'});
   },
-  resetPassword: async(req, res) => {
+  isPasswordReset: async(req, res) => {
     const confirmation = req.query.id;
     const username = req.query.username;
     let user = await getUserCriteri(username, confirmation).then((data) => data)
       .catch((err) => {
         console.log(err);
 
-        return res.status(500).json({error: err});
+        return res.status(500).json({error: 'Erreur'});
       });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (resultJson[0].nb !== 1) {
-      res.status(401).json({error: 'The contact the website administrator'});
+      return res.status(401).json({error: 'The contact the website administrator'});
     }
-    res.status(200).json({error: 'The contact the website administrator'});
+    // redirection versla page pour changer le mot de passe
+    res.status(301).json({msg: 'redirect to pasword change allowed',
+      user});
+  },
+  PasswordReset: async(req, res) => {
+    const password = req.query.password1;
+    const passwordBis = req.query.password2;
+    const username = req.query.username;
+
+    if (!username) {
+      return res.status(400).json({error: 'Invalid request, missing username'});
+    }
+    if (password !== passwordBis) {
+      return res.status(400).json({error: 'Invalid passwords, they should match'});
+    }
+    if (!PASSWORD_REGEX.test(password) || password.length < 8) {
+      return res.status(400).json({error: 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.'});
+    }
+    const hash = await hashFct(password, 2).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
+    await updatePasswordUsername(username, hash).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
+
+    return res.status(200).json({message: 'Password updated'});
   }
 };
 

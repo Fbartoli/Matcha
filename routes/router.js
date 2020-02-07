@@ -30,10 +30,8 @@ router.route('/login')
   .post(user.checkPassword);
 
 router.route('/password')
-  .get(function (req, res) {
-    continue
-  })
-  .post(user.checkPassword);
+  .get(user.isPasswordReset)
+  .post(user.PasswordReset);
 
 router.route('/users')
   .get(function (req, res) {
