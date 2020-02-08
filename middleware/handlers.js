@@ -10,7 +10,7 @@ module.exports = {
     let token = req.header('authorization');
     let apiResult = {};
 
-    if (token.startsWith('Bearer ')) {
+    if (token && token.startsWith('Bearer ')) {
       token = token.slice(7, token.length);
     } else {
       apiResult.meta = {

@@ -117,43 +117,13 @@ const User = {
     const post = [username, name, surname, email, hash, confirmation];
     await addUser(post).then((data) => data)
       .catch((error) => res.status(500).json({error: error}));
-    mail(email, 'activation link matcha', 'http://' + req.get("host") + '/activate?id=' + confirmation, null);
+    mail(email, 'activation link matcha', 'http://localhost:3000/activate?id=' + confirmation, null);
 
     return res.status(200).json({message: 'accepted'});
   },
-  addUserInfo: async(req, res) => {
-    let {username, name, surname, email, password} = req.body;
-    const confirmation = uniqid();
-    if (!(username || name || surname || email || password)) {
-      return res.status(400).json({error: "Missing informations, fill the form"});
-    }
-    const info = [sanitize(username), sanitize(name), sanitize(surname), sanitize(email), sanitize(confirmation)];
-    let apiResult = {};
-    const user = await getUser('id', req.cookie.user_id).then((data) => data)
-      .catch((err) => {
-        res.status(303).json({error: err.error});
-      });
-    let resultJson = JSON.stringify(user);
-    resultJson = JSON.parse(resultJson);
-    if (!resultJson[0]) {
-      apiResult.meta = {
-        error: 'User not found'
-      };
-      apiResult.data = [];
-
-      return res.json(apiResult);
-    } else {
-      await updateUser(req.cookie.user_id, info).then((data) => data)
-        .catch((err) => {
-          res.status(303).json({error: err.error});
-        });
-      apiResult.meta = {
-        msg: 'user created',
-      };
-
-      return res.status(200).json(apiResult);
-    }
-  },
+  // addUserInfo: async(req, res) => {
+  //   let {mobile, bio, gender_id, location} = req.body;
+  // },
   checkPassword: async(req, res) => {
     let {username, password} = req.body;
     let user = await getUser('username', username).then((data) => data)
@@ -258,8 +228,7 @@ const User = {
           return res.status(500).json({error: err});
         });
       // proteger contre les whitespaces;
-      mail(email, 'reset link matcha', 'lien pour changer votre mot de passe : http://' + req.get("host") +
-      '/password?id=' + resultJson[0].confirmation + '&username=' + resultJson[0].username, null);
+      mail(email, 'reset link matcha', 'lien pour changer votre mot de passe : http://localhost:3000/password?id=' + resultJson[0].confirmation + '&username=' + resultJson[0].username, null);
 
       return res.status(200).json({message: 'OK'});
     }
@@ -269,6 +238,11 @@ const User = {
   isPasswordReset: async(req, res) => {
     const confirmation = req.query.id;
     const username = req.query.username;
+    console.log(req.query);
+    if (!(confirmation || username)) {
+
+      return res.status(500).json({error: 'Erreur'});
+    }
     let user = await getUserCriteri(username, confirmation).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -277,6 +251,7 @@ const User = {
       });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
+    console.log(resultJson[0]);
     if (resultJson[0].nb !== 1) {
       return res.status(401).json({error: 'The contact the website administrator'});
     }
