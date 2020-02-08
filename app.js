@@ -13,7 +13,7 @@ const app = express();
 const router = require('./routes/router');
 
 
-// middlewares
+// log setup
 morgan.token('host', function(req, res) {
   return req.hostname;
 });
@@ -22,6 +22,7 @@ morgan.token('header-auth', function(req, res) {
   return req.header('authorization');
 });
 
+// middlewares
 app.use(morgan(':host :method :url :header-auth :status :res[content-length] - :response-time ms'));
 app.use(cors({
   credentials: true,

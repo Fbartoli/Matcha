@@ -1,8 +1,5 @@
-
-
 CREATE TABLE `users` (
-  `id` varchar(255) PRIMARY KEY DEFAULT(UUID()),
-  `mobile` int(10) UNIQUE,
+  `id` varchar(255) PRIMARY KEY DEFAULT (UUID()),
   `username` varchar(255) UNIQUE,
   `name` varchar(255),
   `surname` varchar(255),
@@ -16,11 +13,11 @@ CREATE TABLE `users` (
   `active` boolean DEFAULT (false),
   `password_reset` boolean DEFAULT (false),
   `location` json,
+  `profil_complete` boolean DEFAULT (0),
   `confirmation` varchar(255),
   `notification` boolean DEFAULT (1),
-  `score` int DEFAULT (100),
-  `isOnline` boolean DEFAULT (0),
-  `photo` json
+  `score` int DEFAULT (0),
+  `isOnline` boolean DEFAULT (0)
 );
 
 CREATE TABLE `gender` (
@@ -54,6 +51,30 @@ CREATE TABLE `photo` (
   `active` boolean DEFAULT (1)
 );
 
+CREATE TABLE `history_likes` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `date` timestamp DEFAULT (now()),
+  `user_id` varchar(255),
+  `like_id` int
+);
+
+CREATE TABLE `like` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `user_id` varchar(255),
+);
+
+CREATE TABLE `history_views` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `date` timestamp DEFAULT (now()),
+  `user_id` varchar(255)
+);
+
+CREATE TABLE `views` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `user_id` varchar(255),
+  `history_views_id` int
+);
+
 CREATE TABLE `match` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `active` boolean DEFAULT (1)
@@ -69,8 +90,6 @@ CREATE TABLE `hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255) UNIQUE
 );
-
-INSERT INTO hobbies (name) VALUES ('#poney'), ('#league_of_legends'), ('#escalade'), ('#balade'), ('#witcher'), ('#gaming'), ('#coding'), ('#threesome'), ('#lollipop'), ('#tentacles');
 
 CREATE TABLE `interested_in_hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
@@ -127,3 +146,13 @@ ALTER TABLE `participant` ADD FOREIGN KEY (`id`) REFERENCES `conversation` (`id`
 ALTER TABLE `participant` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 ALTER TABLE `message` ADD FOREIGN KEY (`id`) REFERENCES `participant` (`id`);
+
+ALTER TABLE `users` ADD FOREIGN KEY (`id`) REFERENCES `history_views` (`user_id`);
+
+ALTER TABLE `views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `views` ADD FOREIGN KEY (`history_views_id`) REFERENCES `history_views` (`id`);
+
+ALTER TABLE `like` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `history_likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);

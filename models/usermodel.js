@@ -59,7 +59,7 @@ module.exports = {
     });
   },
   updateUser: (id, info, callback) => {
-    db.connection.query('INSERT INTO users (mobile, bio, birth_date, country, city, postal_code, gender_id, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?) where id =' + id, info, function(error, result) {
+    db.connection.query('INSERT INTO users (bio, birth_date, gender_id, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?) where id =' + id, info, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -76,6 +76,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  updateFieldUsername: (value, field, username, callback) => {
+    db.connection.query('UPDATE users SET ?? = ? WHERE username =?', [field, value, username], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   updateConfirmation: (string, confirmation, callback) => {
     db.connection.query('UPDATE users SET confirmation = ? WHERE confirmation =?', [string, confirmation], function(error, result) {
       if (error) {
@@ -85,8 +94,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  updatePassword: (password, user_id, callback) => {
-    db.connection.query('UPDATE users SET password = ? WHERE id =?', [password, user_id], function(error, result) {
+  updatePassword: (hash, user_id, callback) => {
+    db.connection.query('UPDATE users SET password = ? WHERE id =?', [hash, user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -95,7 +104,7 @@ module.exports = {
     });
   },
   updatePasswordUsername: (username, hash, callback) => {
-    db.connection.query('UPDATE users SET password = ? WHERE  email =?', [hash, username], function(error, result) {
+    db.connection.query('UPDATE users SET password=? WHERE username=?', [hash, username], function(error, result) {
       if (error) {
         return callback(error, null);
       }

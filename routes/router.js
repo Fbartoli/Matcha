@@ -1,46 +1,20 @@
 const express = require('express');
-const router = express.Router();
-const user = require('../controllers/user');
-const path = require('path');
-const handlers = require('../middleware/handlers');
+const usersRoute = require('./users/usersApi');
+const editRoute = require('./users/editApi');
+// const notifRoute = require('./users/notifapi');
+// const socialRoute = require('./users/socialapi');
 
-router.get('/', function (req, res) {
+
+const router = express.Router();
+
+router.use('/api/users/', usersRoute);
+router.use('/api/edit/', editRoute);
+// router.use('/api/notif/', notifRoute);
+// router.use('/api/social/', socialRoute);
+
+
+router.get('/api', function (req, res) {
   res.send({msg: 'Welcome to the Matcha API'});
 });
-
-router.get('/activate', function (req, res) {
-  user.activate(req, res);
-});
-
-router.route('/reset')
-  .post(user.resetPasswordEmail);
-
-// remove gets because handled front side
-router.route('/register')
-  .get(function (req, res) {
-    res.sendFile('/index.html', {root: path.join(__dirname)});
-  })
-  .post(user.addUser);
-
-// remove gets because handled front side
-router.route('/login')
-  .get(function (req, res) {
-    res.sendFile('/login.html', {root: path.join(__dirname)});
-  })
-  .post(user.checkPassword);
-
-router.route('/password')
-  .get(user.isPasswordReset)
-  .post(user.PasswordReset);
-
-router.route('/users')
-  .get(function (req, res) {
-    handlers.jwtCheck(req, res, user.getAllusers);
-  });
-
-router.route('/user')
-  .get(function (req, res) {
-    handlers.jwtCheck(req, res, user.getUser);
-  });
 
 module.exports = router;
