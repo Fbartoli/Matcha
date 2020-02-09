@@ -14,7 +14,7 @@ router.use('/api/edit/', editRoute);
 
 
 router.get('/api', function (req, res) {
-  res.send({msg: 'Welcome to the Matcha API'});
+  res.send({msg: 'Welcome to Matcha API'});
 });
 
 module.exports = router;

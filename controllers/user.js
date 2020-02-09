@@ -29,7 +29,11 @@ const GENDER_REGEX = /^[1-3]*1/;
 const jwtkey = CONFIG.jwt_secret;
 const jwtExpirySeconds = CONFIG.jwt_expiration;
 
-// create class
+// wrapper response
+function response (status, message, res) {
+  return res.status(status).json({client: message});
+}
+
 const User = {
   getAllusers: async(req, res) => {
     const allUsers = await getAllUsers(req).then((data) => data)
@@ -64,53 +68,50 @@ const User = {
   },
   addUser: async(req, res) => {
     let {username, name, surname, email, password} = req.body;
+    console.log(req.body);
     const confirmation = uniqid();
     if (!(username || name || surname || email || password)) {
-      return res.status(400).json({error: "Missing informations, fill the form"});
+
+      return res.status(400).json({client: "Missing informations, fill the form"});
     }
     if (!MAIL_REGEX.test(email)) {
-      return res.status(400).json({error: 'Invalid mail.'});
+      return res.status(400).json({client: 'Invalid mail.'});
     }
     if (!PASSWORD_REGEX.test(password) || password.length < 8) {
-      return res.status(400).json({error: 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.'});
+      return res.status(400).json({client: 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.'});
     }
     if (!USERNAME_REGEX.test(username) || username.length < 6) {
-      return res.status(400).json({error: 'Invalid username, it should contain only letters, numbers and a minimun of 6 characters'});
+      return res.status(400).json({client: 'Invalid username, it should contain only letters, numbers and a minimun of 6 characters'});
     }
     if (!NAME_REGEX.test(name) || name.length < 2) {
-      return res.status(400).json({error: 'Invalid name, it should contain only letters'});
+      return res.status(400).json({client: 'Invalid name, it should contain only letters'});
     }
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
-      return res.status(400).json({error: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
+      return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
-    let apiResult = {};
     let user = await getUser('email', email).then((data) => data)
-      .catch((error) => {
-        throw new Error(error);
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
       });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (resultJson[0]) {
-      apiResult.meta = {
-        error: 'Email already exists'
-      };
-      apiResult.data = [];
 
-      return res.status(303).json(apiResult);
+      return res.status(400).json({client: 'Email already exists'});
     }
     user = await getUser('username', username).then((data) => data)
-      .catch((error) => {
-        throw new error(error);
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
       });
     resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (resultJson[0]) {
-      apiResult.meta = {
-        error: 'Username already exists'
-      };
-      apiResult.data = [];
 
-      return res.status(303).json(apiResult);
+      return res.status(400).json({client: 'Username already exists'});
     }
     const hash = await hashFct(password, 2).then((data) => data)
       .catch((error) => {
@@ -119,9 +120,9 @@ const User = {
     const post = [username, name, surname, email, hash, confirmation];
     await addUser(post).then((data) => data)
       .catch((error) => res.status(500).json({error: error}));
-    mail(email, 'activation link matcha', null, '<p>lien pour changer votre mot de passe : <a href="http://localhost:3000/activate?id=' + confirmation + '"> lien reset </a></p>');
+    mail(email, 'activation link matcha', null, '<p>lien pour activer votre compte : <a href="http://localhost:3000/activate?id=' + confirmation + '"> lien pour activer </a></p>');
 
-    return res.status(200).json({message: 'accepted'});
+    return res.status(200).json({client: 'accepted'});
   },
   editEmail: async(req, res) => {
     const email = req.body.email;
@@ -184,113 +185,108 @@ const User = {
   checkPassword: async(req, res) => {
     let {username, password} = req.body;
     let user = await getUser('username', username).then((data) => data)
-      .catch((error) => {
-        throw new Error(error);
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
       });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
-    let apiResult = {};
     if (!resultJson[0]) {
-      apiResult.meta = {
-        access: 'denied',
-        error: 'Wrong information',
-      };
-      apiResult.data = resultJson;
-      res.status(401);
+      return res.status(401).json({
+        client: 'Wrong information'
+      });
     } else if (resultJson[0].active === 0) {
-      apiResult.meta = {
-        access: 'denied',
-        error: 'Account not activated',
-      };
-      res.status(401);
+      return res.status(401).json({
+        client: 'Account not activated'
+      });
     } else if (bcrypt.compareSync(password, resultJson[0].password)) {
       const token = jwt.sign({username}, jwtkey, {
         algorithm: 'HS256',
         expiresIn: jwtExpirySeconds
       });
-      apiResult.meta = {
-        access: 'granted',
+
+      return res.status(200).json({
+        client: 'Login successful !',
         token: token,
-        user_id: resultJson[0].id
-      };
-      apiResult.data = resultJson;
-      res.cookie('token', token, {
-        maxAge: jwtExpirySeconds
-      });
-      res.cookie('user_id', resultJson[0].id, {
-        maxAge: jwtExpirySeconds
+        userdata: {
+          user_id: resultJson[0].id,
+          username: username
+        }
       });
     } else {
-      apiResult.meta = {
-        access: 'denied',
-        error: 'Wrong information',
-      };
-      res.status(401);
+      return res.status(401).json({
+        client: 'Wrong information'
+      });
     }
-
-    return res.json(apiResult).end();
   },
   activate: async(req, res) => {
     const confirmation = req.query.id;
     if (confirmation === '0') {
-      return res.status(403).json({message: "User doesn't exist"});
+      return res.status(403).json({client: "Wrong information"});
     }
-    let apiResult = {};
     if (!confirmation) {
-      return res.send('Invalid').redirect('/login');
+      return res.status(400).json({client: "Missing information"});
     }
     let user = await getUser('confirmation', confirmation).then((data) => data)
-      .catch((error) => res.status(500).json(apiResult.meta = {
-        error: error,
-        info: user,
-      }));
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (!resultJson[0]) {
-      apiResult.meta = {
-        error: 'User already activated or wrong link',
-      };
 
-      return res.status(500).json(apiResult);
+      return res.status(500).json({
+        client: 'User already activated or wrong link',
+      });
     }
     await activate('1', confirmation).then((data) => data)
-      .catch((error) => res.status(500).json(apiResult.meta = {
-        error: error,
-        info: user,
-      }));
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
     const string = uniqid();
     await updateConfirmation(string, confirmation).then((data) => data)
-      .catch((error) => res.status(500).json(apiResult.meta = {
-        error: error,
-        info: user,
-      }));
+      .catch((err) => {
+        console.log(err);
 
-    return res.status(200).json({message: 'User activated'});
+        return res.status(500).json({client: "Internal error"});
+      });
+
+    return res.status(200).json({client: 'User activated'});
   },
   resetPasswordEmail: async(req, res) => {
     const email = req.body.email;
     if (!email) {
-      return res.status(401).json({message: "Email not provided"});
+      return res.status(401).json({client: "Email not provided"});
     }
     console.log(email);
     const user = await getUser('email', email).then((data) => data)
-      .catch((err) => res.status(500).json({error: err}));
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
+    console.log(resultJson[0]);
     if (resultJson[0]) {
-      await updateFieldUser(1, 'password_reset', resultJson[0].id).then((data) => data)
+      await updateFieldUser(1, 'password_reset', resultJson[0].id).then((data) => console.log(data))
         .catch((err) => {
           console.log(err);
 
-          return res.status(500).json({error: err});
+          return response(500, 'Internal error', res);
         });
       // proteger contre les whitespaces;
       mail(email, 'reset link matcha', null, '<p>lien pour changer votre mot de passe : <a href="http://localhost:3000/password?id=' + resultJson[0].confirmation + '&username=' + resultJson[0].username + '"> lien reset </a></p>');
 
-      return res.status(200).json({message: 'OK'});
+      return response(200, 'OK', res);
     }
 
-    return res.status(401).json({message: 'User not found'});
+    return response(401, 'User not found', res);
   },
   isPasswordReset: async(req, res) => {
     const confirmation = req.query.id;
@@ -298,13 +294,13 @@ const User = {
     console.log(req.query);
     if (!(confirmation || username)) {
 
-      return res.status(500).json({error: 'Erreur'});
+      return res.status(500).json({client: 'Internal error'});
     }
     let user = await getUserCriteri(username, confirmation).then((data) => data)
       .catch((err) => {
         console.log(err);
 
-        return res.status(500).json({error: 'Erreur'});
+        return res.status(500).json({client: 'Internal error'});
       });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
@@ -312,12 +308,11 @@ const User = {
     if (resultJson[0].nb !== 1) {
       console.log(resultJson[0]);
 
-      return res.status(401).json({error: 'The contact the website administrator'});
+      return res.status(401).json({client: 'The contact the website administrator'});
     }
     // redirection versla page pour changer le mot de passe
 
-    return res.status(200).json({msg: 'redirect to password change allowed',
-      user});
+    return response(200, 'redirect to password change allowed', res);
   },
   PasswordReset: async(req, res) => {
     const password = req.body.password1;
@@ -326,35 +321,37 @@ const User = {
 
     if (!username) {
 
-      return res.status(400).json({error: 'Invalid request, missing username'});
+      return response(500, 'Invalid request, missing username', res);
     }
     if (password !== passwordBis) {
 
-      return res.status(400).json({error: 'Invalid passwords, they should match'});
+      return response(500, 'Password does not match', res);
     }
     if (!PASSWORD_REGEX.test(password) || password.length < 8) {
 
-      return res.status(400).json({error: 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.'});
+      return response(500, 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.', res);
     }
     const hash = await hashFct(password, 2).then((data) => data)
       .catch((err) => {
         console.log(err);
 
-        return res.status(500).json({error: err});
+        return response(500, 'Internal error', res);
       });
     await updatePasswordUsername(username, hash).then((data) => data)
       .catch((err) => {
         console.log(err);
 
-        return res.status(500).json({error: err});
+        return response(500, 'Internal error', res);
       });
     const string = uniqid();
     await updateFieldUsername(string, 'confirmation', username).then((data) => data)
-      .catch((error) => res.status(500).json({
-        error: error
-      }));
+      .catch((err) => {
+        console.log(err);
 
-    return res.status(200).json({message: 'Password updated'});
+        return response(500, 'Internal error', res);
+      });
+
+    return response(200, 'Password updated', res);
   }
 };
 

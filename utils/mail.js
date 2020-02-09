@@ -5,16 +5,16 @@ const sendmail = async function(mailto, mailsubject, mailtext, mailhtml) {
     host: 'smtp.ethereal.email',
     port: 587,
     auth: {
-        user: 'naomie36@ethereal.email',
-        pass: 'AdzdUpGZQMhMEqJAhF'
+      user: 'naomie36@ethereal.email',
+      pass: 'AdzdUpGZQMhMEqJAhF'
     }
   });
-  const info = await transporter.sendMail({
-  from: '"MATCHA <naomie36@ethereal.email>',
-  to: mailto,
-  subject: mailsubject,
-  text: mailtext,
-  html: mailhtml,
+  await transporter.sendMail({
+    from: '"MATCHA <naomie36@ethereal.email>',
+    to: mailto,
+    subject: mailsubject,
+    text: mailtext,
+    html: mailhtml,
   });
 };
 
