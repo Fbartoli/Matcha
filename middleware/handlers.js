@@ -8,16 +8,14 @@ module.exports = {
   jwtCheck: (req, res, callback) => {
     // We can obtain the session token from the requests cookies, which come with every request
     let token = req.header('authorization');
-    let apiResult = {};
 
     if (token && token.startsWith('Bearer ')) {
       token = token.slice(7, token.length);
     } else {
-      apiResult.meta = {
-        error: "Missing token or wrong authentification type",
-      };
 
-      return res.status(401).json(apiResult);
+      return res.status(401).json({
+        client: "Missing token or wrong authentification type",
+      });
     }
     let payload = '';
     try {
@@ -25,12 +23,8 @@ module.exports = {
       console.log(payload);
     } catch (err) {
       if (err instanceof jwt.JsonWebTokenError) {
-        apiResult.meta = {
-          error: err,
-        };
-        apiResult.data = [];
 
-        return res.status(401).json(apiResult);
+        return res.status(401).json({client: 'Token error'});
       }
     }
     const nowUnixSeconds = Math.round(Number(new Date()) / 1000);

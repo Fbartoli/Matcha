@@ -32,15 +32,14 @@ usersRoute.route('/password')
 // Routes protegées
 
 // charger les informations de l'utilisateur connecté
-// usersRoute.route('/users')
-//  .get(function (req, res) {
-//    handlers.jwtCheck(req, res, user.getAllusers);
-//  });
-
-// charger les informations de l'utilisateur connecté
 usersRoute.route('/user')
   .get(function (req, res) {
     handlers.jwtCheck(req, res, user.getUser);
+  });
+
+usersRoute.route('/update')
+  .post(function (req, res) {
+    handlers.jwtCheck(req, res, user.addUserInfo);
   });
 
 module.exports = usersRoute;

@@ -10,14 +10,19 @@ const util = require('util');
 
 const getUser = util.promisify(usermodel.findOneUser);
 const getAllUsers = util.promisify(usermodel.getAllusers);
+const getUserConfirmation = util.promisify(usermodel.findOneUserConfirmation);
+const getUserReset = util.promisify(usermodel.findOneUserReset);
+const getProfileComplete = util.promisify(usermodel.profileComplete);
+
 const hashFct = util.promisify(bcrypt.hash);
+
 const addUser = util.promisify(usermodel.addUser);
 // const updateUser = util.promisify(usermodel.updateUser);
 const activate = util.promisify(usermodel.activate);
+
 const updateConfirmation = util.promisify(usermodel.updateConfirmation);
 const updateFieldUser = util.promisify(usermodel.updateFieldUser);
 const updateFieldUsername = util.promisify(usermodel.updateFieldUsername);
-const getUserCriteri = util.promisify(usermodel.findOneUserCriteri);
 const updatePasswordUsername = util.promisify(usermodel.updatePasswordUsername);
 
 const MAIL_REGEX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
@@ -122,7 +127,8 @@ const User = {
       .catch((error) => res.status(500).json({error: error}));
     mail(email, 'activation link matcha', null, '<p>lien pour activer votre compte : <a href="http://localhost:3000/activate?id=' + confirmation + '"> lien pour activer </a></p>');
 
-    return res.status(200).json({client: 'accepted'});
+    return res.status(200).json({client: 'accepted',
+      link: confirmation});
   },
   editEmail: async(req, res) => {
     const email = req.body.email;
@@ -176,14 +182,21 @@ const User = {
 
     return res.status(200);
   },
-  // addUserInfo: async(req, res) => {
-  //   let {bio, birth_date, gender_id, location, int_in_gender, int_in_rela} = req.body;
-  //   bio = sanitize(bio);
-  //   bio = sanitize(location);
+  addUserInfo: async(req, res) => {
+    let {user_id} = req.body;
+    console.log(req.body);
+    if (!user_id) {
+      return response(400, "Missing information", res);
+    }
+    await getProfileComplete(user_id).then((data) => console.log(data))
+      .catch((error) => console.log(error));
 
-  // },
+    return response(200, 'ok', res);
+
+  },
   checkPassword: async(req, res) => {
     let {username, password} = req.body;
+    console.log(req.body);
     let user = await getUser('username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -265,8 +278,8 @@ const User = {
     }
     console.log(email);
     const user = await getUser('email', email).then((data) => data)
-      .catch((err) => {
-        console.log(err);
+      .catch((error) => {
+        console.log(error);
 
         return res.status(500).json({client: "Internal error"});
       });
@@ -296,7 +309,7 @@ const User = {
 
       return res.status(500).json({client: 'Internal error'});
     }
-    let user = await getUserCriteri(username, confirmation).then((data) => data)
+    let user = await getUserConfirmation(username, confirmation).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -308,7 +321,7 @@ const User = {
     if (resultJson[0].nb !== 1) {
       console.log(resultJson[0]);
 
-      return res.status(401).json({client: 'The contact the website administrator'});
+      return res.status(401).json({client: 'Contact the website administrator'});
     }
     // redirection versla page pour changer le mot de passe
 
@@ -331,6 +344,19 @@ const User = {
 
       return response(500, 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.', res);
     }
+    let user = await getUserReset(username, 1).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: 'Internal error'});
+      });
+    let resultJson = JSON.stringify(user);
+    resultJson = JSON.parse(resultJson);
+    if (resultJson[0].nb !== 1) {
+      console.log(resultJson[0]);
+
+      return res.status(401).json({client: 'Contact the website administrator'});
+    }
     const hash = await hashFct(password, 2).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -345,6 +371,12 @@ const User = {
       });
     const string = uniqid();
     await updateFieldUsername(string, 'confirmation', username).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return response(500, 'Internal error', res);
+      });
+    await updateFieldUsername(0, 'password_reset', username).then((data) => console.log(data))
       .catch((err) => {
         console.log(err);
 

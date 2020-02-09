@@ -31,8 +31,26 @@ module.exports = {
       return callback(error, result);
     });
   },
-  findOneUserCriteri: (username, confirmation, callback) => {
+  profileComplete: (user_id, callback) => {
+    db.connection.query('SELECT count(*) as nb FROM users WHERE id=? and profile_complete = 1', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  findOneUserConfirmation: (username, confirmation, callback) => {
     db.connection.query('SELECT count(*) as nb FROM users WHERE username=? and confirmation=?', [username, confirmation], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  findOneUserReset: (username, reset, callback) => {
+    db.connection.query('SELECT count(*) as nb FROM users WHERE username=? and password_reset=?', [username, reset], function(error, result) {
       if (error) {
         return callback(error, null);
       }

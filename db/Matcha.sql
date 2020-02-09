@@ -13,7 +13,7 @@ CREATE TABLE `users` (
   `active` boolean DEFAULT (false),
   `password_reset` boolean DEFAULT (false),
   `location` json,
-  `profil_complete` boolean DEFAULT (0),
+  `profile_complete` boolean DEFAULT (0),
   `confirmation` varchar(255),
   `notification` boolean DEFAULT (1),
   `score` int DEFAULT (0),
@@ -25,21 +25,19 @@ CREATE TABLE `gender` (
   `name` varchar(255) UNIQUE
 );
 
-CREATE TABLE `interested_in_gender` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` varchar(255),
-  `gender_id` int
-);
+INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('nonbinary');
 
 CREATE TABLE `relationship_types` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(255) UNIQUE
 );
 
+INSERT INTO `relationship_types` (`name`) values ('bisexual'), ('heterosexual'), ('homosexual');
+
 CREATE TABLE `interested_in_relationship` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
-  `relation_types_id` int
+  `relation_types_id` int DEFAULT (0)
 );
 
 CREATE TABLE `photo` (
@@ -60,7 +58,7 @@ CREATE TABLE `history_likes` (
 
 CREATE TABLE `like` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` varchar(255),
+  `user_id` varchar(255)
 );
 
 CREATE TABLE `history_views` (
@@ -119,40 +117,3 @@ CREATE TABLE `message` (
   `time` timestamp
 );
 
-ALTER TABLE `users` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`);
-
-ALTER TABLE `interested_in_gender` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`);
-
-ALTER TABLE `interested_in_gender` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `interested_in_relationship` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `interested_in_relationship` ADD FOREIGN KEY (`relation_types_id`) REFERENCES `relationship_types` (`id`);
-
-ALTER TABLE `photo` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `match_user` ADD FOREIGN KEY (`match_id`) REFERENCES `match` (`id`);
-
-ALTER TABLE `match_user` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`hobbies_id`) REFERENCES `hobbies` (`id`);
-
-ALTER TABLE `conversation` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `participant` ADD FOREIGN KEY (`id`) REFERENCES `conversation` (`id`);
-
-ALTER TABLE `participant` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `message` ADD FOREIGN KEY (`id`) REFERENCES `participant` (`id`);
-
-ALTER TABLE `users` ADD FOREIGN KEY (`id`) REFERENCES `history_views` (`user_id`);
-
-ALTER TABLE `views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `views` ADD FOREIGN KEY (`history_views_id`) REFERENCES `history_views` (`id`);
-
-ALTER TABLE `like` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `history_likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
