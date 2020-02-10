@@ -22,6 +22,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  addRelationship: (user_id, callback) => {
+    db.connection.query('INSERT INTO `interested_in_relationship` (user_id, relation_types_id) VALUES (?, 1)', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   findOneUser: (field, info, callback) => {
     db.connection.query('SELECT * FROM users WHERE ??=?', [field, info], function(error, result) {
       if (error) {
@@ -67,6 +76,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  findRelationship: (user_id, callback) => {
+    db.connection.query('Select * from `interested_in_relationship` WHERE user_id = ?', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   activate: (bool, confirmation, callback) => {
     db.connection.query('UPDATE users SET active = ? WHERE confirmation = ?', [bool, confirmation], function(error, result) {
       if (error) {
@@ -77,7 +95,7 @@ module.exports = {
     });
   },
   updateUser: (id, info, callback) => {
-    db.connection.query('INSERT INTO users (bio, birth_date, gender_id, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?) where id =' + id, info, function(error, result) {
+    db.connection.query('INSERT INTO users (bio, birth_date, gender_id, location, notification, relationship_id) VALUES (?, ?, ?, ?, ?, ?) where id = ?', [info, id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -114,6 +132,15 @@ module.exports = {
   },
   updatePassword: (hash, user_id, callback) => {
     db.connection.query('UPDATE users SET password = ? WHERE id =?', [hash, user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  updateRelationship: (relationship, user_id, callback) => {
+    db.connection.query('UPDATE `interested_in_relationship` SET `relation_types_id` = ? WHERE user_id =?', [relationship, user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }

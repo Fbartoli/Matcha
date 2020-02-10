@@ -1,4 +1,5 @@
 const express = require('express');
+const handlers = require('../middleware/handlers');
 const usersRoute = require('./users/usersApi');
 const editRoute = require('./users/editApi');
 // const notifRoute = require('./users/notifapi');
@@ -15,6 +16,9 @@ router.use('/api/edit/', editRoute);
 
 router.get('/api', function (req, res) {
   res.send({msg: 'Welcome to Matcha API'});
+});
+router.get('/api/refresh', function (req, res) {
+  handlers.jwtRefresh(req, res);
 });
 
 module.exports = router;

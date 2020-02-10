@@ -33,6 +33,9 @@ usersRoute.route('/password')
 
 // charger les informations de l'utilisateur connecté
 usersRoute.route('/user')
+  .post(function (req, res) {
+    handlers.jwtCheck(req, res, user.addUserInfo);
+  })
   .get(function (req, res) {
     handlers.jwtCheck(req, res, user.getUser);
   });

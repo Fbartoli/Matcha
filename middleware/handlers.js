@@ -23,6 +23,7 @@ module.exports = {
       console.log(payload);
     } catch (err) {
       if (err instanceof jwt.JsonWebTokenError) {
+        console.log(err);
 
         return res.status(401).json({client: 'Token error'});
       }
@@ -38,6 +39,42 @@ module.exports = {
     // Set the new token as the users `token` cookie
 
     callback(req, res);
+  },
+  jwtRefresh: (req, res) => {
+    // We can obtain the session token from the requests cookies, which come with every request
+    let token = req.header('authorization');
+
+    if (token && token.startsWith('Bearer ')) {
+      token = token.slice(7, token.length);
+    } else {
+
+      return res.status(401).json({
+        client: "Missing token or wrong authentification type",
+      });
+    }
+    let payload = '';
+    try {
+      payload = jwt.verify(token, jwtKey);
+      console.log(payload);
+    } catch (err) {
+      if (err instanceof jwt.JsonWebTokenError) {
+        console.log(err);
+
+        return res.status(401).json({client: 'Token error'});
+      }
+    }
+    const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
+    if (payload.exp - nowUnixSeconds < 30) {
+      const newToken = jwt.sign({username: payload.username}, jwtKey, {
+        algorithm: 'HS256',
+        expiresIn: jwtExpirySeconds
+      });
+
+      return res.status(200).json({token: newToken});
+    }
+    // Set the new token as the users `token` cookie
+
+    return res.status(401).json({client: 'still usable'});
   }
 };
 

@@ -12,16 +12,18 @@ const getUser = util.promisify(usermodel.findOneUser);
 const getAllUsers = util.promisify(usermodel.getAllusers);
 const getUserConfirmation = util.promisify(usermodel.findOneUserConfirmation);
 const getUserReset = util.promisify(usermodel.findOneUserReset);
-const getProfileComplete = util.promisify(usermodel.profileComplete);
+const getRelationship = util.promisify(usermodel.findRelationship);
 
 const hashFct = util.promisify(bcrypt.hash);
 
 const addUser = util.promisify(usermodel.addUser);
+const addRelationship = util.promisify(usermodel.addRelationship);
 // const updateUser = util.promisify(usermodel.updateUser);
 const activate = util.promisify(usermodel.activate);
 
 const updateConfirmation = util.promisify(usermodel.updateConfirmation);
 const updateFieldUser = util.promisify(usermodel.updateFieldUser);
+const updateRelationsip = util.promisify(usermodel.updateRelationship);
 const updateFieldUsername = util.promisify(usermodel.updateFieldUsername);
 const updatePasswordUsername = util.promisify(usermodel.updatePasswordUsername);
 
@@ -59,17 +61,27 @@ const User = {
   getUser: async(req, res) => {
     const user = await getUser('id', req.header('user_id')).then((data) => data)
       .catch((err) => {
-        res.status(303).json({error: err.error});
+        console.log(err);
+
+        return res.status(500).json({error: err});
       });
-    let apiResult = {};
+    const relationship_id = await getRelationship(req.header('user_id')).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
-    apiResult.meta = {
-      table: 'user',
-      total_entries: 0,
-    };
-    apiResult.data = resultJson;
-    res.json(apiResult);
+    delete resultJson[0].password;
+    delete resultJson[0].password_reset;
+    delete resultJson[0].registration_date;
+    delete resultJson[0].active;
+    delete resultJson[0].confirmation;
+    delete resultJson[0].isOnline;
+    resultJson[0].relationship = relationship_id[0].relation_types_id;
+
+    return res.status(200).json({userdata: resultJson[0]});
   },
   addUser: async(req, res) => {
     let {username, name, surname, email, password} = req.body;
@@ -124,8 +136,25 @@ const User = {
       });
     const post = [username, name, surname, email, hash, confirmation];
     await addUser(post).then((data) => data)
-      .catch((error) => res.status(500).json({error: error}));
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
+    user = await getUser('username', username).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
+    await addRelationship(user[0].id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
     mail(email, 'activation link matcha', null, '<p>lien pour activer votre compte : <a href="http://localhost:3000/activate?id=' + confirmation + '"> lien pour activer </a></p>');
+
 
     return res.status(200).json({client: 'accepted',
       link: confirmation});
@@ -138,6 +167,15 @@ const User = {
     }
     if (!MAIL_REGEX.test(email)) {
       return res.status(400).json({error: 'Invalid mail.'});
+    }
+    let user = await getUser('id', user_id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        response(500, 'Internal error', res);
+      });
+    if (!user[0]) {
+      response(400, 'Unknown user', res);
     }
     await updateFieldUser(email, 'email', user_id).then((data) => data)
       .catch((err) => {
@@ -154,7 +192,15 @@ const User = {
     if (!(bio || user_id)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
+    let user = await getUser('id', user_id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
 
+        response(500, 'Internal error', res);
+      });
+    if (!user[0]) {
+      response(400, 'Unknown user', res);
+    }
     await updateFieldUser(bio, 'bio', user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -173,6 +219,15 @@ const User = {
     if (!GENDER_REGEX.test(gender_id)) {
       return res.status(400).json({error: 'Invalid input.'});
     }
+    let user = await getUser('id', user_id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        response(500, 'Internal error', res);
+      });
+    if (!user[0]) {
+      response(400, 'Unknown user', res);
+    }
     await updateFieldUser(gender_id, 'gender_id', user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -182,14 +237,80 @@ const User = {
 
     return res.status(200);
   },
+  editPassword: async(req, res) => {
+    const passwordNew = req.body.password2;
+    const passwordCurrent = req.body.password;
+    const user_id = req.body.user_id;
+    if (!(passwordNew || user_id || passwordCurrent)) {
+      return res.status(400).json({error: "Missing informations, fill the form"});
+    }
+    if (!(passwordNew === passwordCurrent)) {
+      return res.status(400).json({error: "Input different password"});
+    }
+    if (!PASSWORD_REGEX.test(passwordNew)) {
+      return res.status(400).json({error: 'Invalid input.'});
+    }
+    let user = await getUser('id', user_id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        response(500, 'Internal error', res);
+      });
+    if (!user[0]) {
+      response(400, 'Unknown user', res);
+    }
+    if (!bcrypt.compareSync(passwordCurrent, user[0].password)) {
+      response(400, 'Passwords are not matching', res);
+    }
+    const hashNew = await hashFct(passwordNew, 2).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return response(500, 'Internal error', res);
+      });
+    await updateFieldUser(hashNew, 'password', user_id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
+
+    return response(200, 'OK', res);
+  },
+  editRelationship: async(req, res) => {
+    const relationship = req.body.editRelationship;
+    const user_id = req.body.user_id;
+    if (!(relationship || user_id)) {
+      return res.status(400).json({error: "Missing informations, fill the form"});
+    }
+    if (!GENDER_REGEX.test(relationship)) {
+      return res.status(400).json({error: 'Invalid input.'});
+    }
+    let user = await getUser('id', user_id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        response(500, 'Internal error', res);
+      });
+    if (!user[0]) {
+      response(400, 'Unknown user', res);
+    }
+    await updateRelationsip(user_id, relationship).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
+
+    return res.status(200);
+  },
   addUserInfo: async(req, res) => {
-    let {user_id} = req.body;
-    console.log(req.body);
-    if (!user_id) {
+    let user_id = req.header.user_id;
+    let {bio, birth_date, gender_id, location, notification, relationship_id} = req.body;
+    if (!user_id || bio || birth_date || gender_id || location || notification || relationship_id) {
       return response(400, "Missing information", res);
     }
-    await getProfileComplete(user_id).then((data) => console.log(data))
-      .catch((error) => console.log(error));
+
 
     return response(200, 'ok', res);
 
@@ -223,8 +344,9 @@ const User = {
         client: 'Login successful !',
         token: token,
         userdata: {
-          user_id: resultJson[0].id,
-          username: username
+          id: resultJson[0].id,
+          username: username,
+          profile_complete: resultJson[0].profile_complete
         }
       });
     } else {
@@ -328,17 +450,12 @@ const User = {
     return response(200, 'redirect to password change allowed', res);
   },
   PasswordReset: async(req, res) => {
-    const password = req.body.password1;
-    const passwordBis = req.body.password2;
+    const password = req.body.password2;
     const username = req.body.username;
 
     if (!username) {
 
       return response(500, 'Invalid request, missing username', res);
-    }
-    if (password !== passwordBis) {
-
-      return response(500, 'Password does not match', res);
     }
     if (!PASSWORD_REGEX.test(password) || password.length < 8) {
 
