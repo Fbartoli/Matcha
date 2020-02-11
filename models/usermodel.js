@@ -23,7 +23,7 @@ module.exports = {
     });
   },
   addRelationship: (user_id, callback) => {
-    db.connection.query('INSERT INTO `interested_in_relationship` (user_id, relation_types_id) VALUES (?, 1)', [user_id], function(error, result) {
+    db.connection.query('INSERT INTO `interested_in_gender` (user_id, gender_id) VALUES (?, 1)', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -77,7 +77,7 @@ module.exports = {
     });
   },
   findRelationship: (user_id, callback) => {
-    db.connection.query('Select * from `interested_in_relationship` WHERE user_id = ?', [user_id], function(error, result) {
+    db.connection.query('Select * from `interested_in_gender` WHERE user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -94,8 +94,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  updateUser: (id, info, callback) => {
-    db.connection.query('INSERT INTO users (bio, birth_date, gender_id, location, notification, relationship_id) VALUES (?, ?, ?, ?, ?, ?) where id = ?', [info, id], function(error, result) {
+  updateUser: (info, callback) => {
+    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, location = ?, notification = ? WHERE id=?', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -139,8 +139,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  updateRelationship: (relationship, user_id, callback) => {
-    db.connection.query('UPDATE `interested_in_relationship` SET `relation_types_id` = ? WHERE user_id =?', [relationship, user_id], function(error, result) {
+  updateRelationship: (gender, user_id, callback) => {
+    db.connection.query('UPDATE `interested_in_gender` SET `gender_id` = ? WHERE user_id =?', [gender, user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }

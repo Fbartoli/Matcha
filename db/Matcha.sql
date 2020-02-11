@@ -26,17 +26,10 @@ CREATE TABLE `gender` (
 
 INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('nonbinary');
 
-CREATE TABLE `relationship_types` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
-  `name` varchar(255) UNIQUE
-);
-
-INSERT INTO `relationship_types` (`name`) values ('bisexual'), ('heterosexual'), ('homosexual');
-
-CREATE TABLE `interested_in_relationship` (
+CREATE TABLE `interested_in_gender` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
-  `relation_types_id` int DEFAULT (0)
+  `gender_id` int DEFAULT (0)
 );
 
 CREATE TABLE `photo` (

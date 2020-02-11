@@ -33,7 +33,6 @@ app.use(bodyParser.json());
 app.use(cookieParser(CONFIG.jwt_secret));
 app.use(router);
 
-
 // start server
 let server = app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);

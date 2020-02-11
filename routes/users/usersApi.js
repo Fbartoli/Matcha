@@ -1,5 +1,12 @@
 const express = require('express');
 const user = require('../../controllers/user');
+const storage = require('../../uploads/uploads-config');
+const crypto = require('crypto');
+const multer = require('multer');
+const upload = multer(storage);
+const sharp = require('sharp');
+const path = require('path');
+const fs = require('fs');
 
 const handlers = require('../../middleware/handlers');
 
@@ -28,6 +35,23 @@ usersRoute.route('/password')
   .get(user.isPasswordReset)
   .post(user.PasswordReset);
 
+// usersRoute.post('/upload', upload.single('image'), async (req, res) => {
+//   const {filename: image} = (req, file, callback) => {
+//     crypto.pseudoRandomBytes(16, function(err, raw) {
+//       if (err) return callback(err);
+
+//       callback(null, raw.toString('hex') + path.extname(file.originalname));
+//     });
+//   };
+
+//   await sharp(req.file.path)
+//     .resize(500)
+//     .jpeg({quality: 50})
+//     .toFile(path.resolve(req.file.destination, './uploads/resized', image));
+//   fs.unlinkSync(req.file.path);
+
+//   return res.send('SUCCESS!');
+// });
 
 // Routes protegées
 
@@ -38,11 +62,6 @@ usersRoute.route('/user')
   })
   .get(function (req, res) {
     handlers.jwtCheck(req, res, user.getUser);
-  });
-
-usersRoute.route('/update')
-  .post(function (req, res) {
-    handlers.jwtCheck(req, res, user.addUserInfo);
   });
 
 module.exports = usersRoute;

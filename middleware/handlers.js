@@ -86,6 +86,7 @@ module.exports = {
       return callback(error, null);
     }
     let date = new Date(dateString);
+    console.log(date);
     let dNum = date.getTime();
     // NaN value, Invalid date
     if (!dNum && dNum !== 0) {

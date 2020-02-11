@@ -280,12 +280,12 @@ const User = {
     return response(200, 'OK', res);
   },
   editRelationship: async(req, res) => {
-    const relationship = req.body.editRelationship;
-    const user_id = req.body.user_id;
-    if (!(relationship || user_id)) {
+    const gender = req.body.gender_id;
+    const user_id = req.header('user_id');
+    if (!(gender || user_id)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
-    if (!GENDER_REGEX.test(relationship)) {
+    if (!GENDER_REGEX.test(gender)) {
       return res.status(400).json({error: 'Invalid input.'});
     }
     let user = await getUser('id', user_id).then((data) => data)
@@ -297,7 +297,7 @@ const User = {
     if (!user[0]) {
       response(400, 'Unknown user', res);
     }
-    await updateRelationsip(user_id, relationship).then((data) => data)
+    await updateRelationsip(user_id, gender).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -309,24 +309,30 @@ const User = {
   addUserInfo: async(req, res) => {
     // date 2018-09-24  yyyy-mm-dd
     let user_id = req.header('id');
-    let {bio, birth_date, gender_id, location, notification, relationship_id} = req.body;
-    console.log(req.body);
-    if (!user_id || bio || birth_date || gender_id || location || notification || relationship_id) {
+    let {bio, birth_date, gender_id, location, notification, interested_in} = req.body;
+    if (!(user_id || bio || birth_date || gender_id || location || notification || interested_in)) {
       return response(400, "Missing information", res);
     }
-    let date = await ValidDate(birth_date);
-    console.log(date);
-    let info = [sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(location), sanitize(notification), sanitize(relationship_id)];
-    let result = await updateFieldUser(user_id, info).then((data) => data)
+    if (!await ValidDate(birth_date)) {
+      return response(400, "Wrong date format", res);
+    }
+
+    let info = [sanitize(bio), sanitize(birth_date), sanitize(gender_id), location, sanitize(notification), sanitize(user_id)];
+    await updateUser(info).then((data) => data)
       .catch((error) => {
         console.log(error);
 
-        response(500, 'Internal error', res);
+        return response(500, 'Internal error', res);
       });
 
-    console.log(result);
+    await updateRelationsip(user_id, gender_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
 
-    return response(200, 'ok', res);
+        return response(500, 'Internal error', res);
+      });
+
+    return response(200, 'Information updated', res);
 
   },
   checkPassword: async(req, res) => {
@@ -421,7 +427,6 @@ const User = {
       });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
-    console.log(resultJson[0]);
     if (resultJson[0]) {
       await updateFieldUser(1, 'password_reset', resultJson[0].id).then((data) => console.log(data))
         .catch((err) => {
