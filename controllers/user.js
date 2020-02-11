@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const mail = require('../utils/mail');
 const sanitize = require('sanitize-html');
 const util = require('util');
+const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
 const getAllUsers = util.promisify(usermodel.getAllusers);
@@ -18,9 +19,9 @@ const hashFct = util.promisify(bcrypt.hash);
 
 const addUser = util.promisify(usermodel.addUser);
 const addRelationship = util.promisify(usermodel.addRelationship);
-// const updateUser = util.promisify(usermodel.updateUser);
 const activate = util.promisify(usermodel.activate);
 
+const updateUser = util.promisify(usermodel.updateUser);
 const updateConfirmation = util.promisify(usermodel.updateConfirmation);
 const updateFieldUser = util.promisify(usermodel.updateFieldUser);
 const updateRelationsip = util.promisify(usermodel.updateRelationship);
@@ -40,6 +41,7 @@ const jwtExpirySeconds = CONFIG.jwt_expiration;
 function response (status, message, res) {
   return res.status(status).json({client: message});
 }
+const ValidDate = util.promisify(handlers.isValidDate);
 
 const User = {
   getAllusers: async(req, res) => {
@@ -305,12 +307,24 @@ const User = {
     return res.status(200);
   },
   addUserInfo: async(req, res) => {
-    let user_id = req.header.user_id;
+    // date 2018-09-24  yyyy-mm-dd
+    let user_id = req.header('id');
     let {bio, birth_date, gender_id, location, notification, relationship_id} = req.body;
+    console.log(req.body);
     if (!user_id || bio || birth_date || gender_id || location || notification || relationship_id) {
       return response(400, "Missing information", res);
     }
+    let date = await ValidDate(birth_date);
+    console.log(date);
+    let info = [sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(location), sanitize(notification), sanitize(relationship_id)];
+    let result = await updateFieldUser(user_id, info).then((data) => data)
+      .catch((error) => {
+        console.log(error);
 
+        response(500, 'Internal error', res);
+      });
+
+    console.log(result);
 
     return response(200, 'ok', res);
 
