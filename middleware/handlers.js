@@ -95,7 +95,6 @@ module.exports = {
       return callback(error, null);
     }
 
-
     return callback(error, date.toISOString().slice(0, 10) === dateString);
   }
 };

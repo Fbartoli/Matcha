@@ -31,6 +31,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  addPhoto: (user_id, link, callback) => {
+    db.connection.query('INSERT INTO `photo` (user_id, link) VALUES (?, ?)', [user_id, link], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   findOneUser: (field, info, callback) => {
     db.connection.query('SELECT * FROM users WHERE ??=?', [field, info], function(error, result) {
       if (error) {
@@ -95,7 +104,7 @@ module.exports = {
     });
   },
   updateUser: (info, callback) => {
-    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, location = ?, notification = ? WHERE id=?', info, function(error, result) {
+    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, location = ?, notification = ?, username = ?, name = ?, surname = ?, email = ? WHERE id=?', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }

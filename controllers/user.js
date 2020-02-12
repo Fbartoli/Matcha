@@ -8,6 +8,8 @@ const mail = require('../utils/mail');
 const sanitize = require('sanitize-html');
 const util = require('util');
 const handlers = require('../middleware/handlers');
+const sharp = require('sharp');
+const fs = require('fs');
 
 const getUser = util.promisify(usermodel.findOneUser);
 const getAllUsers = util.promisify(usermodel.getAllusers);
@@ -18,6 +20,7 @@ const getRelationship = util.promisify(usermodel.findRelationship);
 const hashFct = util.promisify(bcrypt.hash);
 
 const addUser = util.promisify(usermodel.addUser);
+const addPhoto = util.promisify(usermodel.addPhoto);
 const addRelationship = util.promisify(usermodel.addRelationship);
 const activate = util.promisify(usermodel.activate);
 
@@ -61,13 +64,13 @@ const User = {
     res.json(apiResult);
   },
   getUser: async(req, res) => {
-    const user = await getUser('id', req.header('user_id')).then((data) => data)
+    const user = await getUser('id', req.header('id')).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({error: err});
       });
-    const relationship_id = await getRelationship(req.header('user_id')).then((data) => data)
+    const relationship_id = await getRelationship(req.header('id')).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -89,7 +92,7 @@ const User = {
     let {username, name, surname, email, password} = req.body;
     console.log(req.body);
     const confirmation = uniqid();
-    if (!(username || name || surname || email || password)) {
+    if (!(username && name && surname && email && password)) {
 
       return res.status(400).json({client: "Missing informations, fill the form"});
     }
@@ -164,13 +167,22 @@ const User = {
   editEmail: async(req, res) => {
     const email = req.body.email;
     const user_id = req.body.user_id;
-    if (!(email || user_id)) {
+    if (!(email && user_id)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
     if (!MAIL_REGEX.test(email)) {
       return res.status(400).json({error: 'Invalid mail.'});
     }
-    let user = await getUser('id', user_id).then((data) => data)
+    let user = await getUser('email', email).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        response(500, 'Internal error', res);
+      });
+    if (user[0]) {
+      response(400, 'Email not avalaible', res);
+    }
+    user = await getUser('id', user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -183,7 +195,7 @@ const User = {
       .catch((err) => {
         console.log(err);
 
-        return res.status(500).json({error: err});
+        return res.status(500).json({client: err});
       });
 
     return res.status(200);
@@ -242,11 +254,11 @@ const User = {
   editPassword: async(req, res) => {
     const passwordNew = req.body.password2;
     const passwordCurrent = req.body.password;
-    const user_id = req.body.user_id;
-    if (!(passwordNew || user_id || passwordCurrent)) {
+    const user_id = req.header('id');
+    if (!(passwordNew && user_id && passwordCurrent)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
-    if (!(passwordNew === passwordCurrent)) {
+    if (passwordNew === passwordCurrent) {
       return res.status(400).json({error: "Input different password"});
     }
     if (!PASSWORD_REGEX.test(passwordNew)) {
@@ -270,7 +282,7 @@ const User = {
 
         return response(500, 'Internal error', res);
       });
-    await updateFieldUser(hashNew, 'password', user_id).then((data) => data)
+    await updateFieldUser(hashNew, 'password', user_id).then((data) => console.log(data))
       .catch((err) => {
         console.log(err);
 
@@ -281,7 +293,7 @@ const User = {
   },
   editRelationship: async(req, res) => {
     const gender = req.body.gender_id;
-    const user_id = req.header('user_id');
+    const user_id = req.header('id');
     if (!(gender || user_id)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
@@ -306,26 +318,65 @@ const User = {
 
     return res.status(200);
   },
-  addUserInfo: async(req, res) => {
-    // date 2018-09-24  yyyy-mm-dd
-    let user_id = req.header('id');
-    let {bio, birth_date, gender_id, location, notification, interested_in} = req.body;
-    if (!(user_id || bio || birth_date || gender_id || location || notification || interested_in)) {
-      return response(400, "Missing information", res);
+  editPhoto: async(req, res) => {
+    const user_id = req.header('id');
+    const newFilename = uniqid() + '.jpeg';
+    if (!req.file || !user_id) {
+      response(500, 'Missing information', res);
     }
-    if (!await ValidDate(birth_date)) {
-      return response(400, "Wrong date format", res);
-    }
-
-    let info = [sanitize(bio), sanitize(birth_date), sanitize(gender_id), location, sanitize(notification), sanitize(user_id)];
-    await updateUser(info).then((data) => data)
+    const link = "/Users/flbartol/Documents/Matcha/uploads/resized/" + newFilename;
+    await sharp(req.file.path)
+      .resize(640, 320)
+      .toFormat("jpeg")
+      .jpeg({quality: 90})
+      .toFile(link)
+      .catch((err) => console.log(err));
+    fs.unlinkSync(req.file.path);
+    await addPhoto(user_id, link).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error', res);
       });
+    response(200, req.file, res);
 
-    await updateRelationsip(user_id, gender_id).then((data) => data)
+  },
+  addUserInfo: async(req, res) => {
+    let user_id = req.header('id');
+    let {bio, birth_date, gender_id, location, notification, interested_in, name, surname, email, username} = req.body;
+    console.log(req.body);
+    console.log(user_id);
+    if (!(user_id && bio && birth_date && gender_id && location && notification && interested_in && username && name && surname && email)) {
+      return response(400, "Missing information", res);
+    }
+    await ValidDate(birth_date).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(400, "Wrong date format", res);
+
+      });
+    if (!USERNAME_REGEX.test(username) || username.length < 6) {
+      return res.status(400).json({client: 'Invalid username, it should contain only letters, numbers and a minimun of 6 characters'});
+    }
+    if (!NAME_REGEX.test(name) || name.length < 2) {
+      return res.status(400).json({client: 'Invalid name, it should contain only letters'});
+    }
+    if (!NAME_REGEX.test(surname) || surname.length < 2) {
+      return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
+    }
+    let info = [
+      sanitize(bio), sanitize(birth_date), sanitize(gender_id), location, sanitize(notification), sanitize(username),
+      sanitize(name), sanitize(surname), sanitize(email), sanitize(user_id)
+    ];
+    console.log(info);
+    await updateUser(info).then((data) => console.log(data))
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+    await updateRelationsip(user_id, interested_in).then((data) => data)
       .catch((error) => {
         console.log(error);
 
