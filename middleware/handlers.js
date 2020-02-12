@@ -1,9 +1,32 @@
 const jwt = require('jsonwebtoken');
 const CONFIG = require('../config/config');
+const util = require("util");
+const path = require("path");
+const multer = require("multer");
 
 const jwtKey = CONFIG.jwt_secret;
 const jwtExpirySeconds = CONFIG.jwt_expiration;
 
+let storage = multer.diskStorage({
+  destination: (req, file, callback) => {
+    callback(null, path.join(`${__dirname}/../uploads/uploads`));
+  },
+  filename: (req, file, callback) => {
+    const match = ["image/png", "image/jpeg"];
+
+    if (match.indexOf(file.mimetype) === -1) {
+      let message = `${file.originalname} is invalid. Only accept png/jpeg.`;
+
+      return callback(message, null);
+    }
+
+    let filename = `${Date.now()}-bezkoder-${file.originalname}`;
+    callback(null, filename);
+  }
+});
+function uploadFiles () {
+  multer({storage: storage}).array("multi-files", 5);
+}
 module.exports = {
   jwtCheck: (req, res, callback) => {
     // We can obtain the session token from the requests cookies, which come with every request
@@ -28,9 +51,10 @@ module.exports = {
         return res.status(401).json({client: 'Token error'});
       }
     }
+    const user_id = payload.user_id;
     const nowUnixSeconds = Math.round(Number(new Date()) / 1000);
     if (payload.exp - nowUnixSeconds < 30) {
-      const newToken = jwt.sign({username: payload.username}, jwtKey, {
+      const newToken = jwt.sign({user_id}, jwtKey, {
         algorithm: 'HS256',
         expiresIn: jwtExpirySeconds
       });
@@ -38,7 +62,7 @@ module.exports = {
     }
     // Set the new token as the users `token` cookie
 
-    callback(req, res);
+    callback(req, res, payload);
   },
   jwtRefresh: (req, res) => {
     // We can obtain the session token from the requests cookies, which come with every request
@@ -96,6 +120,9 @@ module.exports = {
     }
 
     return callback(error, date.toISOString().slice(0, 10) === dateString);
+  },
+  uploadFilesMiddleware: () => {
+    util.promisify(uploadFiles);
   }
 };
 

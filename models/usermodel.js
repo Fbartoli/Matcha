@@ -104,7 +104,7 @@ module.exports = {
     });
   },
   updateUser: (info, callback) => {
-    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, location = ?, notification = ?, username = ?, name = ?, surname = ?, email = ? WHERE id=?', info, function(error, result) {
+    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, location = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1 WHERE id=?', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }

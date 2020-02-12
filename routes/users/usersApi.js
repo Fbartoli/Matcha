@@ -1,9 +1,6 @@
 const express = require('express');
 const user = require('../../controllers/user');
-const storage = require('../../uploads/uploads-config');
-const multer = require('multer');
-const upload = multer(storage);
-
+const edit = require('../../controllers/edit');
 const handlers = require('../../middleware/handlers');
 
 const usersRoute = express.Router();
@@ -31,8 +28,8 @@ usersRoute.route('/password')
   .get(user.isPasswordReset)
   .post(user.PasswordReset);
 
-usersRoute.post('/upload', upload.single('image'), (req, res) => {
-  user.editPhoto(req, res);
+usersRoute.post('/upload', (req, res) => {
+  edit.editPhoto(req, res);
 });
 
 // Routes protegées

@@ -24,18 +24,17 @@ CREATE TABLE `gender` (
   `name` varchar(255) UNIQUE
 );
 
-INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('nonbinary');
+INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('bi');
 
 CREATE TABLE `interested_in_gender` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
-  `gender_id` int DEFAULT (0)
+  `gender_id` int DEFAULT (1)
 );
 
 CREATE TABLE `photo` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
-  `details` varchar(255),
   `link` varchar(255),
   `time_added` timestamp DEFAULT (now()),
   `active` boolean DEFAULT (1)

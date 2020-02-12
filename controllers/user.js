@@ -8,11 +8,10 @@ const mail = require('../utils/mail');
 const sanitize = require('sanitize-html');
 const util = require('util');
 const handlers = require('../middleware/handlers');
-const sharp = require('sharp');
-const fs = require('fs');
+const edit = require('./edit');
 
 const getUser = util.promisify(usermodel.findOneUser);
-const getAllUsers = util.promisify(usermodel.getAllusers);
+// const getAllUsers = util.promisify(usermodel.getAllusers);
 const getUserConfirmation = util.promisify(usermodel.findOneUserConfirmation);
 const getUserReset = util.promisify(usermodel.findOneUserReset);
 const getRelationship = util.promisify(usermodel.findRelationship);
@@ -20,9 +19,10 @@ const getRelationship = util.promisify(usermodel.findRelationship);
 const hashFct = util.promisify(bcrypt.hash);
 
 const addUser = util.promisify(usermodel.addUser);
-const addPhoto = util.promisify(usermodel.addPhoto);
 const addRelationship = util.promisify(usermodel.addRelationship);
 const activate = util.promisify(usermodel.activate);
+
+const editEmail = util.promisify(edit.checkEmail);
 
 const updateUser = util.promisify(usermodel.updateUser);
 const updateConfirmation = util.promisify(usermodel.updateConfirmation);
@@ -35,7 +35,6 @@ const MAIL_REGEX = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{6,}/;
 const USERNAME_REGEX = /^[a-zA-Z0-9_.-]*$/;
 const NAME_REGEX = /^[a-zA-Z_.-]*$/;
-const GENDER_REGEX = /^[1-3]*1/;
 
 const jwtkey = CONFIG.jwt_secret;
 const jwtExpirySeconds = CONFIG.jwt_expiration;
@@ -47,50 +46,89 @@ function response (status, message, res) {
 const ValidDate = util.promisify(handlers.isValidDate);
 
 const User = {
-  getAllusers: async(req, res) => {
-    const allUsers = await getAllUsers(req).then((data) => data)
+  // getAllusers: async(req, res) => {
+  //   const allUsers = await getAllUsers(req).then((data) => data)
+  //     .catch((err) => {
+  //       res.status(303).json({error: err.error});
+  //     });
+  //   console.log(allUsers);
+  //   let apiResult = {};
+  //   let resultJson = JSON.stringify(allUsers);
+  //   resultJson = JSON.parse(resultJson);
+  //   apiResult.meta = {
+  //     table: 'user',
+  //     total_entries: 0,
+  //   };
+  //   apiResult.data = resultJson;
+  //   res.json(apiResult);
+  // },
+  editPassword: async(req, res, payload) => {
+    const passwordNew = req.body.password2;
+    const passwordCurrent = req.body.password;
+    const user_id = payload.user_id;
+    if (!(passwordNew && user_id && passwordCurrent)) {
+      return res.status(400).json({error: "Missing informations, fill the form"});
+    }
+    if (passwordNew === passwordCurrent) {
+      return res.status(400).json({error: "Input different password"});
+    }
+    if (!PASSWORD_REGEX.test(passwordNew)) {
+      return res.status(400).json({error: 'Invalid input.'});
+    }
+    let user = await getUser('id', user_id).then((data) => data)
       .catch((err) => {
-        res.status(303).json({error: err.error});
+        console.log(err);
+
+        response(500, 'Internal error', res);
       });
-    console.log(allUsers);
-    let apiResult = {};
-    let resultJson = JSON.stringify(allUsers);
-    resultJson = JSON.parse(resultJson);
-    apiResult.meta = {
-      table: 'user',
-      total_entries: 0,
-    };
-    apiResult.data = resultJson;
-    res.json(apiResult);
-  },
-  getUser: async(req, res) => {
-    const user = await getUser('id', req.header('id')).then((data) => data)
+    if (!user[0]) {
+      response(400, 'Unknown user', res);
+    }
+    if (!bcrypt.compareSync(passwordCurrent, user[0].password)) {
+      response(400, 'Passwords are not matching', res);
+    }
+    const hashNew = await hashFct(passwordNew, 2).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return response(500, 'Internal error', res);
+      });
+    await updateFieldUser(hashNew, 'password', user_id).then((data) => console.log(data))
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({error: err});
       });
-    const relationship_id = await getRelationship(req.header('id')).then((data) => data)
+
+    return response(200, 'OK', res);
+  },
+  getUser: async(req, res, payload) => {
+    let user_id = payload.user_id;
+    const user = await getUser('id', user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({error: err});
       });
-    let resultJson = JSON.stringify(user);
-    resultJson = JSON.parse(resultJson);
-    delete resultJson[0].password;
-    delete resultJson[0].password_reset;
-    delete resultJson[0].registration_date;
-    delete resultJson[0].active;
-    delete resultJson[0].confirmation;
-    delete resultJson[0].isOnline;
-    resultJson[0].relationship = relationship_id[0].relation_types_id;
+    const relationship_id = await getRelationship(user_id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
 
-    return res.status(200).json({userdata: resultJson[0]});
+        return res.status(500).json({error: err});
+      });
+    console.log(user);
+    delete user[0].password;
+    delete user[0].password_reset;
+    delete user[0].registration_date;
+    delete user[0].active;
+    delete user[0].confirmation;
+    delete user[0].isOnline;
+    user[0].interested_in = relationship_id[0].gender_id;
+
+    return res.status(200).json({userdata: user[0]});
   },
-  addUser: async(req, res) => {
+  addUser: async(req, res, payload) => {
     let {username, name, surname, email, password} = req.body;
-    console.log(req.body);
     const confirmation = uniqid();
     if (!(username && name && surname && email && password)) {
 
@@ -164,188 +202,9 @@ const User = {
     return res.status(200).json({client: 'accepted',
       link: confirmation});
   },
-  editEmail: async(req, res) => {
-    const email = req.body.email;
-    const user_id = req.body.user_id;
-    if (!(email && user_id)) {
-      return res.status(400).json({error: "Missing informations, fill the form"});
-    }
-    if (!MAIL_REGEX.test(email)) {
-      return res.status(400).json({error: 'Invalid mail.'});
-    }
-    let user = await getUser('email', email).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        response(500, 'Internal error', res);
-      });
-    if (user[0]) {
-      response(400, 'Email not avalaible', res);
-    }
-    user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      response(400, 'Unknown user', res);
-    }
-    await updateFieldUser(email, 'email', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: err});
-      });
-
-    return res.status(200);
-  },
-  editBio: async(req, res) => {
-    const bio = sanitize(req.body.bio);
-    const user_id = req.body.user_id;
-    if (!(bio || user_id)) {
-      return res.status(400).json({error: "Missing informations, fill the form"});
-    }
-    let user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      response(400, 'Unknown user', res);
-    }
-    await updateFieldUser(bio, 'bio', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
-      });
-
-    return res.status(200);
-  },
-  editGender: async(req, res) => {
-    const gender_id = req.body.gender_id;
-    const user_id = req.body.user_id;
-    if (!(gender_id || user_id)) {
-      return res.status(400).json({error: "Missing informations, fill the form"});
-    }
-    if (!GENDER_REGEX.test(gender_id)) {
-      return res.status(400).json({error: 'Invalid input.'});
-    }
-    let user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      response(400, 'Unknown user', res);
-    }
-    await updateFieldUser(gender_id, 'gender_id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
-      });
-
-    return res.status(200);
-  },
-  editPassword: async(req, res) => {
-    const passwordNew = req.body.password2;
-    const passwordCurrent = req.body.password;
-    const user_id = req.header('id');
-    if (!(passwordNew && user_id && passwordCurrent)) {
-      return res.status(400).json({error: "Missing informations, fill the form"});
-    }
-    if (passwordNew === passwordCurrent) {
-      return res.status(400).json({error: "Input different password"});
-    }
-    if (!PASSWORD_REGEX.test(passwordNew)) {
-      return res.status(400).json({error: 'Invalid input.'});
-    }
-    let user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      response(400, 'Unknown user', res);
-    }
-    if (!bcrypt.compareSync(passwordCurrent, user[0].password)) {
-      response(400, 'Passwords are not matching', res);
-    }
-    const hashNew = await hashFct(passwordNew, 2).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
-    await updateFieldUser(hashNew, 'password', user_id).then((data) => console.log(data))
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
-      });
-
-    return response(200, 'OK', res);
-  },
-  editRelationship: async(req, res) => {
-    const gender = req.body.gender_id;
-    const user_id = req.header('id');
-    if (!(gender || user_id)) {
-      return res.status(400).json({error: "Missing informations, fill the form"});
-    }
-    if (!GENDER_REGEX.test(gender)) {
-      return res.status(400).json({error: 'Invalid input.'});
-    }
-    let user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      response(400, 'Unknown user', res);
-    }
-    await updateRelationsip(user_id, gender).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
-      });
-
-    return res.status(200);
-  },
-  editPhoto: async(req, res) => {
-    const user_id = req.header('id');
-    const newFilename = uniqid() + '.jpeg';
-    if (!req.file || !user_id) {
-      response(500, 'Missing information', res);
-    }
-    const link = "/Users/flbartol/Documents/Matcha/uploads/resized/" + newFilename;
-    await sharp(req.file.path)
-      .resize(640, 320)
-      .toFormat("jpeg")
-      .jpeg({quality: 90})
-      .toFile(link)
-      .catch((err) => console.log(err));
-    fs.unlinkSync(req.file.path);
-    await addPhoto(user_id, link).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    response(200, req.file, res);
-
-  },
-  addUserInfo: async(req, res) => {
-    let user_id = req.header('id');
+  addUserInfo: async(req, res, payload) => {
+    let user_id = payload.user_id;
     let {bio, birth_date, gender_id, location, notification, interested_in, name, surname, email, username} = req.body;
-    console.log(req.body);
-    console.log(user_id);
     if (!(user_id && bio && birth_date && gender_id && location && notification && interested_in && username && name && surname && email)) {
       return response(400, "Missing information", res);
     }
@@ -369,7 +228,14 @@ const User = {
       sanitize(bio), sanitize(birth_date), sanitize(gender_id), location, sanitize(notification), sanitize(username),
       sanitize(name), sanitize(surname), sanitize(email), sanitize(user_id)
     ];
-    console.log(info);
+    if (email) {
+      await editEmail(email, user_id).then((data) => console.log(data))
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, error, res);
+        });
+    }
     await updateUser(info).then((data) => console.log(data))
       .catch((error) => {
         console.log(error);
@@ -386,9 +252,8 @@ const User = {
     return response(200, 'Information updated', res);
 
   },
-  checkPassword: async(req, res) => {
+  checkPassword: async(req, res, payload) => {
     let {username, password} = req.body;
-    console.log(req.body);
     let user = await getUser('username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -397,6 +262,8 @@ const User = {
       });
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
+    let user_id = user[0].id;
+    console.log(user_id);
     if (!resultJson[0]) {
       return res.status(401).json({
         client: 'Wrong information'
@@ -406,7 +273,7 @@ const User = {
         client: 'Account not activated'
       });
     } else if (bcrypt.compareSync(password, resultJson[0].password)) {
-      const token = jwt.sign({username}, jwtkey, {
+      const token = jwt.sign({user_id}, jwtkey, {
         algorithm: 'HS256',
         expiresIn: jwtExpirySeconds
       });
@@ -426,7 +293,7 @@ const User = {
       });
     }
   },
-  activate: async(req, res) => {
+  activate: async(req, res, payload) => {
     const confirmation = req.query.id;
     if (confirmation === '0') {
       return res.status(403).json({client: "Wrong information"});
@@ -464,7 +331,7 @@ const User = {
 
     return res.status(200).json({client: 'User activated'});
   },
-  resetPasswordEmail: async(req, res) => {
+  resetPasswordEmail: async(req, res, payload) => {
     const email = req.body.email;
     if (!email) {
       return res.status(401).json({client: "Email not provided"});
@@ -493,7 +360,7 @@ const User = {
 
     return response(401, 'User not found', res);
   },
-  isPasswordReset: async(req, res) => {
+  isPasswordReset: async(req, res, payload) => {
     const confirmation = req.query.id;
     const username = req.query.username;
     console.log(req.query);
@@ -519,7 +386,7 @@ const User = {
 
     return response(200, 'redirect to password change allowed', res);
   },
-  PasswordReset: async(req, res) => {
+  PasswordReset: async(req, res, payload) => {
     const password = req.body.password2;
     const username = req.body.username;
 
