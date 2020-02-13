@@ -184,4 +184,13 @@ module.exports = {
       return callback(error, result);
     });
   },
+  deleteUser: (user_id, callback) => {
+    db.connection.query('DELETE FROM users WHERE id=?', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
 };

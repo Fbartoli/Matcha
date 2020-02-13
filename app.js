@@ -62,7 +62,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('like', (username, callback) => {
-    const user_id
   });
   socket.on('sendMessage', (message, callback) => {
     const user = getUser(socket, id);
