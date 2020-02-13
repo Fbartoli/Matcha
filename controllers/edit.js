@@ -2,13 +2,15 @@
 const usermodel = require('../models/usermodel');
 const sanitize = require('sanitize-html');
 const util = require('util');
-const handlers = require('../middleware/handlers');
+const fs = require('fs');
+// const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
 // const getAllUsers = util.promisify(usermodel.getAllusers);
 
 
-const addPhoto = util.promisify(usermodel.addPhoto);
+const updatePhoto = util.promisify(usermodel.updatePhoto);
+const getPhoto = util.promisify(usermodel.getPhoto);
 
 const updateFieldUser = util.promisify(usermodel.updateFieldUser);
 const updateRelationsip = util.promisify(usermodel.updateRelationship);
@@ -147,12 +149,20 @@ module.exports = {
   editPhoto: async(req, res, payload) => {
     const user_id = payload.user_id;
     try {
-      await handlers.uploadFilesMiddleware(req, res);
       console.log(req.files);
-
+      if (!req.files) {
+        return response(400, `No pictures received`, res);
+      }
       if (req.files.length <= 0) {
         return response(400, `You must select at least 1 file.`, res);
       }
+      let links = [req.files[0].path, req.files[1].path, req.files[2].path, req.files[3].path, req.files[4].path];
+      await updatePhoto(user_id, links).then((data) => data)
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error', res);
+        });
 
       return response(200, `Files has been uploaded.`, res);
     } catch (error) {
@@ -165,4 +175,19 @@ module.exports = {
       return response(500, `Error when trying upload many files: ${error}`, res);
     }
   },
+  getPhoto: async(req, res, payload) => {
+    let user_id = payload.user_id;
+    let photos = await getPhoto(user_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+    console.log(photos.length);
+    for (let index = 0; index < photos.length; index++) {
+      photos[index].link = Buffer.from(fs.readFileSync(photos[index].link)).toString('base64');
+    }
+
+    return response(200, photos, res);
+  }
 };

@@ -1,3 +1,5 @@
+DROP TABLE *; 
+
 CREATE TABLE `users` (
   `id` varchar(255) PRIMARY KEY DEFAULT (UUID()),
   `username` varchar(255) UNIQUE,
@@ -36,6 +38,7 @@ CREATE TABLE `photo` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
   `link` varchar(255),
+  `position` int(1) NOT NULL,
   `time_added` timestamp DEFAULT (now()),
   `active` boolean DEFAULT (1)
 );

@@ -13,6 +13,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  getPhoto: (user_id, callback) => {
+    db.connection.query('SELECT link, position FROM photo WHERE user_id = ?', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   addUser: (post, callback) => {
     db.connection.query('INSERT INTO users (username, name, surname, email, password, confirmation) VALUES (?, ?, ?, ?, ?, ?)', post, function(error, result) {
       if (error) {
@@ -31,8 +40,17 @@ module.exports = {
       return callback(error, result);
     });
   },
-  addPhoto: (user_id, link, callback) => {
-    db.connection.query('INSERT INTO `photo` (user_id, link) VALUES (?, ?)', [user_id, link], function(error, result) {
+  addPhoto: (user_id, callback) => {
+    db.connection.query(`INSERT INTO photo (user_id, link, position) VALUES ('${user_id}', '/Users/flbartol/Documents/Matcha/uploads/1024px.png', 1),('${user_id}', /Users/flbartol/Documents/Matcha/uploads/1024px.png, 2),('${user_id}', /Users/flbartol/Documents/Matcha/uploads/1024px.png, 3),('${user_id}', /Users/flbartol/Documents/Matcha/uploads/1024px.png, 4),('${user_id}', /Users/flbartol/Documents/Matcha/uploads/1024px.png, 5) `, function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  updatePhoto: (user_id, link, callback) => {
+    db.connection.query(`INSERT INTO photo (user_id, link, position) VALUES ('${user_id}', ?, 1),('${user_id}', ?, 2),('${user_id}', ?, 3),('${user_id}', ?, 4),('${user_id}', ?, 5) `, link, function(error, result) {
       if (error) {
         return callback(error, null);
       }

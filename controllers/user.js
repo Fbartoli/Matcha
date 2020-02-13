@@ -18,6 +18,7 @@ const getRelationship = util.promisify(usermodel.findRelationship);
 
 const hashFct = util.promisify(bcrypt.hash);
 
+const addPhoto = util.promisify(usermodel.addPhoto);
 const addUser = util.promisify(usermodel.addUser);
 const addRelationship = util.promisify(usermodel.addRelationship);
 const activate = util.promisify(usermodel.activate);
@@ -116,7 +117,6 @@ const User = {
 
         return res.status(500).json({error: err});
       });
-    console.log(user);
     delete user[0].password;
     delete user[0].password_reset;
     delete user[0].registration_date;
@@ -127,7 +127,7 @@ const User = {
 
     return res.status(200).json({userdata: user[0]});
   },
-  addUser: async(req, res, payload) => {
+  addUser: async(req, res) => {
     let {username, name, surname, email, password} = req.body;
     const confirmation = uniqid();
     if (!(username && name && surname && email && password)) {
@@ -196,6 +196,12 @@ const User = {
 
         return res.status(500).json({client: "Internal error"});
       });
+    await addPhoto(user[0].id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
     mail(email, 'activation link matcha', null, '<p>lien pour activer votre compte : <a href="http://localhost:3000/activate?id=' + confirmation + '"> lien pour activer </a></p>');
 
 
@@ -252,27 +258,25 @@ const User = {
     return response(200, 'Information updated', res);
 
   },
-  checkPassword: async(req, res, payload) => {
+  checkPassword: async(req, res) => {
     let {username, password} = req.body;
+    console.log(req.body);
     let user = await getUser('username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: "Internal error"});
       });
-    let resultJson = JSON.stringify(user);
-    resultJson = JSON.parse(resultJson);
-    let user_id = user[0].id;
-    console.log(user_id);
-    if (!resultJson[0]) {
+    if (!user[0]) {
       return res.status(401).json({
         client: 'Wrong information'
       });
-    } else if (resultJson[0].active === 0) {
+    } else if (user[0].active === 0) {
       return res.status(401).json({
         client: 'Account not activated'
       });
-    } else if (bcrypt.compareSync(password, resultJson[0].password)) {
+    } else if (bcrypt.compareSync(password, user[0].password)) {
+      let user_id = user[0].id;
       const token = jwt.sign({user_id}, jwtkey, {
         algorithm: 'HS256',
         expiresIn: jwtExpirySeconds
@@ -282,9 +286,9 @@ const User = {
         client: 'Login successful !',
         token: token,
         userdata: {
-          id: resultJson[0].id,
+          id: user[0].id,
           username: username,
-          profile_complete: resultJson[0].profile_complete
+          profile_complete: user[0].profile_complete
         }
       });
     } else {
@@ -293,7 +297,7 @@ const User = {
       });
     }
   },
-  activate: async(req, res, payload) => {
+  activate: async(req, res) => {
     const confirmation = req.query.id;
     if (confirmation === '0') {
       return res.status(403).json({client: "Wrong information"});
@@ -331,7 +335,7 @@ const User = {
 
     return res.status(200).json({client: 'User activated'});
   },
-  resetPasswordEmail: async(req, res, payload) => {
+  resetPasswordEmail: async(req, res) => {
     const email = req.body.email;
     if (!email) {
       return res.status(401).json({client: "Email not provided"});
@@ -360,7 +364,7 @@ const User = {
 
     return response(401, 'User not found', res);
   },
-  isPasswordReset: async(req, res, payload) => {
+  isPasswordReset: async(req, res) => {
     const confirmation = req.query.id;
     const username = req.query.username;
     console.log(req.query);
@@ -386,7 +390,7 @@ const User = {
 
     return response(200, 'redirect to password change allowed', res);
   },
-  PasswordReset: async(req, res, payload) => {
+  PasswordReset: async(req, res) => {
     const password = req.body.password2;
     const username = req.body.username;
 
