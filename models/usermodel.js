@@ -49,8 +49,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  updatePhoto: (user_id, link, callback) => {
-    db.connection.query(`INSERT INTO photo (user_id, link, position) VALUES ('${user_id}', ?, 1),('${user_id}', ?, 2),('${user_id}', ?, 3),('${user_id}', ?, 4),('${user_id}', ?, 5) `, link, function(error, result) {
+  updatePhoto: (user_id, link, position, callback) => {
+    db.connection.query(`UPDATE photo SET link = ? WHERE user_id = '${user_id}' and position = ?`, [link, position], function(error, result) {
       if (error) {
         return callback(error, null);
       }

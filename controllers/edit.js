@@ -3,12 +3,15 @@ const usermodel = require('../models/usermodel');
 const sanitize = require('sanitize-html');
 const util = require('util');
 const fs = require('fs');
+const sharp = require('sharp');
+const path = require("path");
+const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
 // const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
 // const getAllUsers = util.promisify(usermodel.getAllusers);
 
-
+const addPhoto = util.promisify(usermodel.addPhoto);
 const updatePhoto = util.promisify(usermodel.updatePhoto);
 const getPhoto = util.promisify(usermodel.getPhoto);
 
@@ -146,10 +149,9 @@ module.exports = {
 
     return res.status(200);
   },
-  editPhoto: async(req, res, payload) => {
+  editPhoto: (req, res, payload) => {
     const user_id = payload.user_id;
     try {
-      console.log(req.files);
       if (!req.files) {
         return response(400, `No pictures received`, res);
       }
@@ -157,14 +159,23 @@ module.exports = {
         return response(400, `You must select at least 1 file.`, res);
       }
       let links = [req.files[0].path, req.files[1].path, req.files[2].path, req.files[3].path, req.files[4].path];
-      await updatePhoto(user_id, links).then((data) => data)
-        .catch((error) => {
-          console.log(error);
+      let index = 1;
+      links.forEach(async (link) => {
+        const resizedLink = `${rootDir}/uploads/resized/${Date.now()}-matcha.jpeg`;
+        await sharp(link).resize(320, 240)
+          .jpeg()
+          .toFile(`${rootDir}/uploads/resized/${Date.now()}-matcha.jpeg`);
+        fs.unlinkSync(link);
+        await updatePhoto(user_id, resizedLink, index).then((data) => data)
+          .catch((error) => {
+            console.log(error);
 
-          return response(500, 'Internal error', res);
-        });
+            return response(500, 'Internal error', res);
+          });
+        index++;
+      });
 
-      return response(200, `Files has been uploaded.`, res);
+      return response(200, `Files has been updated.`, res);
     } catch (error) {
       console.log(error);
 

@@ -1,4 +1,4 @@
-DROP TABLE *; 
+-- DROP TABLE *; 
 
 CREATE TABLE `users` (
   `id` varchar(255) PRIMARY KEY DEFAULT (UUID()),
@@ -57,13 +57,13 @@ CREATE TABLE `like` (
 
 CREATE TABLE `history_views` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `date` timestamp DEFAULT (now()),
   `user_id` varchar(255)
 );
 
 CREATE TABLE `views` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
+  `date` timestamp DEFAULT (now()),
   `history_views_id` int
 );
 
@@ -111,3 +111,8 @@ CREATE TABLE `message` (
   `time` timestamp
 );
 
+ALTER TABLE `history_views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `views` ADD FOREIGN KEY (`history_views_id`) REFERENCES `history_views` (`id`);
+
+ALTER TABLE `views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
