@@ -248,7 +248,7 @@ const User = {
 
         return response(500, 'Internal error', res);
       });
-    await updateRelationsip(user_id, interested_in).then((data) => data)
+    await updateRelationsip(interested_in, user_id).then((data) => data)
       .catch((error) => {
         console.log(error);
 

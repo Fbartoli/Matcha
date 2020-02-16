@@ -156,16 +156,16 @@ module.exports = {
         return response(400, `No pictures received`, res);
       }
       if (req.files.length <= 0) {
-        return response(400, `You must select at least 1 file.`, res);
+        return response(400, `You must send at least 1 file.`, res);
       }
-      let links = [req.files[0].path, req.files[1].path, req.files[2].path, req.files[3].path, req.files[4].path];
+      // let links = [req.files[0].path, req.files[1].path, req.files[2].path, req.files[3].path, req.files[4].path];
       let index = 1;
-      links.forEach(async (link) => {
+      req.files.forEach(async (link) => {
         const resizedLink = `${rootDir}/uploads/resized/${Date.now()}-matcha.jpeg`;
-        await sharp(link).resize(320, 240)
+        await sharp(link.path).resize(320, 240)
           .jpeg()
           .toFile(`${rootDir}/uploads/resized/${Date.now()}-matcha.jpeg`);
-        fs.unlinkSync(link);
+        fs.unlinkSync(link.path);
         await updatePhoto(user_id, resizedLink, index).then((data) => data)
           .catch((error) => {
             console.log(error);

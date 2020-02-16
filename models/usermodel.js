@@ -41,7 +41,7 @@ module.exports = {
     });
   },
   addPhoto: (user_id, callback) => {
-    db.connection.query(`INSERT INTO photo (user_id, link, position) VALUES ('${user_id}', '/Users/flbartol/Documents/Matcha/uploads/1024px.png', 1),('${user_id}', /Users/flbartol/Documents/Matcha/uploads/1024px.png, 2),('${user_id}', /Users/flbartol/Documents/Matcha/uploads/1024px.png, 3),('${user_id}', /Users/flbartol/Documents/Matcha/uploads/1024px.png, 4),('${user_id}', /Users/flbartol/Documents/Matcha/uploads/1024px.png, 5) `, function(error, result) {
+    db.connection.query(`INSERT INTO photo (user_id, link, position) VALUES ('${user_id}', '/Users/flbartol/Documents/Matcha/uploads/1024px.png', 1),('${user_id}', '/Users/flbartol/Documents/Matcha/uploads/1024px.png', 2),('${user_id}', '/Users/flbartol/Documents/Matcha/uploads/1024px.png', 3),('${user_id}', '/Users/flbartol/Documents/Matcha/uploads/1024px.png', 4),('${user_id}', '/Users/flbartol/Documents/Matcha/uploads/1024px.png', 5) `, function(error, result) {
       if (error) {
         return callback(error, null);
       }
