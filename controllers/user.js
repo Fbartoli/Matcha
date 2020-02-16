@@ -45,6 +45,7 @@ function response (status, message, res) {
   return res.status(status).json({client: message});
 }
 const ValidDate = util.promisify(handlers.isValidDate);
+const ageCalculator = util.promisify(handlers.calculateAge);
 
 const User = {
   // getAllusers: async(req, res) => {
@@ -104,6 +105,7 @@ const User = {
     return response(200, 'OK', res);
   },
   getUser: async(req, res, payload) => {
+    const gender = ['male', 'female'];
     let user_id = payload.user_id;
     const user = await getUser('id', user_id).then((data) => data)
       .catch((err) => {
@@ -124,6 +126,9 @@ const User = {
     delete user[0].confirmation;
     delete user[0].isOnline;
     user[0].interested_in = relationship_id[0].gender_id;
+    user[0].age = await ageCalculator(user[0].birth_date).then((data) => data)
+      .catch((error) => error);
+    user[0].sex = gender[user[0].gender_id - 1];
 
     return res.status(200).json({userdata: user[0]});
   },

@@ -5,6 +5,7 @@ const multer = require("multer");
 const jwtKey = CONFIG.jwt_secret;
 const jwtExpirySeconds = CONFIG.jwt_expiration;
 const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
+const uniqid = require('uniqid');
 
 module.exports = {
   jwtCheck: (req, res, callback) => {
@@ -106,16 +107,22 @@ module.exports = {
     },
     filename: (req, file, callback) => {
       const match = ["image/png", "image/jpeg"];
-      console.log(file);
       if (match.indexOf(file.mimetype) === -1) {
         let message = `${file.originalname} is invalid. Only accept png/jpeg.`;
 
         return callback(message, null);
       }
 
-      let filename = `${Date.now()}-matcha${path.extname(file.originalname)}`;
+      let filename = `${uniqid()}-matcha${path.extname(file.originalname)}`;
       callback(null, filename);
     }
-  })
+  }),
+  calculateAge: (birthday, callback) => {
+    let ageDifMs = Date.now() - birthday.getTime();
+    let ageDate = new Date(ageDifMs);
+    let age = Math.abs(ageDate.getUTCFullYear() - 1970);
+
+    return callback(null, age);
+  }
 };
 

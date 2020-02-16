@@ -1,9 +1,9 @@
 const express = require('express');
 const handlers = require('../middleware/handlers');
 const usersRoute = require('./users/usersApi');
-const editRoute = require('./users/editApi');
+const editRoute = require('./edit/editApi');
 // const notifRoute = require('./users/notifapi');
-// const socialRoute = require('./users/socialapi');
+const socialRoute = require('./social/socialApi');
 
 
 const router = express.Router();
@@ -11,7 +11,7 @@ const router = express.Router();
 router.use('/api/users/', usersRoute);
 router.use('/api/edit/', editRoute);
 // router.use('/api/notif/', notifRoute);
-// router.use('/api/social/', socialRoute);
+router.use('/api/social/', socialRoute);
 
 
 router.get('/api', function (req, res) {

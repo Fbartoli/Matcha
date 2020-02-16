@@ -14,7 +14,7 @@ module.exports = {
     });
   },
   getPhoto: (user_id, callback) => {
-    db.connection.query('SELECT link, position FROM photo WHERE user_id = ?', [user_id], function(error, result) {
+    db.connection.query('SELECT link FROM photo WHERE user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -186,6 +186,33 @@ module.exports = {
   },
   deleteUser: (user_id, callback) => {
     db.connection.query('DELETE FROM users WHERE id=?', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addView: (user_id, history_id, callback) => {
+    db.connection.query('INSERT INTO `views` (user_id, history_views_id) VALUES (?, ?)', [user_id, history_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getHistoryId: (user_id, callback) => {
+    db.connection.query('SELECT * FROM `history_views` WHERE user_id = ?', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getAllViews: (user_id, callback) => {
+    db.connection.query('SELECT history_views.user_id as `user viewed`, users.username as `user who views`, views.date as date FROM `history_views` INNER JOIN views ON history_views.id = views.history_views_id INNER JOIN users ON views.user_id = users.id WHERE history_views.user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }

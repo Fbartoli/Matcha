@@ -6,12 +6,11 @@ const fs = require('fs');
 const sharp = require('sharp');
 const path = require("path");
 const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
+const uniqid = require('uniqid');
 // const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
 // const getAllUsers = util.promisify(usermodel.getAllusers);
-
-const addPhoto = util.promisify(usermodel.addPhoto);
 const updatePhoto = util.promisify(usermodel.updatePhoto);
 const getPhoto = util.promisify(usermodel.getPhoto);
 
@@ -149,7 +148,7 @@ module.exports = {
 
     return res.status(200);
   },
-  editPhoto: (req, res, payload) => {
+  editPhoto: async (req, res, payload) => {
     const user_id = payload.user_id;
     try {
       if (!req.files) {
@@ -158,21 +157,31 @@ module.exports = {
       if (req.files.length <= 0) {
         return response(400, `You must send at least 1 file.`, res);
       }
-      // let links = [req.files[0].path, req.files[1].path, req.files[2].path, req.files[3].path, req.files[4].path];
-      let index = 1;
+      await getPhoto(user_id).then((data) => {
+        data.forEach((photo) => {
+          fs.unlinkSync(photo.link);
+        });
+      })
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error', res);
+        });
       req.files.forEach(async (link) => {
-        const resizedLink = `${rootDir}/uploads/resized/${Date.now()}-matcha.jpeg`;
+        const resizedLink = `${rootDir}/uploads/resized/${uniqid()}-matcha.jpeg`;
         await sharp(link.path).resize(320, 240)
           .jpeg()
-          .toFile(`${rootDir}/uploads/resized/${Date.now()}-matcha.jpeg`);
+          .toFile(resizedLink);
+
+        console.log(link.path);
         fs.unlinkSync(link.path);
-        await updatePhoto(user_id, resizedLink, index).then((data) => data)
+        console.log(link.originalname, parseInt(link.originalname, 10));
+        await updatePhoto(user_id, resizedLink, parseInt(link.originalname, 10)).then((data) => data)
           .catch((error) => {
             console.log(error);
 
             return response(500, 'Internal error', res);
           });
-        index++;
       });
 
       return response(200, `Files has been updated.`, res);
@@ -194,7 +203,7 @@ module.exports = {
 
         return response(500, 'Internal error', res);
       });
-    console.log(photos.length);
+    console.log(photos);
     for (let index = 0; index < photos.length; index++) {
       photos[index].link = Buffer.from(fs.readFileSync(photos[index].link)).toString('base64');
     }
