@@ -49,6 +49,33 @@ module.exports = {
       return callback(error, result);
     });
   },
+  addInterest: (user_id, tag, callback) => {
+    db.connection.query(`INSERT INTO interested_in_hobbies (user_id, hobbies_name) VALUES ('${user_id}', ?)`, [tag], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  deleteInterest: (user_id, callback) => {
+    db.connection.query(`DELETE from interested_in_hobbies WHERE user_id = '${user_id}'`, function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getInterest: (user_id, callback) => {
+    db.connection.query(`SELECT hobbies_name FROM interested_in_hobbies WHERE user_id = '${user_id}'`, function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   updatePhoto: (user_id, link, position, callback) => {
     db.connection.query(`UPDATE photo SET link = ? WHERE user_id = '${user_id}' and position = ?`, [link, position], function(error, result) {
       if (error) {
@@ -122,7 +149,7 @@ module.exports = {
     });
   },
   updateUser: (info, callback) => {
-    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, location = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1 WHERE id=?', info, function(error, result) {
+    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1 WHERE id=?', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -193,6 +220,51 @@ module.exports = {
       return callback(error, result);
     });
   },
+  addLikeHistory: (user_id, callback) => {
+    db.connection.query('INSERT INTO `history_likes` (user_id) VALUES (?)', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addLike: (user_id, history_id, callback) => {
+    db.connection.query('INSERT INTO `like` (user_id, history_likes_id) VALUES (?, ?)', [user_id, history_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getHistoryLikesId: (user_id, callback) => {
+    db.connection.query('SELECT * FROM `history_likes` WHERE user_id = ?', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getAllLikes: (user_id, callback) => {
+    db.connection.query('SELECT history_likes.user_id as `user liked`, users.username as `user who likes`, like.date as date FROM `history_likes` INNER JOIN like ON history_likes.id = like.history_likes_id INNER JOIN users ON like.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addViewHistory: (user_id, callback) => {
+    db.connection.query('INSERT INTO `history_views` (user_id) VALUES (?)', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   addView: (user_id, history_id, callback) => {
     db.connection.query('INSERT INTO `views` (user_id, history_views_id) VALUES (?, ?)', [user_id, history_id], function(error, result) {
       if (error) {
@@ -202,7 +274,7 @@ module.exports = {
       return callback(error, result);
     });
   },
-  getHistoryId: (user_id, callback) => {
+  getHistoryViewsId: (user_id, callback) => {
     db.connection.query('SELECT * FROM `history_views` WHERE user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);

@@ -12,5 +12,12 @@ editSocial.route('/view')
   .get((req, res) => {
     handlers.jwtCheck(req, res, social.getView);
   });
+editSocial.route('/like')
+  .post((req, res) => {
+    handlers.jwtCheck(req, res, social.addLike);
+  })
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, social.getLike);
+  });
 
 module.exports = editSocial;

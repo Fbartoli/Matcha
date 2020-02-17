@@ -1,5 +1,3 @@
--- DROP TABLE *; 
-
 CREATE TABLE `users` (
   `id` varchar(255) PRIMARY KEY DEFAULT (UUID()),
   `username` varchar(255) UNIQUE,
@@ -26,8 +24,6 @@ CREATE TABLE `gender` (
   `name` varchar(255) UNIQUE
 );
 
-INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('bi');
-
 CREATE TABLE `interested_in_gender` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
@@ -45,13 +41,12 @@ CREATE TABLE `photo` (
 
 CREATE TABLE `history_likes` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `date` timestamp DEFAULT (now()),
-  `user_id` varchar(255),
-  `like_id` int
+  `user_id` varchar(255)
 );
 
 CREATE TABLE `like` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
+  `history_likes_id` int,
   `user_id` varchar(255)
 );
 
@@ -63,8 +58,8 @@ CREATE TABLE `history_views` (
 CREATE TABLE `views` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
-  `date` timestamp DEFAULT (now()),
-  `history_views_id` int
+  `history_views_id` int,
+  `date` timestamp DEFAULT (now())
 );
 
 CREATE TABLE `match` (
@@ -79,14 +74,13 @@ CREATE TABLE `match_user` (
 );
 
 CREATE TABLE `hobbies` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
-  `name` varchar(255) UNIQUE
+  `name` varchar(255) PRIMARY KEY
 );
 
 CREATE TABLE `interested_in_hobbies` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
-  `hobbies_id` int
+  `hobbies_name` varchar(255)
 );
 
 CREATE TABLE `conversation` (
@@ -116,3 +110,29 @@ ALTER TABLE `history_views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`
 ALTER TABLE `views` ADD FOREIGN KEY (`history_views_id`) REFERENCES `history_views` (`id`);
 
 ALTER TABLE `views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `photo` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `users` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`);
+
+ALTER TABLE `like` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `like` ADD FOREIGN KEY (`history_likes_id`) REFERENCES `history_likes` (`id`);
+
+ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `interested_in_gender` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `interested_in_gender` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`);
+
+ALTER TABLE `history_likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `match_user` ADD FOREIGN KEY (`match_id`) REFERENCES `match` (`id`);
+
+ALTER TABLE `match_user` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`hobbies_name`) REFERENCES `hobbies` (`name`);
+
+INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('bi');
+
+INSERT INTO `hobbies` (`name`) VALUES ('#horse'), ('#'), ('#coding'), ('#C'), ('#python'), ('#vegan'), ('#meat'), ('#anime'), ('#yachting'), ('#matcha'), ('#macron'), ('#42'), ('#starwars'), ('#meditation'), ('#42'), ('#geek'), ('#gamer'), ('#fashion'), ('#hipster'), ('#surfer'), ('#hacker');

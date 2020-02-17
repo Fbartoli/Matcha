@@ -15,13 +15,18 @@ const getUser = util.promisify(usermodel.findOneUser);
 const getUserConfirmation = util.promisify(usermodel.findOneUserConfirmation);
 const getUserReset = util.promisify(usermodel.findOneUserReset);
 const getRelationship = util.promisify(usermodel.findRelationship);
+const getTags = util.promisify(usermodel.getInterest);
 
 const hashFct = util.promisify(bcrypt.hash);
 
 const addPhoto = util.promisify(usermodel.addPhoto);
 const addUser = util.promisify(usermodel.addUser);
 const addRelationship = util.promisify(usermodel.addRelationship);
+const addLikeHistory = util.promisify(usermodel.addLikeHistory);
+const addViewsHistory = util.promisify(usermodel.addViewHistory);
 const activate = util.promisify(usermodel.activate);
+const addTags = util.promisify(usermodel.addInterest);
+const delTags = util.promisify(usermodel.deleteInterest);
 
 const editEmail = util.promisify(edit.checkEmail);
 
@@ -46,7 +51,6 @@ function response (status, message, res) {
 }
 const ValidDate = util.promisify(handlers.isValidDate);
 const ageCalculator = util.promisify(handlers.calculateAge);
-
 const User = {
   // getAllusers: async(req, res) => {
   //   const allUsers = await getAllUsers(req).then((data) => data)
@@ -113,12 +117,27 @@ const User = {
 
         return res.status(500).json({error: err});
       });
+    if (!user[0]) {
+      return res.status(500).json({client: 'User not found'});
+    }
     const relationship_id = await getRelationship(user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({error: err});
       });
+    const tags = await getTags(user_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return res.status(500).json({error: error});
+      });
+    let list = [];
+    tags.forEach((tag) => {
+      list.push(tag.hobbies_name);
+    });
+    console.log(list);
+    user[0].tags = list;
     Reflect.deleteProperty(user[0], 'password');
     Reflect.deleteProperty(user[0], 'password_reset');
     Reflect.deleteProperty(user[0], 'registration_date');
@@ -201,6 +220,18 @@ const User = {
 
         return res.status(500).json({client: "Internal error"});
       });
+    await addViewsHistory(user[0].id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
+    await addLikeHistory(user[0].id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
     await addPhoto(user[0].id).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -215,8 +246,8 @@ const User = {
   },
   addUserInfo: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let {bio, birth_date, gender_id, location, notification, interested_in, name, surname, email, username} = req.body;
-    if (!(user_id && bio && birth_date && gender_id && location && notification && interested_in && username && name && surname && email)) {
+    let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, username, tags} = req.body;
+    if (!(user_id && bio && birth_date && gender_id && notification && interested_in && username && name && surname && email && tags)) {
       return response(400, "Missing information", res);
     }
     await ValidDate(birth_date).then((data) => data)
@@ -236,7 +267,7 @@ const User = {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
     let info = [
-      sanitize(bio), sanitize(birth_date), sanitize(gender_id), location, sanitize(notification), sanitize(username),
+      sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification), sanitize(username),
       sanitize(name), sanitize(surname), sanitize(email), sanitize(user_id)
     ];
     if (email) {
@@ -253,6 +284,19 @@ const User = {
 
         return response(500, 'Internal error', res);
       });
+    await delTags(user_id).then((data) => console.log(data))
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+    tags.forEach(async (tag) => {
+      await addTags(user_id, tag).catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+    });
     await updateRelationsip(interested_in, user_id).then((data) => data)
       .catch((error) => {
         console.log(error);
