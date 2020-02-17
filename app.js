@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const morgan = require('morgan');
 
-const {addUser, removeUser, getUser, getUsersInRoom} = require('./controllers/chat');
+// const {addUser, removeUser, getUser, getUsersInRoom} = require('./controllers/chat');
 
 const port = CONFIG.port;
 
@@ -14,11 +14,11 @@ const router = require('./routes/router');
 
 
 // log setup
-morgan.token('host', function(req, res) {
+morgan.token('host', function(req) {
   return req.hostname;
 });
 
-morgan.token('header-auth', function(req, res) {
+morgan.token('header-auth', function(req) {
   return req.header('authorization');
 });
 
@@ -34,45 +34,46 @@ app.use(cookieParser(CONFIG.jwt_secret));
 app.use(router);
 
 // start server
-let server = app.listen(port, () => {
+// let server =
+app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);
 });
 
-const io = require('socket.io').listen(server);
+// const io = require('socket.io').listen(server);
 
-io.on('connection', (socket) => {
-  console.log('Connected !');
+// io.on('connection', (socket) => {
+//   console.log('Connected !');
 
-  socket.on('join', ({name, room}, callback) => {
-    const {error, user} = addUser({id: socket.id,
-      name,
-      room});
+//   socket.on('join', ({name, room}, callback) => {
+//     const {error, user} = addUser({id: socket.id,
+//       name,
+//       room});
 
-    if (error) {
-      return callback(error);
-    }
+//     if (error) {
+//       return callback(error);
+//     }
 
-    socket.emit('message', {user: 'admin',
-      text: `${user.name}, Welcome to the room ${user.room}]`});
-    socket.join(user.room);
-    socket.broadcast.to(user.room).emit('message', {user: 'admin',
-      text: `${user.name}, has joined`});
+//     socket.emit('message', {user: 'admin',
+//       text: `${user.name}, Welcome to the room ${user.room}]`});
+//     socket.join(user.room);
+//     socket.broadcast.to(user.room).emit('message', {user: 'admin',
+//       text: `${user.name}, has joined`});
 
-    callback();
-  });
+//     callback();
+//   });
 
-  socket.on('like', (username, callback) => {
-  });
-  socket.on('sendMessage', (message, callback) => {
-    const user = getUser(socket, id);
+//   socket.on('like', (username, callback) => {
+//   });
+//   socket.on('sendMessage', (message, callback) => {
+//     const user = getUser(socket, id);
 
-    io.to(user.room).emit('message', {user: user.name,
-      text: message});
+//     io.to(user.room).emit('message', {user: user.name,
+//       text: message});
 
-    callback();
-  });
+//     callback();
+//   });
 
-  socket.on('disconnect', () => {
-    console.log('disconnected');
-  });
-});
+//   socket.on('disconnect', () => {
+//     console.log('disconnected');
+//   });
+// });

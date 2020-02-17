@@ -119,12 +119,12 @@ const User = {
 
         return res.status(500).json({error: err});
       });
-    delete user[0].password;
-    delete user[0].password_reset;
-    delete user[0].registration_date;
-    delete user[0].active;
-    delete user[0].confirmation;
-    delete user[0].isOnline;
+    Reflect.deleteProperty(user[0], 'password');
+    Reflect.deleteProperty(user[0], 'password_reset');
+    Reflect.deleteProperty(user[0], 'registration_date');
+    Reflect.deleteProperty(user[0], 'active');
+    Reflect.deleteProperty(user[0], 'confirmation');
+    Reflect.deleteProperty(user[0], 'isOnline');
     user[0].interested_in = relationship_id[0].gender_id;
     user[0].age = await ageCalculator(user[0].birth_date).then((data) => data)
       .catch((error) => error);

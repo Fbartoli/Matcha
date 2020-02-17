@@ -66,9 +66,8 @@ module.exports = {
 
     //     return callback(error, null);
     //   });
-    let error;
 
-    return callback(error, 'Email updated');
+    return callback(null, 'Email updated');
   },
   editBio: async(req, res, payload) => {
     const bio = sanitize(req.body.bio);
@@ -100,8 +99,8 @@ module.exports = {
     if (!(gender_id || user_id)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
-    if (!GENDER_REGEX.test(gender_id)) {
-      return res.status(400).json({error: 'Invalid input.'});
+    if (!(gender_id >= 1 && gender_id <= 2)) {
+      return response(400, 'Wrong input gender_id', res);
     }
     let user = await getUser('id', user_id).then((data) => data)
       .catch((err) => {
@@ -127,8 +126,8 @@ module.exports = {
     if (!(gender || user_id)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
-    if (!GENDER_REGEX.test(gender)) {
-      return res.status(400).json({error: 'Invalid input.'});
+    if (!(gender >= 1 && gender <= 3)) {
+      return response(400, 'Wrong input gender_id', res);
     }
     let user = await getUser('id', user_id).then((data) => data)
       .catch((err) => {
@@ -204,7 +203,7 @@ module.exports = {
         return response(500, 'Internal error', res);
       });
     console.log(photos);
-    for (let index = 0; index < photos.length; index++) {
+    for (let index = 0; index < photos.length; index += 1) {
       photos[index].link = Buffer.from(fs.readFileSync(photos[index].link)).toString('base64');
     }
 

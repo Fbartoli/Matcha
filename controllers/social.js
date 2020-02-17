@@ -2,10 +2,6 @@
 const usermodel = require('../models/usermodel');
 const sanitize = require('sanitize-html');
 const util = require('util');
-const fs = require('fs');
-const sharp = require('sharp');
-const path = require("path");
-const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
 // const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
