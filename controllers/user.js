@@ -290,11 +290,7 @@ const User = {
       return res.status(200).json({
         client: 'Login successful !',
         token: token,
-        userdata: {
-          id: user[0].id,
-          username: username,
-          profile_complete: user[0].profile_complete
-        }
+        userdata: user[0],
       });
     } else {
       return res.status(401).json({

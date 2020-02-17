@@ -1,5 +1,6 @@
 const express = require('express');
 const user = require('../../controllers/user');
+const edit = require('../../controllers/edit');
 
 const handlers = require('../../middleware/handlers');
 
@@ -11,15 +12,19 @@ editRoute.route('/email')
   });
 editRoute.route('/bio')
   .post((req, res) => {
-    handlers.jwtCheck(req, res, user.editBio);
+    handlers.jwtCheck(req, res, edit.editBio);
   });
 editRoute.route('/gender')
   .post((req, res) => {
-    handlers.jwtCheck(req, res, user.editGender);
+    handlers.jwtCheck(req, res, edit.editGender);
   });
 editRoute.route('/password')
   .post((req, res) => {
-    handlers.jwtCheck(req, res, user.editPassword);
+    handlers.jwtCheck(req, res, edit.editPassword);
+  });
+editRoute.route('/location')
+  .post((req, res) => {
+    handlers.jwtCheck(req, res, edit.editLocation);
   });
 
 module.exports = editRoute;

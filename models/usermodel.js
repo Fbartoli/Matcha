@@ -219,5 +219,5 @@ module.exports = {
 
       return callback(error, result);
     });
-  },
+  }
 };

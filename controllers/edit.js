@@ -156,25 +156,25 @@ module.exports = {
       if (req.files.length <= 0) {
         return response(400, `You must send at least 1 file.`, res);
       }
-      await getPhoto(user_id).then((data) => {
-        data.forEach((photo) => {
-          fs.unlinkSync(photo.link);
-        });
-      })
+      let photos = await getPhoto(user_id).then((data) => data)
         .catch((error) => {
           console.log(error);
 
           return response(500, 'Internal error', res);
         });
+      console.log('photos: ', photos);
       req.files.forEach(async (link) => {
         const resizedLink = `${rootDir}/uploads/resized/${uniqid()}-matcha.jpeg`;
         await sharp(link.path).resize(320, 240)
           .jpeg()
           .toFile(resizedLink);
-
-        console.log(link.path);
-        fs.unlinkSync(link.path);
-        console.log(link.originalname, parseInt(link.originalname, 10));
+        console.log(parseInt(link.originalname, 10));
+        if (fs.existsSync(photos[parseInt(link.originalname, 10) - 1].link)) {
+          fs.unlinkSync(photos[parseInt(link.originalname, 10) - 1].link);
+        }
+        if (fs.existsSync(link.path)) {
+          fs.unlinkSync(link.path);
+        }
         await updatePhoto(user_id, resizedLink, parseInt(link.originalname, 10)).then((data) => data)
           .catch((error) => {
             console.log(error);
@@ -204,9 +204,30 @@ module.exports = {
       });
     console.log(photos);
     for (let index = 0; index < photos.length; index += 1) {
-      photos[index].link = Buffer.from(fs.readFileSync(photos[index].link)).toString('base64');
+      try {
+        photos[index].link = Buffer.from(fs.readFileSync(photos[index].link)).toString('base64');
+      } catch (error) {
+        console.log(error);
+
+        return response(404, 'File not available', res);
+      }
     }
 
     return response(200, photos, res);
+  },
+  editLocation: async(req, res, payload) => {
+    const location = req.body.location;
+    const user_id = payload.user_id;
+    if (!(location || user_id)) {
+      return res.status(400).json({error: "Missing informations, fill the form"});
+    }
+    await updateFieldUser(location, 'location', user_id).then((data) => console.log(data))
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
+
+    return response(200, "OK", res);
   }
 };
