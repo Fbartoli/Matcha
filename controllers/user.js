@@ -11,6 +11,7 @@ const handlers = require('../middleware/handlers');
 const edit = require('./edit');
 
 const getUser = util.promisify(usermodel.findOneUser);
+const getUserOther = util.promisify(usermodel.findOneUserOther);
 // const getAllUsers = util.promisify(usermodel.getAllusers);
 const getUserConfirmation = util.promisify(usermodel.findOneUserConfirmation);
 const getUserReset = util.promisify(usermodel.findOneUserReset);
@@ -138,6 +139,7 @@ const User = {
     });
     console.log(list);
     user[0].tags = list;
+    // refacto coté sql parce que c'est pas beau
     Reflect.deleteProperty(user[0], 'password');
     Reflect.deleteProperty(user[0], 'password_reset');
     Reflect.deleteProperty(user[0], 'registration_date');
@@ -148,6 +150,48 @@ const User = {
     user[0].age = await ageCalculator(user[0].birth_date).then((data) => data)
       .catch((error) => error);
     user[0].sex = gender[user[0].gender_id - 1];
+
+    return res.status(200).json({userdata: user[0]});
+  },
+  getOtherUser: async(req, res) => {
+    const gender = ['male', 'female'];
+    let username = req.body.username;
+    let list = [];
+    let user = await getUserOther('username', username).then(async (data) => {
+      if (!data[0]) {
+        return res.status(500).json({client: 'User not found'});
+      } else {
+        data[0].age += await ageCalculator(data[0].birth_date).then((data) => data)
+          .catch((error) => error);
+        data[0].sex = await gender[data[0].gender_id - 1];
+      }
+    })
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
+    await getRelationship(user[0].id).then((data) => {
+      user[0].interested_in = data[0].gender_id;
+    })
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({error: err});
+      });
+    await getTags(user[0].id).then((data) => {
+      if (data[0]) {
+        data.forEach((tag) => {
+          list.push(tag.hobbies_name);
+        });
+        user[0].tags = list;
+      }
+    })
+      .catch((error) => {
+        console.log(error);
+
+        return res.status(500).json({error: error});
+      });
 
     return res.status(200).json({userdata: user[0]});
   },
@@ -173,30 +217,26 @@ const User = {
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
-    let user = await getUser('email', email).then((data) => data)
+    let user = await getUser('email', email).then((data) => {
+      if (data[0]) {
+        return res.status(400).json({client: 'Email already exists'});
+      }
+    })
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: "Internal error"});
       });
-    let resultJson = JSON.stringify(user);
-    resultJson = JSON.parse(resultJson);
-    if (resultJson[0]) {
-
-      return res.status(400).json({client: 'Email already exists'});
-    }
-    user = await getUser('username', username).then((data) => data)
+    user = await getUser('username', username).then((data) => {
+      if (data[0]) {
+        return res.status(400).json({client: 'Username already exists'});
+      }
+    })
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: "Internal error"});
       });
-    resultJson = JSON.stringify(user);
-    resultJson = JSON.parse(resultJson);
-    if (resultJson[0]) {
-
-      return res.status(400).json({client: 'Username already exists'});
-    }
     const hash = await hashFct(password, 2).then((data) => data)
       .catch((error) => {
         throw new Error(error);
@@ -266,9 +306,11 @@ const User = {
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
+    let age = await ageCalculator(birth_date).then((data) => data)
+      .catch((error) => error);
     let info = [
       sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification), sanitize(username),
-      sanitize(name), sanitize(surname), sanitize(email), sanitize(user_id)
+      sanitize(name), sanitize(surname), sanitize(email), sanitize(user_id), age
     ];
     if (email) {
       await editEmail(email, user_id).then((data) => console.log(data))
@@ -316,6 +358,7 @@ const User = {
 
         return res.status(500).json({client: "Internal error"});
       });
+    console.log('lol');
     if (!user[0]) {
       return res.status(401).json({
         client: 'Wrong information'
@@ -330,6 +373,7 @@ const User = {
         algorithm: 'HS256',
         expiresIn: jwtExpirySeconds
       });
+      console.log('lol2');
 
       return res.status(200).json({
         client: 'Login successful !',
@@ -440,46 +484,44 @@ const User = {
     const username = req.body.username;
 
     if (!username) {
-
       return response(500, 'Invalid request, missing username', res);
     }
     if (!PASSWORD_REGEX.test(password) || password.length < 8) {
 
       return response(500, 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.', res);
     }
-    let user = await getUserReset(username, 1).then((data) => data)
+    await getUserReset(username, 1).then((data) => {
+      if (data[0].nb !== 1) {
+        console.log(data[0]);
+
+        return res.status(401).json({client: 'Contact the website administrator'});
+      }
+    })
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: 'Internal error'});
       });
-    let resultJson = JSON.stringify(user);
-    resultJson = JSON.parse(resultJson);
-    if (resultJson[0].nb !== 1) {
-      console.log(resultJson[0]);
-
-      return res.status(401).json({client: 'Contact the website administrator'});
-    }
     const hash = await hashFct(password, 2).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return response(500, 'Internal error', res);
       });
-    await updatePasswordUsername(username, hash).then((data) => data)
+    await updatePasswordUsername(username, hash)
       .catch((err) => {
         console.log(err);
 
         return response(500, 'Internal error', res);
       });
     const string = uniqid();
-    await updateFieldUsername(string, 'confirmation', username).then((data) => data)
+    await updateFieldUsername(string, 'confirmation', username)
       .catch((err) => {
         console.log(err);
 
         return response(500, 'Internal error', res);
       });
-    await updateFieldUsername(0, 'password_reset', username).then((data) => console.log(data))
+    await updateFieldUsername(0, 'password_reset', username)
       .catch((err) => {
         console.log(err);
 
@@ -487,6 +529,9 @@ const User = {
       });
 
     return response(200, 'Password updated', res);
+  },
+  getFilteredUser: async(req, res) => {
+
   }
 };
 

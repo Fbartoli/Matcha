@@ -94,6 +94,25 @@ module.exports = {
       return callback(error, result);
     });
   },
+  // age sexe, interested_in, score, distance
+  findFilteredUsers: (field, info, callback) => {
+    db.connection.query('SELECT * FROM users WHERE ??=? LIMIT 5', [field, info], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  findOneUserOther: (field, info, callback) => {
+    db.connection.query('SELECT id, username, name, surname, bio, birthdate, gender_id, location, profile_complete, score, isOnline FROM users WHERE ??=?', [field, info], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   profileComplete: (user_id, callback) => {
     db.connection.query('SELECT count(*) as nb FROM users WHERE id=? and profile_complete = 1', [user_id], function(error, result) {
       if (error) {
@@ -149,7 +168,7 @@ module.exports = {
     });
   },
   updateUser: (info, callback) => {
-    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1 WHERE id=?', info, function(error, result) {
+    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1, age = ? WHERE id=?', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }

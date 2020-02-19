@@ -47,5 +47,8 @@ usersRoute.route('/user')
   .get((req, res) => {
     handlers.jwtCheck(req, res, user.getUser);
   });
-
+usersRoute.route('/profile')
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, user.addOtherUser);
+  });
 module.exports = usersRoute;

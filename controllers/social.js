@@ -1,4 +1,3 @@
-// include the model (aka DB connection)
 const usermodel = require('../models/usermodel');
 const sanitize = require('sanitize-html');
 const util = require('util');

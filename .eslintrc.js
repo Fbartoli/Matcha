@@ -228,7 +228,6 @@ module.exports = {
     "quote-props": "off",
     "quotes": "off",
     "radix": "error",
-    "require-atomic-updates": "error",
     "require-await": "error",
     "rest-spread-spacing": "error",
     "semi": "error",

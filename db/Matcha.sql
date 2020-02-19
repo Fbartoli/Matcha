@@ -7,6 +7,7 @@ CREATE TABLE `users` (
   `registration_date` date DEFAULT (now()),
   `email` varchar(255) UNIQUE,
   `birth_date` date,
+  `age` int (2),
   `gender_id` int,
   `password` varchar(255),
   `active` boolean DEFAULT (false),
