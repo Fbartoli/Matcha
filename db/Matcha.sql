@@ -1,3 +1,9 @@
+DROP DATABASE matcha;
+
+CREATE DATABASE matcha;
+
+use matcha;
+
 CREATE TABLE `users` (
   `id` varchar(255) PRIMARY KEY DEFAULT (UUID()),
   `username` varchar(255) UNIQUE,
@@ -96,7 +102,7 @@ CREATE TABLE `participant` (
   `conversation_id` int,
   `user_id` varchar(255),
   `time_joined` timestamp DEFAULT (now()),
-  `time_left` timestamp DEFAULT null
+  `time_left` timestamp DEFAULT (now())
 );
 
 CREATE TABLE `message` (
@@ -136,4 +142,4 @@ ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`hobbies_name`) REFERENCES 
 
 INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('bi');
 
-INSERT INTO `hobbies` (`name`) VALUES ('#horse'), ('#'), ('#coding'), ('#C'), ('#python'), ('#vegan'), ('#meat'), ('#anime'), ('#yachting'), ('#matcha'), ('#macron'), ('#42'), ('#starwars'), ('#meditation'), ('#42'), ('#geek'), ('#gamer'), ('#fashion'), ('#hipster'), ('#surfer'), ('#hacker');
+INSERT INTO `hobbies` (`name`) VALUES ('#horse'), ('#'), ('#coding'), ('#C'), ('#python'), ('#vegan'), ('#meat'), ('#anime'), ('#yachting'), ('#matcha'), ('#macron'), ('#starwars'), ('#meditation'), ('#42'), ('#geek'), ('#gamer'), ('#fashion'), ('#hipster'), ('#surfer'), ('#hacker');
