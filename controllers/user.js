@@ -17,7 +17,6 @@ const getUserConfirmation = util.promisify(usermodel.findOneUserConfirmation);
 const getUserReset = util.promisify(usermodel.findOneUserReset);
 const getRelationship = util.promisify(usermodel.findRelationship);
 const getTags = util.promisify(usermodel.getInterest);
-
 const hashFct = util.promisify(bcrypt.hash);
 
 const addPhoto = util.promisify(usermodel.addPhoto);
@@ -198,26 +197,34 @@ const User = {
   addUser: async(req, res) => {
     let {username, name, surname, email, password} = req.body;
     const confirmation = uniqid();
+
     if (!(username && name && surname && email && password)) {
 
       return res.status(400).json({client: "Missing informations, fill the form"});
     }
+
     if (!MAIL_REGEX.test(email)) {
       return res.status(400).json({client: 'Invalid mail.'});
     }
+
     if (!PASSWORD_REGEX.test(password) || password.length < 8) {
       return res.status(400).json({client: 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.'});
     }
+
     if (!USERNAME_REGEX.test(username) || username.length < 6) {
       return res.status(400).json({client: 'Invalid username, it should contain only letters, numbers and a minimun of 6 characters'});
     }
+
     if (!NAME_REGEX.test(name) || name.length < 2) {
       return res.status(400).json({client: 'Invalid name, it should contain only letters'});
     }
+
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
+
     let user = await getUser('email', email).then((data) => {
+
       if (data[0]) {
         return res.status(400).json({client: 'Email already exists'});
       }
@@ -227,6 +234,7 @@ const User = {
 
         return res.status(500).json({client: "Internal error"});
       });
+    console.log('before update');
     user = await getUser('username', username).then((data) => {
       if (data[0]) {
         return res.status(400).json({client: 'Username already exists'});
@@ -306,33 +314,33 @@ const User = {
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
-    let age = await ageCalculator(birth_date).then((data) => data)
-      .catch((error) => error);
     let info = [
       sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification), sanitize(username),
-      sanitize(name), sanitize(surname), sanitize(email), sanitize(user_id), age
+      sanitize(name), sanitize(surname), sanitize(email), sanitize(user_id)
     ];
     if (email) {
-      await editEmail(email, user_id).then((data) => console.log(data))
+      await editEmail(email, user_id).then((data) => data)
         .catch((error) => {
           console.log(error);
 
           return response(500, error, res);
         });
     }
-    await updateUser(info).then((data) => console.log(data))
+    await updateUser(info).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error', res);
       });
-    await delTags(user_id).then((data) => console.log(data))
+    await delTags(user_id).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error', res);
       });
-    tags.forEach(async (tag) => {
+    let arrayTags = tags.split(',');
+    console.log(arrayTags);
+    arrayTags.forEach(async (tag) => {
       await addTags(user_id, tag).catch((error) => {
         console.log(error);
 
@@ -351,14 +359,12 @@ const User = {
   },
   checkPassword: async(req, res) => {
     let {username, password} = req.body;
-    console.log(req.body);
     let user = await getUser('username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: "Internal error"});
       });
-    console.log('lol');
     if (!user[0]) {
       return res.status(401).json({
         client: 'Wrong information'
@@ -373,7 +379,6 @@ const User = {
         algorithm: 'HS256',
         expiresIn: jwtExpirySeconds
       });
-      console.log('lol2');
 
       return res.status(200).json({
         client: 'Login successful !',
@@ -530,9 +535,9 @@ const User = {
 
     return response(200, 'Password updated', res);
   },
-  getFilteredUser: async(req, res) => {
+  // getFilteredUser: async(req, res) => {
 
-  }
+  // }
 };
 
 module.exports = User;

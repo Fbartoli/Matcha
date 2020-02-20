@@ -163,25 +163,33 @@ module.exports = {
           return response(500, 'Internal error', res);
         });
       console.log('photos: ', photos);
+      let err = [];
       req.files.forEach(async (link) => {
         const resizedLink = `${rootDir}/uploads/resized/${uniqid()}-matcha.jpeg`;
         await sharp(link.path).resize(320, 240)
           .jpeg()
           .toFile(resizedLink);
         console.log(parseInt(link.originalname, 10));
-        if (fs.existsSync(photos[parseInt(link.originalname, 10) - 1].link)) {
+        if (fs.existsSync(photos[parseInt(link.originalname, 10) - 1].link) && photos[parseInt(link.originalname, 10) - 1].link !== '/Users/flbartol/Documents/Matcha/uploads/1024px.png') {
           fs.unlinkSync(photos[parseInt(link.originalname, 10) - 1].link);
         }
-        if (fs.existsSync(link.path)) {
+        if (fs.existsSync(link.path) && link.path !== '/Users/flbartol/Documents/Matcha/uploads/1024px.png') {
           fs.unlinkSync(link.path);
+        }
+        if (parseInt(link.originalname, 10) > 0 && parseInt(link.originalname, 10) < 6) {
+          err = [400, 'Bad naming for pictures'];
         }
         await updatePhoto(user_id, resizedLink, parseInt(link.originalname, 10)).then((data) => data)
           .catch((error) => {
             console.log(error);
 
-            return response(500, 'Internal error', res);
+            err = [500, 'Internal error'];
           });
       });
+      if (err[0]) {
+
+        return response(err[0], err[1], res);
+      }
 
       return response(200, `Files has been updated.`, res);
     } catch (error) {
@@ -216,12 +224,15 @@ module.exports = {
     return response(200, photos, res);
   },
   editLocation: async(req, res, payload) => {
-    const location = req.body.location;
+    const location = JSON.parse(req.body.location);
     const user_id = payload.user_id;
-    if (!(location || user_id)) {
+    if (!location) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
-    await updateFieldUser(location, 'location', user_id).then((data) => console.log(data))
+    if (!(location.lat && location.lng && location.city && location.country)) {
+      return res.status(400).json({error: "Missing informations, locating info"});
+    }
+    await updateFieldUser(JSON.stringify(location), 'location', user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 

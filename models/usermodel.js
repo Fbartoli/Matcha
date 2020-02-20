@@ -168,7 +168,7 @@ module.exports = {
     });
   },
   updateUser: (info, callback) => {
-    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1, age = ? WHERE id=?', info, function(error, result) {
+    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1 WHERE id=?', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -267,7 +267,7 @@ module.exports = {
     });
   },
   getAllLikes: (user_id, callback) => {
-    db.connection.query('SELECT history_likes.user_id as `user liked`, users.username as `user who likes`, like.date as date FROM `history_likes` INNER JOIN like ON history_likes.id = like.history_likes_id INNER JOIN users ON like.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
+    db.connection.query('SELECT history_likes.user_id as `user liked`, users.username as `user who likes`, like.date as date FROM `history_likes` INNER JOIN `like` ON history_likes.id = like.history_likes_id INNER JOIN users ON like.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }

@@ -18,9 +18,12 @@ exports.connection = {
       eventNameIndex = {};
     pool.getConnection(function (err, conn) {
       if (err) {
-        if (eventNameIndex.error) {
-          eventNameIndex.error();
-        }
+        console.log(err);
+
+        return err;
+        // if (eventNameIndex.error) {
+        //   eventNameIndex.error();
+        // }
       }
       if (conn) {
         let query = conn.query.apply(conn, queryArgs);

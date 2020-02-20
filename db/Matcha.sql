@@ -54,6 +54,7 @@ CREATE TABLE `history_likes` (
 CREATE TABLE `like` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `history_likes_id` int,
+  `date` timestamp DEFAULT(now()),
   `user_id` varchar(255)
 );
 
@@ -78,10 +79,6 @@ CREATE TABLE `match_user` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
   `match_id` int
-);
-
-CREATE TABLE `hobbies` (
-  `name` varchar(255) PRIMARY KEY
 );
 
 CREATE TABLE `interested_in_hobbies` (
@@ -112,34 +109,33 @@ CREATE TABLE `message` (
   `time` timestamp
 );
 
-ALTER TABLE `history_views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `history_views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `views` ADD FOREIGN KEY (`history_views_id`) REFERENCES `history_views` (`id`);
+ALTER TABLE `views` ADD FOREIGN KEY (`history_views_id`) REFERENCES `history_views` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `photo` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `photo` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `users` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`);
+ALTER TABLE `users` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `like` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `like` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `like` ADD FOREIGN KEY (`history_likes_id`) REFERENCES `history_likes` (`id`);
+ALTER TABLE `like` ADD FOREIGN KEY (`history_likes_id`) REFERENCES `history_likes` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `interested_in_gender` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `interested_in_gender` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `interested_in_gender` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`);
+ALTER TABLE `interested_in_gender` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `history_likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `history_likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `match_user` ADD FOREIGN KEY (`match_id`) REFERENCES `match` (`id`);
+ALTER TABLE `match_user` ADD FOREIGN KEY (`match_id`) REFERENCES `match` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `match_user` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
-ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`hobbies_name`) REFERENCES `hobbies` (`name`);
+ALTER TABLE `match_user` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('bi');
 
-INSERT INTO `hobbies` (`name`) VALUES ('#horse'), ('#'), ('#coding'), ('#C'), ('#python'), ('#vegan'), ('#meat'), ('#anime'), ('#yachting'), ('#matcha'), ('#macron'), ('#starwars'), ('#meditation'), ('#42'), ('#geek'), ('#gamer'), ('#fashion'), ('#hipster'), ('#surfer'), ('#hacker');
+
+-- SELECT history_likes.user_id as `user liked`, like.user_id as `user who likes`FROM `history_likes` INNER JOIN `like` ON history_likes.id = like.history_likes_id WHERE history_likes.user_id = '4a917b24-5408-11ea-b6b2-91623afb3c3a' AND like.user_id = '44608fa4-540a-11ea-b6b2-91623afb3c3a' OR history_likes.user_id = '44608fa4-540a-11ea-b6b2-91623afb3c3a' AND like.user_id = '4a917b24-5408-11ea-b6b2-91623afb3c3a';
