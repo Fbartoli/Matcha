@@ -1,6 +1,7 @@
 const usermodel = require('../models/usermodel');
 const sanitize = require('sanitize-html');
 const util = require('util');
+const geolib = require('geolib');
 // const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
@@ -168,8 +169,18 @@ module.exports = {
 
     return response(200, views, res);
   },
-  getPotentialMatch: async(req, res) => {
+  getPotentialMatch: async(req, res, payload) => {
+    let user_id = payload.user_id;
     let err = '';
+    let user = await getUser('id', user_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+    let userLocation = JSON.parse(user[0].location);
+    console.log(user[0]);
+    console.log(userLocation);
     let result = await getTopProfil().then((data) => data)
       .catch((error) => {
         console.log(error);
@@ -181,7 +192,12 @@ module.exports = {
     }
     let hobbies = [];
     for (let index = 0; index < result.length; index += 1) {
-      hobbies[index] = await getInterest(result[index].id).then((data) => data);
+      hobbies[index] = await getInterest(result[index].id).then((data) => data)
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error', res);
+        });
       result[index].hobbies = [];
       for (let ind = 0; ind < hobbies[index].length; ind += 1) {
         result[index].hobbies.push(hobbies[index][ind].hobbies_name);
