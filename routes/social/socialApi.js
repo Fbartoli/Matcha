@@ -19,5 +19,8 @@ editSocial.route('/like')
   .get((req, res) => {
     handlers.jwtCheck(req, res, social.getLike);
   });
-
+editSocial.route('/potential')
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, social.getPotentialMatch);
+  });
 module.exports = editSocial;

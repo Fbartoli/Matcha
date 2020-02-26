@@ -146,8 +146,6 @@ const User = {
     Reflect.deleteProperty(user[0], 'confirmation');
     Reflect.deleteProperty(user[0], 'isOnline');
     user[0].interested_in = relationship_id[0].gender_id;
-    user[0].age = await ageCalculator(user[0].birth_date).then((data) => data)
-      .catch((error) => error);
     user[0].sex = gender[user[0].gender_id - 1];
 
     return res.status(200).json({userdata: user[0]});
@@ -160,8 +158,6 @@ const User = {
       if (!data[0]) {
         return res.status(500).json({client: 'User not found'});
       } else {
-        data[0].age += await ageCalculator(data[0].birth_date).then((data) => data)
-          .catch((error) => error);
         data[0].sex = await gender[data[0].gender_id - 1];
       }
     })
@@ -223,31 +219,29 @@ const User = {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
 
-    let user = await getUser('email', email).then((data) => {
-
-      if (data[0]) {
-        return res.status(400).json({client: 'Email already exists'});
-      }
-    })
+    let user = await getUser('email', email).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: "Internal error"});
       });
-    console.log('before update');
-    user = await getUser('username', username).then((data) => {
-      if (data[0]) {
-        return res.status(400).json({client: 'Username already exists'});
-      }
-    })
+    if (user[0]) {
+      return res.status(400).json({client: 'Email already exists'});
+    }
+    user = await getUser('username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: "Internal error"});
       });
+    if (user[0]) {
+      return res.status(400).json({client: 'Username already exists'});
+    }
     const hash = await hashFct(password, 2).then((data) => data)
       .catch((error) => {
-        throw new Error(error);
+        console.log(error);
+
+        return res.status(500).json({client: "Internal error"});
       });
     const post = [username, name, surname, email, hash, confirmation];
     await addUser(post).then((data) => data)
@@ -314,9 +308,11 @@ const User = {
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
+    let age = await ageCalculator(new Date(birth_date)).then((data) => data)
+      .catch((error) => console.log(error));
     let info = [
       sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification), sanitize(username),
-      sanitize(name), sanitize(surname), sanitize(email), sanitize(user_id)
+      sanitize(name), sanitize(surname), sanitize(email), age, sanitize(user_id)
     ];
     if (email) {
       await editEmail(email, user_id).then((data) => data)

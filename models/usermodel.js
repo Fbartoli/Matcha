@@ -168,7 +168,7 @@ module.exports = {
     });
   },
   updateUser: (info, callback) => {
-    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1 WHERE id=?', info, function(error, result) {
+    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1, age = ? WHERE id=?', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -249,7 +249,16 @@ module.exports = {
     });
   },
   addLike: (user_id, history_id, callback) => {
-    db.connection.query('INSERT INTO `like` (user_id, history_likes_id) VALUES (?, ?)', [user_id, history_id], function(error, result) {
+    db.connection.query('INSERT INTO `likes` (user_id, history_likes_id) VALUES (?, ?)', [user_id, history_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  isLiked: (user_id_1, user_id_2, callback) => {
+    db.connection.query(`SELECT history_likes.user_id as 'user liked', likes.user_id as 'user who likes' FROM history_likes INNER JOIN likes ON history_likes.id = likes.history_likes_id WHERE history_likes.user_id = '${user_id_2}' AND likes.user_id = '${user_id_1}'`, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -267,7 +276,7 @@ module.exports = {
     });
   },
   getAllLikes: (user_id, callback) => {
-    db.connection.query('SELECT history_likes.user_id as `user liked`, users.username as `user who likes`, like.date as date FROM `history_likes` INNER JOIN `like` ON history_likes.id = like.history_likes_id INNER JOIN users ON like.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
+    db.connection.query('SELECT history_likes.user_id as `user liked`, users.username as `user who likes`, likes.date as date FROM `history_likes` INNER JOIN `likes` ON history_likes.id = likes.history_likes_id INNER JOIN users ON likes.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -310,5 +319,52 @@ module.exports = {
 
       return callback(error, result);
     });
+  },
+  isMatch: (user_id_1, user_id_2, callback) => {
+    // Check if users like each other
+    db.connection.query(`SELECT history_likes.user_id as 'user liked', likes.user_id as 'user who likes' FROM history_likes INNER JOIN likes ON history_likes.id = likes.history_likes_id WHERE history_likes.user_id = '${user_id_1}' AND likes.user_id = '${user_id_2}' OR history_likes.user_id = '${user_id_2}' AND likes.user_id = '${user_id_1}'`, function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addMatch: (callback) => {
+    db.connection.query('INSERT INTO `match` (`active`) values (1)', function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  lastIdInsert: (callback) => {
+    db.connection.query('SELECT last_insert_id() as id;', function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addUsersMatch: (user_id_1, user_id_2, match_id, callback) => {
+    db.connection.query(`INSERT INTO match_user (user_id, match_id) values (?, ${match_id}), (?, ${match_id})`, [user_id_1, user_id_2], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getTopProfil: (callback) => {
+    db.connection.query('SELECT users.id, users.username, users.age, users.location, interested_in_gender.gender_id FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id ORDER BY interested_in_gender.gender_id ASC', function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
   }
 };
+// ;INSERT INTO `match_user`(`user_id`,`match_id`) values (`?`, LAST_INSERT_ID()),(`?`, LAST_INSERT_ID())

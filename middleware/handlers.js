@@ -90,7 +90,6 @@ module.exports = {
       return callback(error, null);
     }
     let date = new Date(dateString);
-    console.log(date);
     let dNum = date.getTime();
     // NaN value, Invalid date
     if (!dNum && dNum !== 0) {
@@ -118,6 +117,7 @@ module.exports = {
     }
   }),
   calculateAge: (birthday, callback) => {
+    console.log(birthday);
     let ageDifMs = Date.now() - birthday.getTime();
     let ageDate = new Date(ageDifMs);
     let age = Math.abs(ageDate.getUTCFullYear() - 1970);

@@ -51,7 +51,7 @@ CREATE TABLE `history_likes` (
   `user_id` varchar(255)
 );
 
-CREATE TABLE `like` (
+CREATE TABLE `likes` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `history_likes_id` int,
   `date` timestamp DEFAULT(now()),
@@ -119,9 +119,9 @@ ALTER TABLE `photo` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DEL
 
 ALTER TABLE `users` ADD FOREIGN KEY (`gender_id`) REFERENCES `gender` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `like` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+ALTER TABLE `likes` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `like` ADD FOREIGN KEY (`history_likes_id`) REFERENCES `history_likes` (`id`) ON DELETE CASCADE;
+ALTER TABLE `likes` ADD FOREIGN KEY (`history_likes_id`) REFERENCES `history_likes` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `interested_in_hobbies` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
