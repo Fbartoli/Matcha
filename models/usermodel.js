@@ -94,6 +94,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  getFullProfile: (info, callback) => {
+    db.connection.query('SELECT users.id, users.username, users.location, users.score, users.age, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE `users`.`id`=?', [info], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   // age sexe, interested_in, score, distance
   findFilteredUsers: (field, info, callback) => {
     db.connection.query('SELECT * FROM users WHERE ??=? LIMIT 5', [field, info], function(error, result) {
@@ -168,7 +177,7 @@ module.exports = {
     });
   },
   updateUser: (info, callback) => {
-    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1, age = ? WHERE id=?', info, function(error, result) {
+    db.connection.query('UPDATE users SET bio = ?, birth_date = ?, gender_id = ?, notification = ?, username = ?, name = ?, surname = ?, email = ?, profile_complete = 1, age = ?, location =? WHERE id=?', info, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -357,8 +366,26 @@ module.exports = {
       return callback(error, result);
     });
   },
-  getTopProfil: (callback) => {
-    db.connection.query('SELECT users.id, users.username, users.age, users.location, interested_in_gender.gender_id FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id ORDER BY interested_in_gender.gender_id ASC', function(error, result) {
+  getTopProfil: (user_id, interested_in, callback) => {
+    let gender1 = 1;
+    let gender2 = 2;
+    if (interested_in === 1) {
+      gender1 = 1;
+      gender2 = 1;
+    } else if (interested_in === 2) {
+      gender1 = 2;
+      gender2 = 2;
+    }
+    db.connection.query('SELECT users.id, users.username, users.age, users.location, users.gender_id, users.score, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE users.id != ? AND (users.gender_id = ? OR users.gender_id = ?) ORDER BY interested_in_gender.gender_id ASC', [user_id, gender1, gender2], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  importSeed: (post, callback) => {
+    db.connection.query('INSERT INTO users (id, username, name, surname, bio, age, birth_date, gender_id, email, password, location, profile_complete, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', post, function(error, result) {
       if (error) {
         return callback(error, null);
       }

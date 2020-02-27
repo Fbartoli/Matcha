@@ -1,16 +1,16 @@
 const usermodel = require('../models/usermodel');
 const sanitize = require('sanitize-html');
 const util = require('util');
-const geolib = require('geolib');
+const handlers = require('../middleware/handlers');
 // const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
+const getFullProfile = util.promisify(usermodel.getFullProfile);
 const updateFieldUser = util.promisify(usermodel.updateFieldUser);
 
 const getHistoryViewsID = util.promisify(usermodel.getHistoryViewsId);
 const addView = util.promisify(usermodel.addView);
 const getView = util.promisify(usermodel.getAllViews);
-const getInterest = util.promisify(usermodel.getInterest);
 
 const getHistoryLikesID = util.promisify(usermodel.getHistoryLikesId);
 const addLike = util.promisify(usermodel.addLike);
@@ -23,6 +23,8 @@ const addUsersMatch = util.promisify(usermodel.addUsersMatch);
 
 const getLastId = util.promisify(usermodel.lastIdInsert);
 const getTopProfil = util.promisify(usermodel.getTopProfil);
+
+const algo = util.promisify(handlers.algo);
 // const getAllUsers = util.promisify(usermodel.getAllusers);
 
 
@@ -38,7 +40,7 @@ module.exports = {
     if (!username) {
       return response(400, 'No user provided', res);
     }
-    let user_visited = await getUser('username', username).then((data) => data)
+    let user_visited = await getUser('users.username', username).then((data) => data)
       .catch((error) => {
         console.log(error);
 
@@ -85,7 +87,7 @@ module.exports = {
     let user_id = payload.user_id;
     let username = sanitize(req.body.username);
     let message = '';
-    let user_liked = await getUser('username', username).then((data) => data)
+    let user_liked = await getUser('users.username', username).then((data) => data)
       .catch((error) => {
         console.log(error);
 
@@ -169,41 +171,51 @@ module.exports = {
 
     return response(200, views, res);
   },
+  // scoring weight based on differences
+  // sexual orientation 0 if exact 100 if not matching
+  // distance 0.1 per meters
+  // interest 10 per unmatched interest
+  // score difference 0.01 per pts
   getPotentialMatch: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let err = '';
-    let user = await getUser('id', user_id).then((data) => data)
+    let user = await getFullProfile(user_id).then((data) => data[0])
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error', res);
       });
-    let userLocation = JSON.parse(user[0].location);
-    console.log(user[0]);
-    console.log(userLocation);
-    let result = await getTopProfil().then((data) => data)
+    let users = await getTopProfil(user_id, user.interested_in).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error', res);
       });
-    if (err) {
-      return response(500, 'Internal error', res);
+    if (!users[0]) {
+      return response(200, 'no potential mate, natural selection bitch', res);
     }
-    let hobbies = [];
-    for (let index = 0; index < result.length; index += 1) {
-      hobbies[index] = await getInterest(result[index].id).then((data) => data)
-        .catch((error) => {
-          console.log(error);
+    users.unshift(user);
+    for (let index = 0; index < users.length; index += 1) {
+      if (users[index].matchScore < 500) {
+        await algo(users[index], user).then((data) => data)
+          .catch((error) => {
+            console.log(error);
 
-          return response(500, 'Internal error', res);
-        });
-      result[index].hobbies = [];
-      for (let ind = 0; ind < hobbies[index].length; ind += 1) {
-        result[index].hobbies.push(hobbies[index][ind].hobbies_name);
+            return response(500, 'Internal error', res);
+          });
       }
     }
+    users.shift();
+    let result = users.sort(function compare(a, b) {
+      if (a.matchScore < b.matchScore) {
+        return -1;
+      }
+      if (a.matchScore > b.matchScore) {
+        return 1;
+      }
 
-    return response(200, result, res);
+      return 0;
+    });
+
+    return response(200, result.slice(0, 5), res);
   }
 };

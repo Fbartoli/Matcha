@@ -81,7 +81,7 @@ const User = {
     if (!PASSWORD_REGEX.test(passwordNew)) {
       return res.status(400).json({error: 'Invalid input.'});
     }
-    let user = await getUser('id', user_id).then((data) => data)
+    let user = await getUser('users.id', user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -111,7 +111,7 @@ const User = {
   getUser: async(req, res, payload) => {
     const gender = ['male', 'female'];
     let user_id = payload.user_id;
-    const user = await getUser('id', user_id).then((data) => data)
+    const user = await getUser('users.id', user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -219,7 +219,7 @@ const User = {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
 
-    let user = await getUser('email', email).then((data) => data)
+    let user = await getUser('users.email', email).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -228,7 +228,7 @@ const User = {
     if (user[0]) {
       return res.status(400).json({client: 'Email already exists'});
     }
-    user = await getUser('username', username).then((data) => data)
+    user = await getUser('users.username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -250,12 +250,14 @@ const User = {
 
         return res.status(500).json({client: "Internal error"});
       });
-    user = await getUser('username', username).then((data) => data)
+    console.log(username);
+    user = await getUser('users.username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: "Internal error"});
       });
+    console.log(user[0]);
     await addRelationship(user[0].id).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -288,8 +290,8 @@ const User = {
   },
   addUserInfo: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, username, tags} = req.body;
-    if (!(user_id && bio && birth_date && gender_id && notification && interested_in && username && name && surname && email && tags)) {
+    let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, username, tags, location} = req.body;
+    if (!(user_id && bio && birth_date && gender_id && notification && interested_in && username && name && surname && email && tags && location)) {
       return response(400, "Missing information", res);
     }
     await ValidDate(birth_date).then((data) => data)
@@ -312,7 +314,7 @@ const User = {
       .catch((error) => console.log(error));
     let info = [
       sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification), sanitize(username),
-      sanitize(name), sanitize(surname), sanitize(email), age, sanitize(user_id)
+      sanitize(name), sanitize(surname), sanitize(email), age, sanitize(location), sanitize(user_id)
     ];
     if (email) {
       await editEmail(email, user_id).then((data) => data)
