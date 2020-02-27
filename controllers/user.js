@@ -291,7 +291,7 @@ const User = {
   addUserInfo: async(req, res, payload) => {
     let user_id = payload.user_id;
     let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, username, tags, location} = req.body;
-    if (!(user_id && bio && birth_date && gender_id && notification && interested_in && username && name && surname && email && tags && location)) {
+    if (!(user_id && bio && birth_date && gender_id && notification && interested_in && username && name && surname && email && tags)) {
       return response(400, "Missing information", res);
     }
     await ValidDate(birth_date).then((data) => data)
@@ -314,7 +314,7 @@ const User = {
       .catch((error) => console.log(error));
     let info = [
       sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification), sanitize(username),
-      sanitize(name), sanitize(surname), sanitize(email), age, sanitize(location), sanitize(user_id)
+      sanitize(name), sanitize(surname), sanitize(email), age, sanitize(user_id)
     ];
     if (email) {
       await editEmail(email, user_id).then((data) => data)
