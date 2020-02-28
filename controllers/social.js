@@ -189,7 +189,7 @@ module.exports = {
     if (!user) {
       return response(500, 'User not found', res);
     }
-    let users = await getTopProfil(user_id, user.interested_in).then((data) => data)
+    let users = await getTopProfil(user_id, user).then((data) => data)
       .catch((error) => {
         console.log(error);
 

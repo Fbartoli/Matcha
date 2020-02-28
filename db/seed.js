@@ -24,7 +24,7 @@ async function importUser(callback) {
       let id = uniqid();
       let bio = 'Lorem ipsum blablablalbla ski montagne netflix chat banalités';
       let gender_id = gender.indexOf(users.results[index].gender) + 1;
-      let interested_in = Math.floor(Math.random() * (3 - 1) + 1);
+      let interested_in = Math.floor(Math.random() * (3 - 0) + 1);
       // PasswordPostman2a.
       let password = '$2b$04$WZbkYaN4typkz/nOlIHbselLvsa4syGKRQ65XrxcRGTiN/G2X4Oqm';
       let score = Math.floor(Math.random() * (200 - 0) + 0);

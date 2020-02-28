@@ -96,7 +96,7 @@ module.exports = {
     });
   },
   getFullProfile: (info, callback) => {
-    db.connection.query('SELECT users.id, users.username, users.location, users.score, users.age, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE `users`.`id`=?', [info], function(error, result) {
+    db.connection.query('SELECT users.id, users.username, users.location, users.score, users.age, users.gender_id, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE `users`.`id`=?', [info], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -367,18 +367,17 @@ module.exports = {
       return callback(error, result);
     });
   },
-  getTopProfil: (user_id, interested_in, callback) => {
+  getTopProfil: (user_id, user, callback) => {
     let gender1 = 3;
     let gender2 = 3;
-    if (interested_in === 1) {
+    if (user.interested_in === 1) {
       gender1 = 2;
       gender2 = 3;
-    } else if (interested_in === 2) {
+    } else if (user.interested_in === 2) {
       gender1 = 2;
       gender2 = 2;
     }
-    console.log(interested_in);
-    db.connection.query('SELECT users.id, users.username, users.age, users.location, users.gender_id, users.score, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE users.id != ? AND (users.gender_id = ? OR users.gender_id = ?) ORDER BY interested_in_gender.gender_id ASC', [user_id, gender1, gender2], function(error, result) {
+    db.connection.query('SELECT users.id, users.username, users.age, users.location, users.gender_id, users.score, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE users.id != ? AND (users.gender_id = ? OR users.gender_id = ?) AND (interested_in_gender.gender_id = ? or interested_in_gender.gender_id = 1)', [user_id, gender1, gender2, user.gender_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -397,3 +396,4 @@ module.exports = {
   }
 };
 // ;INSERT INTO `match_user`(`user_id`,`match_id`) values (`?`, LAST_INSERT_ID()),(`?`, LAST_INSERT_ID())
+// 'SELECT users.id, users.username, users.age, users.location, users.gender_id, users.score, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE users.id != ? AND (users.gender_id = ? OR users.gender_id = ?) '
