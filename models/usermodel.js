@@ -114,7 +114,7 @@ module.exports = {
     });
   },
   findOneUserOther: (field, info, callback) => {
-    db.connection.query('SELECT id, username, name, surname, bio, birthdate, gender_id, location, profile_complete, score, isOnline FROM users WHERE ??=?', [field, info], function(error, result) {
+    db.connection.query('SELECT users.id, users.username, users.email, users.name, users.registration_date, users.surname, users.bio, users.birth_date, age, users.gender_id, users.location, users.profile_complete, users.score, users.isOnline, GROUP_CONCAT(photo.link SEPARATOR ";") as photos FROM users INNER JOIN photo ON photo.user_id = users.id WHERE ??=?', [field, info], function(error, result) {
       if (error) {
         return callback(error, null);
       }

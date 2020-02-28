@@ -159,6 +159,8 @@ const User = {
         return res.status(500).json({client: 'User not found'});
       } else {
         data[0].sex = await gender[data[0].gender_id - 1];
+
+        return data;
       }
     })
       .catch((err) => {
@@ -290,7 +292,7 @@ const User = {
   },
   addUserInfo: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, username, tags, location} = req.body;
+    let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, username, tags} = req.body;
     if (!(user_id && bio && birth_date && gender_id && notification && interested_in && username && name && surname && email && tags)) {
       return response(400, "Missing information", res);
     }

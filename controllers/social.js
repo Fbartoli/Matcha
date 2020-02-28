@@ -216,6 +216,6 @@ module.exports = {
       return 0;
     });
 
-    return response(200, result.slice(0, 5), res);
+    return response(200, result.slice(0, 100), res);
   }
 };
