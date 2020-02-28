@@ -25,11 +25,12 @@ async function importUser(callback) {
       let bio = 'Lorem ipsum blablablalbla ski montagne netflix chat banalités';
       let gender_id = gender.indexOf(users.results[index].gender) + 1;
       // PasswordPostman2a.
-      let password = '$2b$04$j8QlfmNLN5.f5AmQyaDuJ.HjCYzplt9rkOWsUp5zXPBQPE8OqthOi';
+      let password = '$2b$04$WZbkYaN4typkz/nOlIHbselLvsa4syGKRQ65XrxcRGTiN/G2X4Oqm';
       let score = Math.floor(Math.random() * (200 - 0) + 0);
       let arrayTags = [tags[Math.floor(Math.random() * (11 - 0) + 0)], tags[Math.floor(Math.random() * (11 - 0) + 0)], tags[Math.floor(Math.random() * (11 - 0) + 0)]];
       let location = {};
       location.city = users.results[index].location.city;
+      location.country = users.results[index].location.country;
       location.lat = users.results[index].location.coordinates.latitude;
       location.lng = users.results[index].location.coordinates.longitude;
 
@@ -46,7 +47,8 @@ async function importUser(callback) {
         password,
         JSON.stringify(location),
         1,
-        score
+        score,
+        1
       ];
       let data = await importSeed(post).then((data) => data)
         .catch((error) => {

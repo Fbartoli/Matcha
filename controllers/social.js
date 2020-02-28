@@ -36,7 +36,6 @@ module.exports = {
   addView: async(req, res, payload) => {
     let user_id = payload.user_id;
     let username = sanitize(req.body.username);
-    console.log(req.body);
     if (!username) {
       return response(400, 'No user provided', res);
     }
@@ -50,7 +49,7 @@ module.exports = {
     if (!user_visited[0]) {
       console.log('user_visited: ', user_visited);
 
-      response(400, 'User not in the db', res);
+      return response(400, 'User not in the db', res);
     }
     let history = await getHistoryViewsID(user_visited[0].id).then((data) => data)
       .catch((error) => {
@@ -178,6 +177,7 @@ module.exports = {
   // score difference 0.01 per pts
   getPotentialMatch: async(req, res, payload) => {
     let user_id = payload.user_id;
+    let number = req.query.number;
     let user = await getFullProfile(user_id).then((data) => data[0])
       .catch((error) => {
         console.log(error);
@@ -215,7 +215,11 @@ module.exports = {
 
       return 0;
     });
+    if (number > result.length) {
+      number = result.length;
+    }
 
-    return response(200, result.slice(0, 100), res);
+    return response(200, {length: number,
+      data: result.slice(0, number)}, res);
   }
 };

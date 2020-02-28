@@ -1,6 +1,7 @@
 const db = require('../models/dbconnection');
 const path = require("path");
 const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
+const pathPhotoDefault = "/Users/flbartol/Documents/Matcha/uploads/1024px.png";
 
 module.exports = {
   getAllusers: (req, callback) => {
@@ -43,7 +44,7 @@ module.exports = {
     });
   },
   addPhoto: (user_id, callback) => {
-    db.connection.query(`INSERT INTO photo (user_id, link, position) VALUES ('${user_id}', '${rootDir}/uploads/uploads/1024px.png', 1),('${user_id}', '${rootDir}/uploads/uploads/1024px.png', 2),('${user_id}', '${rootDir}/uploads/uploads/1024px.png', 3),('${user_id}', '${rootDir}/uploads/uploads/1024px.png', 4),('${user_id}', '${rootDir}/uploads/uploads/1024px.png', 5) `, function(error, result) {
+    db.connection.query(`INSERT INTO photo (user_id, link, position) VALUES ('${user_id}', '${pathPhotoDefault}', 1),('${user_id}', '${pathPhotoDefault}', 2),('${user_id}', '${pathPhotoDefault}', 3),('${user_id}', '${pathPhotoDefault}', 4),('${user_id}', '${pathPhotoDefault}', 5) `, function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -387,7 +388,7 @@ module.exports = {
     });
   },
   importSeed: (post, callback) => {
-    db.connection.query('INSERT INTO users (id, username, name, surname, bio, age, birth_date, gender_id, email, password, location, profile_complete, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', post, function(error, result) {
+    db.connection.query('INSERT INTO users (id, username, name, surname, bio, age, birth_date, gender_id, email, password, location, profile_complete, score, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', post, function(error, result) {
       if (error) {
         return callback(error, null);
       }

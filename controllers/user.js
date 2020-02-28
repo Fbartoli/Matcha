@@ -9,6 +9,7 @@ const sanitize = require('sanitize-html');
 const util = require('util');
 const handlers = require('../middleware/handlers');
 const edit = require('./edit');
+const fs = require('fs');
 
 const getUser = util.promisify(usermodel.findOneUser);
 const getUserOther = util.promisify(usermodel.findOneUserOther);
@@ -197,6 +198,17 @@ const User = {
 
         return res.status(500).json({error: error});
       });
+    let photos = user[0].photos.split(';');
+    for (let index = 0; index < photos.length; index += 1) {
+      try {
+        photos[index] = Buffer.from(fs.readFileSync(photos[index])).toString('base64');
+      } catch (error) {
+        console.log(error);
+
+        return response(404, 'File not available', res);
+      }
+    }
+    user[0].photos = photos;
 
     return res.status(200).json({userdata: user[0]});
   },
