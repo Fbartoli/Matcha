@@ -285,7 +285,7 @@ module.exports = {
     });
   },
   getAllLikes: (user_id, callback) => {
-    db.connection.query('SELECT history_likes.user_id as `user liked`, users.username as `user who likes`, likes.date as date FROM `history_likes` INNER JOIN `likes` ON history_likes.id = likes.history_likes_id INNER JOIN users ON likes.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
+    db.connection.query('SELECT history_likes.user_id as `user_liked`, users.username as `user_who_likes`, likes.date as date FROM `history_likes` INNER JOIN `likes` ON history_likes.id = likes.history_likes_id INNER JOIN users ON likes.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -321,7 +321,7 @@ module.exports = {
     });
   },
   getAllViews: (user_id, callback) => {
-    db.connection.query('SELECT history_views.user_id as `user viewed`, users.username as `user who views`, views.date as date FROM `history_views` INNER JOIN views ON history_views.id = views.history_views_id INNER JOIN users ON views.user_id = users.id WHERE history_views.user_id = ?', [user_id], function(error, result) {
+    db.connection.query('SELECT history_views.user_id as `user_viewed`, users.username as `user_who_views`, views.date as date FROM `history_views` INNER JOIN views ON history_views.id = views.history_views_id INNER JOIN users ON views.user_id = users.id WHERE history_views.user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
