@@ -150,10 +150,18 @@ const User = {
 
     return res.status(200).json({userdata: user[0]});
   },
-  getOtherUser: async(req, res) => {
+  getOtherUser: async(req, res, payload) => {
     const gender = ['male', 'female'];
-    let username = req.body.username;
+    let username = req.query.username;
     let list = [];
+    await getUser('users.id', payload.user_id).then((data) => {
+      if (data[0].profile_complete === 0) {
+        return response(400, 'Please complete your profile', res);
+      }
+    })
+      .catch((error) => {
+        console.log(error);
+      });
     let user = await getUserOther('username', username).then(async (data) => {
       if (!data[0]) {
         return res.status(500).json({client: 'User not found'});

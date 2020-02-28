@@ -170,10 +170,10 @@ module.exports = {
           .jpeg()
           .toFile(resizedLink);
         console.log(parseInt(link.originalname, 10));
-        if (fs.existsSync(photos[parseInt(link.originalname, 10) - 1].link) && photos[parseInt(link.originalname, 10) - 1].link !== '/Users/flbartol/Documents/Matcha/uploads/1024px.png') {
+        if (fs.existsSync(photos[parseInt(link.originalname, 10) - 1].link) && photos[parseInt(link.originalname, 10) - 1].link !== `${rootDir}/uploads/1024px.png`) {
           fs.unlinkSync(photos[parseInt(link.originalname, 10) - 1].link);
         }
-        if (fs.existsSync(link.path) && link.path !== '/Users/flbartol/Documents/Matcha/uploads/1024px.png') {
+        if (fs.existsSync(link.path) && link.path !== `${rootDir}/uploads/uploads/1024px.png`) {
           fs.unlinkSync(link.path);
         }
         if (parseInt(link.originalname, 10) > 0 && parseInt(link.originalname, 10) < 6) {
