@@ -1,6 +1,4 @@
 const db = require('../models/dbconnection');
-const path = require("path");
-const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
 const pathPhotoDefault = "/Users/flbartol/Documents/Matcha/uploads/1024px.png";
 
 module.exports = {
@@ -370,15 +368,16 @@ module.exports = {
     });
   },
   getTopProfil: (user_id, interested_in, callback) => {
-    let gender1 = 1;
-    let gender2 = 2;
+    let gender1 = 3;
+    let gender2 = 3;
     if (interested_in === 1) {
-      gender1 = 1;
-      gender2 = 1;
+      gender1 = 2;
+      gender2 = 3;
     } else if (interested_in === 2) {
       gender1 = 2;
       gender2 = 2;
     }
+    console.log(interested_in);
     db.connection.query('SELECT users.id, users.username, users.age, users.location, users.gender_id, users.score, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE users.id != ? AND (users.gender_id = ? OR users.gender_id = ?) ORDER BY interested_in_gender.gender_id ASC', [user_id, gender1, gender2], function(error, result) {
       if (error) {
         return callback(error, null);

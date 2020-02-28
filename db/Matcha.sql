@@ -13,12 +13,13 @@ CREATE TABLE `users` (
   `registration_date` date DEFAULT (now()),
   `email` varchar(255) UNIQUE,
   `birth_date` date,
-  `age` int (2),
+  `age` int(2),
   `gender_id` int,
   `password` varchar(255),
   `active` boolean DEFAULT (false),
   `password_reset` boolean DEFAULT (false),
   `location` json,
+  `last_connection` timestamp DEFAULT (now()),
   `profile_complete` boolean DEFAULT (0),
   `confirmation` varchar(255),
   `notification` boolean DEFAULT (1),
@@ -54,7 +55,31 @@ CREATE TABLE `history_likes` (
 CREATE TABLE `likes` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `history_likes_id` int,
-  `date` timestamp DEFAULT(now()),
+  `date` timestamp DEFAULT (now()),
+  `user_id` varchar(255)
+);
+
+CREATE TABLE `history_blocks` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `user_id` varchar(255)
+);
+
+CREATE TABLE `blocks` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `history_blocks_id` int,
+  `date` timestamp DEFAULT (now()),
+  `user_id` varchar(255)
+);
+
+CREATE TABLE `history_reports` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `user_id` varchar(255)
+);
+
+CREATE TABLE `reports` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `history_reports_id` int,
+  `date` timestamp DEFAULT (now()),
   `user_id` varchar(255)
 );
 
@@ -135,7 +160,20 @@ ALTER TABLE `match_user` ADD FOREIGN KEY (`match_id`) REFERENCES `match` (`id`) 
 
 ALTER TABLE `match_user` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-INSERT INTO `gender` (`name`) VALUES ('male'), ('female'), ('bi');
+ALTER TABLE `history_reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `reports` ADD FOREIGN KEY (`history_reports_id`) REFERENCES `history_reports` (`id`);
+
+ALTER TABLE `reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `history_blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `blocks` ADD FOREIGN KEY (`history_blocks_id`) REFERENCES `history_blocks` (`id`);
+
+
+INSERT INTO `gender` (`name`) VALUES ('bi'), ('male'), ('female');
 
 
 -- SELECT history_likes.user_id as `user liked`, like.user_id as `user who likes`FROM `history_likes` INNER JOIN `like` ON history_likes.id = like.history_likes_id WHERE history_likes.user_id = '4a917b24-5408-11ea-b6b2-91623afb3c3a' AND like.user_id = '44608fa4-540a-11ea-b6b2-91623afb3c3a' OR history_likes.user_id = '44608fa4-540a-11ea-b6b2-91623afb3c3a' AND like.user_id = '4a917b24-5408-11ea-b6b2-91623afb3c3a';

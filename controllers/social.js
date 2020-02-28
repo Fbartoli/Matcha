@@ -35,6 +35,7 @@ function response (status, message, res) {
 module.exports = {
   addView: async(req, res, payload) => {
     let user_id = payload.user_id;
+    console.log(user_id);
     let username = sanitize(req.body.username);
     if (!username) {
       return response(400, 'No user provided', res);
@@ -178,12 +179,16 @@ module.exports = {
   getPotentialMatch: async(req, res, payload) => {
     let user_id = payload.user_id;
     let number = req.query.number;
+    console.log(user_id);
     let user = await getFullProfile(user_id).then((data) => data[0])
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error', res);
       });
+    if (!user) {
+      return response(500, 'User not found', res);
+    }
     let users = await getTopProfil(user_id, user.interested_in).then((data) => data)
       .catch((error) => {
         console.log(error);
@@ -195,14 +200,12 @@ module.exports = {
     }
     users.unshift(user);
     for (let index = 0; index < users.length; index += 1) {
-      if (users[index].matchScore < 500) {
-        await algo(users[index], user).then((data) => data)
-          .catch((error) => {
-            console.log(error);
+      await algo(users[index], user).then((data) => data)
+        .catch((error) => {
+          console.log(error);
 
-            return response(500, 'Internal error', res);
-          });
-      }
+          return response(500, 'Internal error', res);
+        });
     }
     users.shift();
     let result = users.sort(function compare(a, b) {

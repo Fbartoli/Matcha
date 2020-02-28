@@ -15,7 +15,7 @@ const {add, multiply, subtract} = require('async-math');
 async function computeMatchScore(result, user, callback) {
   try {
     if (user.interested_in !== 3) {
-      let distanceScore = await multiply(result.distance, 0.1).then((data) => data);
+      let distanceScore = await multiply(result.distance, 0.5).then((data) => data);
       let diffScore = await subtract(user.score, result.score).then((data) => data);
       diffScore = Math.abs(diffScore);
       diffScore = await multiply(diffScore, 0.01).then((data) => data);
@@ -26,7 +26,7 @@ async function computeMatchScore(result, user, callback) {
       result.matchScore = await add(result.matchScore, genderScore).then((data) => data);
       result.matchScore = await add(result.matchScore, distanceScore).then((data) => data);
     } else {
-      let distanceScore = await multiply(result.distance, 0.1).then((data) => data);
+      let distanceScore = await multiply(result.distance, 0.5).then((data) => data);
       let diffScore = await subtract(user.score, result.score).then((data) => data);
       diffScore = Math.abs(diffScore);
       diffScore = await multiply(diffScore, 0.01).then((data) => data);
@@ -185,13 +185,22 @@ module.exports = {
 
         return callback(error, null);
       });
+    Reflect.deleteProperty(result, 'id');
     for (let ind = 0; ind < hobbies.length; ind += 1) {
       result.hobbies.push(hobbies[ind].hobbies_name);
       if (!user.hobbies.includes(hobbies[ind].hobbies_name)) {
         result.matchScore = await add(result.matchScore, 10).then((data) => data);
       }
     }
-    result.location = JSON.parse(result.location);
+    if (!result.location) {
+      return callback(`Error on: algo ${result.username}`, null);
+    }
+    if (typeof result.location === 'string') {
+      result.location = JSON.parse(result.location);
+    }
+    if (!result.location) {
+      return callback(`Error on: algo ${result.username}`, null);
+    }
     await getDistancePro(result, user).then((data) => data)
       .catch((error) => {
         console.log(error);

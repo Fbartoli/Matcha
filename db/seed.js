@@ -10,8 +10,9 @@ const addTags = util.promisify(usermodel.addInterest);
 const addRelationship = util.promisify(usermodel.addRelationship);
 const addLikeHistory = util.promisify(usermodel.addLikeHistory);
 const addViewsHistory = util.promisify(usermodel.addViewHistory);
+const updateRelationship = util.promisify(usermodel.updateRelationship);
 
-let gender = ['male', 'female', 'bisexual'];
+let gender = ['bisexual', 'male', 'female'];
 let tags = ['#coding', '#cheval', '#got', '#pullrequest', '#travel', '#TV', '#chat', '#luxury', '#cars', '#videogames', '#chill', '#netflix'];
 const importSeed = util.promisify(usermodel.importSeed);
 
@@ -19,11 +20,11 @@ async function importUser(callback) {
   if (fs.existsSync('./db/seed.json')) {
     let rawData = fs.readFileSync('./db/seed.json');
     let users = JSON.parse(rawData);
-    console.log(users.results.length);
     for (let index = 0; index < users.results.length; index++) {
       let id = uniqid();
       let bio = 'Lorem ipsum blablablalbla ski montagne netflix chat banalités';
       let gender_id = gender.indexOf(users.results[index].gender) + 1;
+      let interested_in = Math.floor(Math.random() * (3 - 1) + 1);
       // PasswordPostman2a.
       let password = '$2b$04$WZbkYaN4typkz/nOlIHbselLvsa4syGKRQ65XrxcRGTiN/G2X4Oqm';
       let score = Math.floor(Math.random() * (200 - 0) + 0);
@@ -50,9 +51,9 @@ async function importUser(callback) {
         score,
         1
       ];
-      let data = await importSeed(post).then((data) => data)
-        .catch((error) => {
-          console.log(error);
+      await importSeed(post).then((data) => data)
+        .catch((err) => {
+          console.log(err);
 
           return callback('oups', null);
         });
@@ -80,9 +81,15 @@ async function importUser(callback) {
 
           return callback('oups', null);
         });
+      await updateRelationship(interested_in, id)
+        .catch((err) => {
+          console.log(err);
+
+          return callback('oups', null);
+        });
       arrayTags.forEach(async (tag) => {
-        await addTags(id, tag).catch((error) => {
-          console.log(error);
+        await addTags(id, tag).catch((err) => {
+          console.log(err);
 
           return callback('oups', null);
         });
@@ -100,11 +107,11 @@ const importUsers = util.promisify(importUser);
 
 // async function getUser() {
 //   let seeds = await fetch('https://randomuser.me/api/?results=500').then((data) => {
-//     console.log(data);
+//     (data);
 
 //     return data.json();
 //   })
-//     .catch((error) => console.log(error));
+//     .catch((error) => (error));
 
 //   return seeds;
 // }

@@ -394,6 +394,7 @@ const User = {
         client: 'Account not activated'
       });
     } else if (bcrypt.compareSync(password, user[0].password)) {
+      console.log(user[0].id);
       let user_id = user[0].id;
       const token = jwt.sign({user_id}, jwtkey, {
         algorithm: 'HS256',
