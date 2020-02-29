@@ -9,7 +9,6 @@ const sanitize = require('sanitize-html');
 const util = require('util');
 const handlers = require('../middleware/handlers');
 const edit = require('./edit');
-const fs = require('fs');
 
 const getUser = util.promisify(usermodel.findOneUser);
 const getUserOther = util.promisify(usermodel.findOneUserOther);
@@ -52,6 +51,7 @@ function response (status, message, res) {
 }
 const ValidDate = util.promisify(handlers.isValidDate);
 const ageCalculator = util.promisify(handlers.calculateAge);
+const Convertb64 = util.promisify(handlers.Convertb64);
 const User = {
   // getAllusers: async(req, res) => {
   //   const allUsers = await getAllUsers(req).then((data) => data)
@@ -156,6 +156,9 @@ const User = {
     let username = req.query.username;
     let list = [];
     await getUser('users.id', payload.user_id).then((data) => {
+      if (!data[0]) {
+        return response(400, 'User not in db', res);
+      }
       if (data[0].profile_complete === 0) {
         return response(400, 'Please complete your profile', res);
       }
@@ -198,16 +201,12 @@ const User = {
 
         return res.status(500).json({error: error});
       });
-    let photos = user[0].photos.split(';');
-    for (let index = 0; index < photos.length; index += 1) {
-      try {
-        photos[index] = Buffer.from(fs.readFileSync(photos[index])).toString('base64');
-      } catch (error) {
+    let photos = await Convertb64(user[0]).then((data) => data)
+      .catch((error) => {
         console.log(error);
 
-        return response(404, 'File not available', res);
-      }
-    }
+        return response(500, 'Internal error', res);
+      });
     user[0].photos = photos;
 
     return res.status(200).json({userdata: user[0]});
@@ -379,6 +378,9 @@ const User = {
   },
   checkPassword: async(req, res) => {
     let {username, password} = req.body;
+    if (!username || !password) {
+      return response(400, 'Missing information', res);
+    }
     let user = await getUser('username', username).then((data) => data)
       .catch((err) => {
         console.log(err);

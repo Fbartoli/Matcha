@@ -6,6 +6,7 @@ const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
 const getFullProfile = util.promisify(usermodel.getFullProfile);
+const getSearch = util.promisify(usermodel.findFilteredUsers);
 const updateFieldUser = util.promisify(usermodel.updateFieldUser);
 
 const getHistoryViewsID = util.promisify(usermodel.getHistoryViewsId);
@@ -25,6 +26,7 @@ const getLastId = util.promisify(usermodel.lastIdInsert);
 const getTopProfil = util.promisify(usermodel.getTopProfil);
 
 const algo = util.promisify(handlers.algo);
+const Convertb64 = util.promisify(handlers.Convertb64);
 // const getAllUsers = util.promisify(usermodel.getAllusers);
 
 
@@ -208,11 +210,11 @@ module.exports = {
         });
     }
     users.shift();
-    let result = users.sort(function compare(a, b) {
-      if (a.matchScore < b.matchScore) {
+    let result = users.sort(function compare(user1, user2) {
+      if (user1.matchScore < user2.matchScore) {
         return -1;
       }
-      if (a.matchScore > b.matchScore) {
+      if (user1.matchScore > user2.matchScore) {
         return 1;
       }
 
@@ -224,5 +226,38 @@ module.exports = {
 
     return response(200, {length: number,
       data: result.slice(0, number)}, res);
-  }
+  },
+  getSearch: async(req, res, payload) => {
+    let user_id = payload.user_id;
+    let age = req.query.age.split(',');
+    let popularity = req.query.popularity.split(',');
+    let distance = req.query.distance.split(',');
+    let tags = req.query.tags.split(',');
+    let gender = req.query.gender;
+    console.log(req.query);
+    if (!age || !distance || !popularity || !tags || !user_id || !gender) {
+      return response(400, 'missing parameters', res);
+    }
+    let info = [age[0], age[1], popularity[0], popularity[1]];
+    let results = await getSearch(info).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+    console.log(results);
+    for (let index = 0; index < results.length; index += 1) {
+      let photos = await Convertb64(results[index]).then((data) => data)
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error', res);
+        });
+      results[index].photos = photos;
+    }
+
+    return response(200, {
+      length: results.length,
+      results: results}, res);
+  },
 };

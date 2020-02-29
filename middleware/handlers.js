@@ -5,6 +5,7 @@ const path = require("path");
 const multer = require("multer");
 const geolib = require('geolib');
 const util = require('util');
+const fs = require('fs');
 const jwtKey = CONFIG.jwt_secret;
 const jwtExpirySeconds = CONFIG.jwt_expiration;
 const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
@@ -215,6 +216,24 @@ module.exports = {
       });
 
     return callback(null, 'ok');
+  },
+  Convertb64: (user, callback) => {
+    let photos = [];
+    if (user.photos.includes(';')) {
+      photos = user.photos.split(';');
+    } else {
+      photos.push(user.photos);
+    }
+    for (let index = 0; index < photos.length; index += 1) {
+      try {
+        photos[index] = Buffer.from(fs.readFileSync(photos[index])).toString('base64');
+      } catch (error) {
+        console.log(error);
+
+        return callback('File not available', null);
+      }
+    }
+    callback(null, photos);
   }
 };
 

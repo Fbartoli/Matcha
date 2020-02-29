@@ -23,4 +23,8 @@ editSocial.route('/potential')
   .get((req, res) => {
     handlers.jwtCheck(req, res, social.getPotentialMatch);
   });
+editSocial.route('/search')
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, social.getSearch);
+  });
 module.exports = editSocial;

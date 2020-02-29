@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+/* eslint-disable */ 
 // include the model (aka DB connection)
 const uniqid = require('uniqid');
 const usermodel = require('../models/usermodel');
@@ -20,7 +20,7 @@ async function importUser(callback) {
   if (fs.existsSync('./db/seed.json')) {
     let rawData = fs.readFileSync('./db/seed.json');
     let users = JSON.parse(rawData);
-    for (let index = 0; index < users.results.length; index++) {
+    for (let index = 0; index < users.results.length; index += 1) {
       let id = uniqid();
       let bio = 'Lorem ipsum blablablalbla ski montagne netflix chat banalités';
       let gender_id = gender.indexOf(users.results[index].gender) + 1;
