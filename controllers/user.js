@@ -24,6 +24,8 @@ const addUser = util.promisify(usermodel.addUser);
 const addRelationship = util.promisify(usermodel.addRelationship);
 const addLikeHistory = util.promisify(usermodel.addLikeHistory);
 const addViewsHistory = util.promisify(usermodel.addViewHistory);
+const addBlocksHistory = util.promisify(usermodel.addBlockHistory);
+const addReportsHistory = util.promisify(usermodel.addReportHistory);
 const activate = util.promisify(usermodel.activate);
 const addTags = util.promisify(usermodel.addInterest);
 const delTags = util.promisify(usermodel.deleteInterest);
@@ -297,6 +299,18 @@ const User = {
 
         return res.status(500).json({client: "Internal error"});
       });
+    await addBlocksHistory(user[0].id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
+    await addReportsHistory(user[0].id).then((data) => data)
+      .catch((err) => {
+        console.log(err);
+
+        return res.status(500).json({client: "Internal error"});
+      });
     await addPhoto(user[0].id).then((data) => data)
       .catch((err) => {
         console.log(err);
@@ -401,6 +415,11 @@ const User = {
       const token = jwt.sign({user_id}, jwtkey, {
         algorithm: 'HS256',
         expiresIn: jwtExpirySeconds
+      });
+      await updateFieldUser('last_connection', new Date(Date.now()), user[0].id).catch((err) => {
+        console.log(err);
+
+        return response(500, 'Internal error', res);
       });
 
       return res.status(200).json({

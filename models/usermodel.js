@@ -105,14 +105,26 @@ module.exports = {
     });
   },
   // age sexe, interested_in, score, distance
-  findFilteredUsers: (info, callback) => {
-    db.connection.query('SELECT users.username, ANY_VALUE(users.bio) as bio,ANY_VALUE(users.id) as id,  ANY_VALUE(interested_in_gender.gender_id) as interested_in, ANY_VALUE(photo.link) as photos, GROUP_CONCAT(interested_in_hobbies.hobbies_name) as hobbies FROM users INNER JOIN interested_in_hobbies ON interested_in_hobbies.user_id = users.id INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id INNER JOIN photo ON photo.user_id = users.id WHERE (users.age BETWEEN ? AND ? ) AND (users.score BETWEEN ? AND ? ) and photo.position = 1  GROUP BY users.username', info, function(error, result) {
-      if (error) {
-        return callback(error, null);
-      }
+  findFilteredUsers: (info, gender, callback) => {
+    let SQL = 'SELECT users.username, ANY_VALUE(users.bio) as bio, ANY_VALUE(users.location) as location,ANY_VALUE(users.id) as id,  ANY_VALUE(interested_in_gender.gender_id) as interested_in, ANY_VALUE(users.gender_id) as gender_id, ANY_VALUE(photo.link) as photos, GROUP_CONCAT(interested_in_hobbies.hobbies_name) as hobbies FROM users INNER JOIN interested_in_hobbies ON interested_in_hobbies.user_id = users.id INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id INNER JOIN photo ON photo.user_id = users.id ';
+    if (gender === '1') {
+      let where = 'WHERE (users.age BETWEEN ? AND ? ) AND (users.score BETWEEN ? AND ? ) and photo.position = 1  GROUP BY users.username';
+      db.connection.query(`${SQL} ${where}`, info, function(error, result) {
+        if (error) {
+          return callback(error, null);
+        }
 
-      return callback(error, result);
-    });
+        return callback(error, result);
+      });
+    } else {
+      db.connection.query(`${SQL} WHERE (users.age BETWEEN ? AND ? ) AND (users.score BETWEEN ? AND ? ) AND users.gender_id = ${gender}  and photo.position = 1  GROUP BY users.username`, info, function(error, result) {
+        if (error) {
+          return callback(error, null);
+        }
+
+        return callback(error, result);
+      });
+    }
   },
   findOneUserOther: (field, info, callback) => {
     db.connection.query('SELECT users.id, users.username, users.email, users.name, users.registration_date, users.surname, users.bio, users.birth_date, age, users.gender_id, users.location, users.profile_complete, users.score, users.isOnline, GROUP_CONCAT(photo.link SEPARATOR ";") as photos FROM users INNER JOIN photo ON photo.user_id = users.id WHERE ??=?', [field, info], function(error, result) {
@@ -186,7 +198,7 @@ module.exports = {
       return callback(error, result);
     });
   },
-  updateFieldUser: (value, field, user_id, callback) => {
+  updateFieldUser: (field, value, user_id, callback) => {
     db.connection.query('UPDATE users SET ?? = ? WHERE id =?', [field, value, user_id], function(error, result) {
       if (error) {
         return callback(error, null);
@@ -251,6 +263,24 @@ module.exports = {
   },
   addLikeHistory: (user_id, callback) => {
     db.connection.query('INSERT INTO `history_likes` (user_id) VALUES (?)', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addBlockHistory: (user_id, callback) => {
+    db.connection.query('INSERT INTO `history_blocks` (user_id) VALUES (?)', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addReportHistory: (user_id, callback) => {
+    db.connection.query('INSERT INTO `history_reports` (user_id) VALUES (?)', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }

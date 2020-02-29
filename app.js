@@ -5,8 +5,6 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const morgan = require('morgan');
 
-// const {addUser, removeUser, getUser, getUsersInRoom} = require('./controllers/chat');
-
 const port = CONFIG.port;
 
 const app = express();
@@ -39,7 +37,6 @@ app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);
 });
 
-// const io = require('socket.io').listen(server);
 
 // io.on('connection', (socket) => {
 //   console.log('Connected !');

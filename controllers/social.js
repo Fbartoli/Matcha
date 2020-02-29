@@ -34,6 +34,7 @@ function response (status, message, res) {
   return res.status(status).json({client: message});
 }
 
+
 module.exports = {
   addView: async(req, res, payload) => {
     let user_id = payload.user_id;
@@ -181,7 +182,6 @@ module.exports = {
   getPotentialMatch: async(req, res, payload) => {
     let user_id = payload.user_id;
     let number = req.query.number;
-    console.log(user_id);
     let user = await getFullProfile(user_id).then((data) => data[0])
       .catch((error) => {
         console.log(error);
@@ -231,21 +231,33 @@ module.exports = {
     let user_id = payload.user_id;
     let age = req.query.age.split(',');
     let popularity = req.query.popularity.split(',');
-    let distance = req.query.distance.split(',');
+    let distance = req.query.distance;
     let tags = req.query.tags.split(',');
     let gender = req.query.gender;
-    console.log(req.query);
+    console.log(`age: ${age}`);
+    console.log(`popularity: ${popularity}`);
+    console.log(`distance: ${distance}`);
+    console.log(`tags: ${tags}`);
+    console.log(`gender: ${gender}`);
     if (!age || !distance || !popularity || !tags || !user_id || !gender) {
       return response(400, 'missing parameters', res);
     }
-    let info = [age[0], age[1], popularity[0], popularity[1]];
-    let results = await getSearch(info).then((data) => data)
+    let user = await getFullProfile(user_id).then((data) => data[0])
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error', res);
       });
-    console.log(results);
+    if (!user) {
+      return response(500, 'User not found', res);
+    }
+    let info = [age[0], age[1], popularity[0], popularity[1]];
+    let results = await getSearch(info, gender).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
     for (let index = 0; index < results.length; index += 1) {
       let photos = await Convertb64(results[index]).then((data) => data)
         .catch((error) => {
@@ -254,10 +266,16 @@ module.exports = {
           return response(500, 'Internal error', res);
         });
       results[index].photos = photos;
+      await handlers.getDistancePro(results[index], user).then((data) => data)
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error', res);
+        });
     }
 
     return response(200, {
       length: results.length,
-      results: results}, res);
+      data: results}, res);
   },
 };

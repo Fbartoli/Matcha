@@ -160,17 +160,17 @@ ALTER TABLE `match_user` ADD FOREIGN KEY (`match_id`) REFERENCES `match` (`id`) 
 
 ALTER TABLE `match_user` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `history_reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `history_reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `reports` ADD FOREIGN KEY (`history_reports_id`) REFERENCES `history_reports` (`id`);
+ALTER TABLE `reports` ADD FOREIGN KEY (`history_reports_id`) REFERENCES `history_reports` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `reports` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `history_blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `history_blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `blocks` ADD FOREIGN KEY (`history_blocks_id`) REFERENCES `history_blocks` (`id`);
+ALTER TABLE `blocks` ADD FOREIGN KEY (`history_blocks_id`) REFERENCES `history_blocks` (`id`) ON DELETE CASCADE;
 
 
 INSERT INTO `gender` (`name`) VALUES ('bi'), ('male'), ('female');

@@ -11,6 +11,8 @@ const addRelationship = util.promisify(usermodel.addRelationship);
 const addLikeHistory = util.promisify(usermodel.addLikeHistory);
 const addViewsHistory = util.promisify(usermodel.addViewHistory);
 const updateRelationship = util.promisify(usermodel.updateRelationship);
+const addBlocksHistory = util.promisify(usermodel.addBlockHistory);
+const addReportsHistory = util.promisify(usermodel.addReportHistory);
 
 let gender = ['bisexual', 'male', 'female'];
 let tags = ['#coding', '#cheval', '#got', '#pullrequest', '#travel', '#TV', '#chat', '#luxury', '#cars', '#videogames', '#chill', '#netflix'];
@@ -86,6 +88,18 @@ async function importUser(callback) {
           console.log(err);
 
           return callback('oups', null);
+        });
+        await addBlocksHistory(id).then((data) => data)
+        .catch((err) => {
+          console.log(err);
+  
+          return res.status(500).json({client: "Internal error"});
+        });
+      await addReportsHistory(id).then((data) => data)
+        .catch((err) => {
+          console.log(err);
+  
+          return res.status(500).json({client: "Internal error"});
         });
       arrayTags.forEach(async (tag) => {
         await addTags(id, tag).catch((err) => {

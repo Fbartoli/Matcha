@@ -232,7 +232,7 @@ module.exports = {
     if (!(location.lat && location.lng && location.city && location.country)) {
       return res.status(400).json({error: "Missing informations, locating info"});
     }
-    await updateFieldUser(JSON.stringify(location), 'location', user_id).then((data) => data)
+    await updateFieldUser('location', JSON.stringify(location), user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 
