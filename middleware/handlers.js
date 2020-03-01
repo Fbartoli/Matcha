@@ -167,7 +167,6 @@ module.exports = {
 
         return callback(error, null);
       });
-    Reflect.deleteProperty(result, 'id');
     for (let ind = 0; ind < hobbies.length; ind += 1) {
       result.hobbies.push(hobbies[ind].hobbies_name);
       if (!user.hobbies.includes(hobbies[ind].hobbies_name)) {

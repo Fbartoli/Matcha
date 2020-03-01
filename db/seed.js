@@ -15,14 +15,17 @@ const addBlocksHistory = util.promisify(usermodel.addBlockHistory);
 const addReportsHistory = util.promisify(usermodel.addReportHistory);
 
 let gender = ['bisexual', 'male', 'female'];
-let tags = ['#coding', '#cheval', '#got', '#pullrequest', '#travel', '#TV', '#chat', '#luxury', '#cars', '#videogames', '#chill', '#netflix'];
+let tags = ['#gamer', '#surfer', '#hacker', '#starwars', '#meditation', '#42', '#geek', '#fashion', '#hipster', '#horse', '#vegan', '#meat', '#', '#coding', '#C', '#python', '#anime', '#yachting', '#matcha', '#macron'];
 const importSeed = util.promisify(usermodel.importSeed);
 
 async function importUser(callback) {
   if (fs.existsSync('./db/seed.json')) {
     let rawData = fs.readFileSync('./db/seed.json');
     let users = JSON.parse(rawData);
+    let length = users.results.length;
     for (let index = 0; index < users.results.length; index += 1) {
+      console.clear()
+      console.log(`${(index/(length - 1)).toFixed(2)*100}%`);
       let id = uniqid();
       let bio = 'Lorem ipsum blablablalbla ski montagne netflix chat banalités';
       let gender_id = gender.indexOf(users.results[index].gender) + 1;
@@ -30,9 +33,10 @@ async function importUser(callback) {
       // PasswordPostman2a.
       let password = '$2b$04$WZbkYaN4typkz/nOlIHbselLvsa4syGKRQ65XrxcRGTiN/G2X4Oqm';
       let score = Math.floor(Math.random() * (200 - 0) + 0);
-      let arrayTags = [tags[Math.floor(Math.random() * (11 - 0) + 0)], tags[Math.floor(Math.random() * (11 - 0) + 0)], tags[Math.floor(Math.random() * (11 - 0) + 0)]];
+      let arrayTags = [tags[Math.floor(Math.random() * (19 - 0) + 0)], tags[Math.floor(Math.random() * (19 - 0) + 0)], tags[Math.floor(Math.random() * (19 - 0) + 0)]];
       let location = {};
       location.city = users.results[index].location.city;
+      location.district = '';
       location.country = users.results[index].location.country;
       location.lat = users.results[index].location.coordinates.latitude;
       location.lng = users.results[index].location.coordinates.longitude;

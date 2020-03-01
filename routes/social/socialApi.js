@@ -19,6 +19,20 @@ editSocial.route('/like')
   .get((req, res) => {
     handlers.jwtCheck(req, res, social.getLike);
   });
+editSocial.route('/block')
+  .post((req, res) => {
+    handlers.jwtCheck(req, res, social.addBlock);
+  })
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, social.getBlock);
+  });
+editSocial.route('/report')
+  .post((req, res) => {
+    handlers.jwtCheck(req, res, social.addReport);
+  })
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, social.getReport);
+  });
 editSocial.route('/potential')
   .get((req, res) => {
     handlers.jwtCheck(req, res, social.getPotentialMatch);

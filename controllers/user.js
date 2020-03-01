@@ -11,7 +11,9 @@ const handlers = require('../middleware/handlers');
 const edit = require('./edit');
 
 const getUser = util.promisify(usermodel.findOneUser);
+const getUserPass = util.promisify(usermodel.getUserPassword);
 const getUserOther = util.promisify(usermodel.findOneUserOther);
+const getFulluser = util.promisify(usermodel.getFullProfile);
 // const getAllUsers = util.promisify(usermodel.getAllusers);
 const getUserConfirmation = util.promisify(usermodel.findOneUserConfirmation);
 const getUserReset = util.promisify(usermodel.findOneUserReset);
@@ -25,6 +27,7 @@ const addRelationship = util.promisify(usermodel.addRelationship);
 const addLikeHistory = util.promisify(usermodel.addLikeHistory);
 const addViewsHistory = util.promisify(usermodel.addViewHistory);
 const addBlocksHistory = util.promisify(usermodel.addBlockHistory);
+const getBlock = util.promisify(usermodel.getAllBlocks);
 const addReportsHistory = util.promisify(usermodel.addReportHistory);
 const activate = util.promisify(usermodel.activate);
 const addTags = util.promisify(usermodel.addInterest);
@@ -168,9 +171,15 @@ const User = {
       .catch((error) => {
         console.log(error);
       });
+    let blocks = await getBlock(payload.user_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, "Internal Error, getView requete", res);
+      });
     let user = await getUserOther('username', username).then(async (data) => {
-      if (!data[0]) {
-        return res.status(500).json({client: 'User not found'});
+      if (!data[0] || data[0].id === null) {
+        return res.status(400).json({client: 'User not found'});
       } else {
         data[0].sex = await gender[data[0].gender_id - 1];
 
@@ -182,6 +191,15 @@ const User = {
 
         return res.status(500).json({error: err});
       });
+    console.log(blocks);
+    for (let ind = 0; ind < blocks.length; ind += 1) {
+      let blocked_id = blocks[ind].user_blocked;
+      if (user[0].id === blocked_id) {
+        console.log(`${blocked_id}:  ${user[0]}`);
+
+        return response(400, 'You Blocked that user', res);
+      }
+    }
     await getRelationship(user[0].id).then((data) => {
       user[0].interested_in = data[0].gender_id;
     })
@@ -395,7 +413,7 @@ const User = {
     if (!username || !password) {
       return response(400, 'Missing information', res);
     }
-    let user = await getUser('username', username).then((data) => data)
+    let user = await getUserPass('username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
 
@@ -410,7 +428,6 @@ const User = {
         client: 'Account not activated'
       });
     } else if (bcrypt.compareSync(password, user[0].password)) {
-      console.log(user[0].id);
       let user_id = user[0].id;
       const token = jwt.sign({user_id}, jwtkey, {
         algorithm: 'HS256',
@@ -421,11 +438,17 @@ const User = {
 
         return response(500, 'Internal error', res);
       });
+      let result = await getFulluser(user[0].id).then((data) => data[0])
+        .catch((err) => {
+          console.log(err);
+
+          return res.status(500).json({client: "Internal error"});
+        });
 
       return res.status(200).json({
         client: 'Login successful !',
         token: token,
-        userdata: user[0],
+        userdata: result,
       });
     } else {
       return res.status(401).json({
