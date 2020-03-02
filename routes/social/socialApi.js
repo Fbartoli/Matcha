@@ -19,6 +19,10 @@ editSocial.route('/like')
   .get((req, res) => {
     handlers.jwtCheck(req, res, social.getLike);
   });
+editSocial.route('/dislike')
+  .post((req, res) => {
+    handlers.jwtCheck(req, res, social.deleteLike);
+  });
 editSocial.route('/block')
   .post((req, res) => {
     handlers.jwtCheck(req, res, social.addBlock);

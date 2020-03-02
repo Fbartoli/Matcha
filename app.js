@@ -3,7 +3,10 @@ const CONFIG = require('./config/config');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const socketIOHelper = require('./middleware/socket');
 const morgan = require('morgan');
+const socketIO = require('socket.io');
+let receivers = require('./controllers/socket');
 
 const port = CONFIG.port;
 
@@ -30,13 +33,14 @@ app.use(express.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cookieParser(CONFIG.jwt_secret));
 app.use(router);
-
 // start server
-// let server =
-app.listen(port, () => {
+let server = app.listen(port, () => {
   console.log('Matcha API server started on: ' + port);
 });
 
+let io = socketIO(server);
+socketIOHelper.set(io);
+receivers.receivers(io);
 
 // io.on('connection', (socket) => {
 //   console.log('Connected !');

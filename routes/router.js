@@ -14,8 +14,8 @@ router.use('/api/edit/', editRoute);
 router.use('/api/social/', socialRoute);
 
 
-router.get('/api', function (req, res) {
-  res.send({msg: 'Welcome to Matcha API'});
+router.get('/', function (req, res) {
+  res.sendFile('/Users/flbartol/Documents/Matcha/socket.html');
 });
 router.get('/api/refresh', function (req, res) {
   handlers.jwtRefresh(req, res);

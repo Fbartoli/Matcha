@@ -1,4 +1,4 @@
-DROP DATABASE matcha;
+DROP DATABASE IF EXISTS matcha;
 
 CREATE DATABASE matcha;
 

@@ -17,7 +17,9 @@ const getView = util.promisify(usermodel.getAllViews);
 
 const getHistoryLikesID = util.promisify(usermodel.getHistoryLikesId);
 const addLike = util.promisify(usermodel.addLike);
-const getLike = util.promisify(usermodel.getAllLikes);
+const getAllLikesReceived = util.promisify(usermodel.getAllLikesReceived);
+const getAllLikesGiven = util.promisify(usermodel.getAllLikesGiven);
+const delLike = util.promisify(usermodel.deleteLike);
 
 const getHistoryReportsID = util.promisify(usermodel.getHistoryReportsId);
 const addReport = util.promisify(usermodel.addReport);
@@ -101,6 +103,9 @@ module.exports = {
   addLike: async(req, res, payload) => {
     let user_id = payload.user_id;
     let username = sanitize(req.body.username);
+    if (!username) {
+      return response(400, 'Missing username', res);
+    }
     let message = '';
     let user_liked = await getUser('users.username', username).then((data) => data)
       .catch((error) => {
@@ -188,18 +193,80 @@ module.exports = {
 
     return response(200, `Liked${message}`, res);
   },
+  deleteLike: async(req, res, payload) => {
+    let user_id = payload.user_id;
+    let username = sanitize(req.body.username);
+    if (!username) {
+      return response(400, 'Missing username', res);
+    }
+    let message = '';
+    let user_liked = await getUser('users.username', username).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error getUser/addView', res);
+      });
+    if (!user_liked[0]) {
+      console.log('user_liked: ', user_liked);
+
+      return response(400, 'User not in the db', res);
+    }
+    if (user_id === user_liked[0].id) {
+      return response(400, 'Cannot self like', res);
+    }
+    let history = await getHistoryLikesID(user_liked[0].id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error getHistory/addLike', res);
+      });
+    let data = await isLiked(user_id, user_liked[0].id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error getHistory/addLike', res);
+      });
+    if (data.length > 0) {
+      await delLike(user_id, history[0].id).catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error getHistory/addLike', res);
+      });
+      await updateFieldUser('score', user_liked[0].score - 10, user_id).catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error update score', res);
+      });
+      // add notification real time;
+      // add notification real time;
+      // add notification real time;
+      // add notification real time;
+
+      return response(200, `Disliked`, res);
+    } else {
+      return response(400, 'You need to like the user first', res);
+    }
+
+  },
   getLike: async(req, res, payload) => {
     if (!payload.user_id) {
       return response(400, 'You are not connected', res);
     }
-    let views = await getLike(payload.user_id).then((data) => data)
+    let LikesReceived = await getAllLikesReceived(payload.user_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, "Internal Error, getLike requete", res);
+      });
+    let LikesGiven = await getAllLikesGiven(payload.user_id).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, "Internal Error, getLike requete", res);
       });
 
-    return response(200, views, res);
+    return response(200, {Received: LikesReceived,
+      Given: LikesGiven}, res);
   },
   addReport: async(req, res, payload) => {
     let user_id = payload.user_id;

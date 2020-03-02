@@ -78,7 +78,7 @@ module.exports = {
     });
   },
   updatePhoto: (user_id, link, position, callback) => {
-    db.connection.query(`UPDATE photo SET link = ? WHERE user_id = '${user_id}' and position = ?`, [link, position], function(error, result) {
+    db.connection.query(`UPDATE photo SET link = ? WHERE user_id = '${user_id}' AND position = ?`, [link, position], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -360,6 +360,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  deleteLike: (user_id, history_id, callback) => {
+    db.connection.query('DELETE FROM `likes` WHERE user_id = ? AND history_likes_id = ?', [user_id, history_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   isLiked: (user_id_1, user_id_2, callback) => {
     db.connection.query(`SELECT history_likes.user_id as 'user liked', likes.user_id as 'user who likes' FROM history_likes INNER JOIN likes ON history_likes.id = likes.history_likes_id WHERE history_likes.user_id = '${user_id_2}' AND likes.user_id = '${user_id_1}'`, function(error, result) {
       if (error) {
@@ -378,8 +387,17 @@ module.exports = {
       return callback(error, result);
     });
   },
-  getAllLikes: (user_id, callback) => {
-    db.connection.query('SELECT history_likes.user_id as `user_liked`, users.username as `user_who_likes`, likes.date as date FROM `history_likes` INNER JOIN `likes` ON history_likes.id = likes.history_likes_id INNER JOIN users ON likes.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
+  getAllLikesGiven: (user_id, callback) => {
+    db.connection.query('SELECT history_likes.user_id as `user_liked`, users.username as `user_who_likes`, users.id, likes.date as date FROM `history_likes` INNER JOIN `likes` ON history_likes.id = likes.history_likes_id INNER JOIN users ON likes.user_id = users.id WHERE likes.user_id = ?', [user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getAllLikesReceived: (user_id, callback) => {
+    db.connection.query('SELECT history_likes.user_id as `user_liked`, users.username as `user_who_likes`, users.id, likes.date as date FROM `history_likes` INNER JOIN `likes` ON history_likes.id = likes.history_likes_id INNER JOIN users ON likes.user_id = users.id WHERE history_likes.user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
