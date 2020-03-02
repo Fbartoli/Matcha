@@ -96,14 +96,14 @@ CREATE TABLE `views` (
 );
 
 CREATE TABLE `match` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `id` varchar(255) PRIMARY KEY,
   `active` boolean DEFAULT (1)
 );
 
 CREATE TABLE `match_user` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
-  `match_id` int
+  `match_id` varchar(255)
 );
 
 CREATE TABLE `interested_in_hobbies` (

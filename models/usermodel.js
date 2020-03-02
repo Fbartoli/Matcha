@@ -451,8 +451,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  addMatch: (callback) => {
-    db.connection.query('INSERT INTO `match` (`active`) values (1)', function(error, result) {
+  addMatch: (id, callback) => {
+    db.connection.query('INSERT INTO `match` (`id`,`active`) values (`?`,1)', [id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -470,7 +470,7 @@ module.exports = {
     });
   },
   addUsersMatch: (user_id_1, user_id_2, match_id, callback) => {
-    db.connection.query(`INSERT INTO match_user (user_id, match_id) values (?, ${match_id}), (?, ${match_id})`, [user_id_1, user_id_2], function(error, result) {
+    db.connection.query(`INSERT INTO match_user (user_id, match_id) values (?, '${match_id}'), (?, '${match_id}')`, [user_id_1, user_id_2], function(error, result) {
       if (error) {
         return callback(error, null);
       }

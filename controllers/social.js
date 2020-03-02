@@ -3,6 +3,7 @@ const sanitize = require('sanitize-html');
 const util = require('util');
 const handlers = require('../middleware/handlers');
 const fs = require('fs');
+const uniqid = require('uniqid');
 
 const getPhoto = util.promisify(usermodel.getPhoto);
 
@@ -34,7 +35,6 @@ const isLiked = util.promisify(usermodel.isLiked);
 const addMatch = util.promisify(usermodel.addMatch);
 const addUsersMatch = util.promisify(usermodel.addUsersMatch);
 
-const getLastId = util.promisify(usermodel.lastIdInsert);
 const getTopProfil = util.promisify(usermodel.getTopProfil);
 
 const algo = util.promisify(handlers.algo);
@@ -166,19 +166,14 @@ module.exports = {
         return response(500, 'Internal error isMatching', res);
       });
     if (match === true) {
-      await addMatch().then((data) => data)
+      let id = uniqid();
+      await addMatch(id).then((data) => data)
         .catch((error) => {
           console.log(error);
 
           return response(500, 'Internal error addmatch', res);
         });
-      let id = await getLastId().then((data) => data[0])
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error isMatching', res);
-        });
-      await addUsersMatch(user_id, user_liked[0].id, id.id).then((data) => data)
+      await addUsersMatch(user_id, user_liked[0].id, id).then((data) => data)
         .catch((error) => {
           console.log(error);
 
@@ -199,7 +194,6 @@ module.exports = {
     if (!username) {
       return response(400, 'Missing username', res);
     }
-    let message = '';
     let user_liked = await getUser('users.username', username).then((data) => data)
       .catch((error) => {
         console.log(error);
@@ -265,8 +259,8 @@ module.exports = {
         return response(500, "Internal Error, getLike requete", res);
       });
 
-    return response(200, {Received: LikesReceived,
-      Given: LikesGiven}, res);
+    return response(200, {received: LikesReceived,
+      given: LikesGiven}, res);
   },
   addReport: async(req, res, payload) => {
     let user_id = payload.user_id;
@@ -413,23 +407,19 @@ module.exports = {
       });
     users.unshift(user);
     for (let index = 0; index < users.length; index += 1) {
-      for (let ind = 0; ind < blocks.length; ind += 1) {
-        let blocked_id = blocks[ind].user_blocked;
-        if (users[index].id === blocked_id) {
-          users.splice(index, 1);
-        } else {
-          await algo(users[index], user).then((data) => data)
-            .catch((error) => {
-              console.log(error);
+      await algo(users[index], user).then((data) => data)
+        .catch((error) => {
+          console.log(error);
 
-              return response(500, 'Internal error', res);
-            });
-        }
-      }
+          return response(500, 'Internal error', res);
+        });
     }
     users.shift();
     if (number > users.length) {
       number = users.length;
+    }
+    for (let index = 0; index < blocks.length; index += 1) {
+      users = users.filter((user) => user.id !== blocks[index].user_blocked);
     }
     users = users.splice(0, number);
     let result = users.sort(function compare(user1, user2) {
@@ -442,7 +432,6 @@ module.exports = {
 
       return 0;
     });
-    console.log(result);
     for (let index = 0; index < result.length; index += 1) {
       let photos = await getPhoto(result[index].id).then((data) => data)
         .catch((error) => {
@@ -461,8 +450,8 @@ module.exports = {
       }
     }
 
-    return response(200, {length: number,
-      data: result}, res);
+    return response(200, {length: user.length,
+      data: users}, res);
   },
   getSearch: async(req, res, payload) => {
     let user_id = payload.user_id;
@@ -515,7 +504,7 @@ module.exports = {
 
           return response(500, 'Internal error', res);
         });
-      results[index].photos = photos;
+      results[index].photo = photos;
     }
     results = results.filter((result) => result.distance < distance);
     for (let index = 0; index < tags.length; index += 1) {
