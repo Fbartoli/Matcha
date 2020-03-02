@@ -173,6 +173,7 @@ module.exports = {
         result.matchScore = await add(result.matchScore, 10).then((data) => data);
       }
     }
+
     await getDistancePro(result, user).then((data) => data)
       .catch((error) => {
         console.log(error);

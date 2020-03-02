@@ -30,6 +30,9 @@ const getHistoryBlocksID = util.promisify(usermodel.getHistoryBlocksId);
 const addBlock = util.promisify(usermodel.addBlock);
 const getBlock = util.promisify(usermodel.getAllBlocks);
 
+const getUserMatched = util.promisify(usermodel.getUserMatched);
+
+
 const isMatching = util.promisify(usermodel.isMatch);
 const isLiked = util.promisify(usermodel.isLiked);
 const addMatch = util.promisify(usermodel.addMatch);
@@ -377,7 +380,7 @@ module.exports = {
   // score difference 0.01 per pts
   getPotentialMatch: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let number = req.query.number;
+    let number = req.query.number; // protect against not string
     let user = await getFullProfile(user_id).then((data) => data[0])
       .catch((error) => {
         console.log(error);
@@ -450,7 +453,7 @@ module.exports = {
       }
     }
 
-    return response(200, {length: user.length,
+    return response(200, {length: users.length,
       data: users}, res);
   },
   getSearch: async(req, res, payload) => {
@@ -515,4 +518,16 @@ module.exports = {
       length: results.length,
       data: results}, res);
   },
+  getMatchedUser: async(req, res, payload) => {
+    let user_id = payload.user_id;
+    console.log(user_id);
+    let result = await getUserMatched(user_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+
+    return response(200, result, res);
+  }
 };

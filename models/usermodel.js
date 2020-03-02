@@ -388,7 +388,7 @@ module.exports = {
     });
   },
   getAllLikesGiven: (user_id, callback) => {
-    db.connection.query('SELECT history_likes.user_id as `user_liked`, users.username as `user_who_likes`, users.id, likes.date as date FROM `history_likes` INNER JOIN `likes` ON history_likes.id = likes.history_likes_id INNER JOIN users ON likes.user_id = users.id WHERE likes.user_id = ?', [user_id], function(error, result) {
+    db.connection.query('SELECT history_likes.user_id as `userid_liked`, users.username as `user_liked`, likes.date as date FROM `history_likes` INNER JOIN `likes` ON history_likes.id = likes.history_likes_id INNER JOIN users ON history_likes.user_id = users.id WHERE likes.user_id = ?', [user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -441,6 +441,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  getUserMatched: (user_id, callback) => {
+    db.connection.query('select username from users INNER JOIN match_user on match_user.user_id = users.id where match_user.match_id IN (select match_id from match_user where match_user.user_id = ?) and users.id <> ? group by users.username;', [user_id, user_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   isMatch: (user_id_1, user_id_2, callback) => {
     // Check if users like each other
     db.connection.query(`SELECT history_likes.user_id as 'user liked', likes.user_id as 'user who likes' FROM history_likes INNER JOIN likes ON history_likes.id = likes.history_likes_id WHERE history_likes.user_id = '${user_id_1}' AND likes.user_id = '${user_id_2}' OR history_likes.user_id = '${user_id_2}' AND likes.user_id = '${user_id_1}'`, function(error, result) {
@@ -452,7 +461,7 @@ module.exports = {
     });
   },
   addMatch: (id, callback) => {
-    db.connection.query('INSERT INTO `match` (`id`,`active`) values (`?`,1)', [id], function(error, result) {
+    db.connection.query('INSERT INTO `match` (`id`,`active`) values (?,1)', [id], function(error, result) {
       if (error) {
         return callback(error, null);
       }

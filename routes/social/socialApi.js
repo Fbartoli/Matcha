@@ -12,6 +12,10 @@ editSocial.route('/view')
   .get((req, res) => {
     handlers.jwtCheck(req, res, social.getView);
   });
+editSocial.route('/match')
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, social.getMatchedUser);
+  });
 editSocial.route('/like')
   .post((req, res) => {
     handlers.jwtCheck(req, res, social.addLike);
