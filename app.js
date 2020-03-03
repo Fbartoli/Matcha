@@ -7,6 +7,8 @@ const socketIOHelper = require('./middleware/socket');
 const morgan = require('morgan');
 const socketIO = require('socket.io');
 let receivers = require('./controllers/socket');
+const path = require('path');
+global.appRoot = path.resolve(__dirname);
 
 const port = CONFIG.port;
 

@@ -380,7 +380,10 @@ module.exports = {
   // score difference 0.01 per pts
   getPotentialMatch: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let number = req.query.number; // protect against not string
+    let number = parseInt(req.query.number, 10);
+    if (typeof number !== 'number' || isNaN(number)) {
+      return response(400, 'Please provide the amount of results desired', res);
+    }
     let user = await getFullProfile(user_id).then((data) => data[0])
       .catch((error) => {
         console.log(error);
@@ -472,10 +475,9 @@ module.exports = {
 
         return response(500, 'Internal error', res);
       });
-    if (!user) {
-      return response(500, 'User not found', res);
-    }
-    let info = [age[0], age[1], popularity[0], popularity[1]];
+
+    console.log(user);
+    let info = [age[0], age[1], popularity[0], popularity[1], user.id];
     let results = await getSearch(info, gender).then((data) => data)
       .catch((error) => {
         console.log(error);

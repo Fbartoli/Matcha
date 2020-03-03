@@ -1,5 +1,6 @@
 const db = require('../models/dbconnection');
-const pathPhotoDefault = "/Users/flbartol/Documents/Matcha/uploads/1024px.png";
+const path = require('path');
+const pathPhotoDefault = `${path.dirname(require.main.filename)}/uploads/1024px.png`;
 
 module.exports = {
   getAllusers: (req, callback) => {
@@ -117,7 +118,7 @@ module.exports = {
   findFilteredUsers: (info, gender, callback) => {
     let SQL = 'SELECT users.username, ANY_VALUE(users.age) AS age, ANY_VALUE(users.score) as score, ANY_VALUE(users.location) as location, ANY_VALUE(users.id) as id,  ANY_VALUE(interested_in_gender.gender_id) as interested_in, ANY_VALUE(users.gender_id) as gender_id, ANY_VALUE(photo.link) as photos, GROUP_CONCAT(interested_in_hobbies.hobbies_name) as hobbies FROM users INNER JOIN interested_in_hobbies ON interested_in_hobbies.user_id = users.id INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id INNER JOIN photo ON photo.user_id = users.id ';
     if (gender === '1') {
-      let where = 'WHERE (users.age BETWEEN ? AND ? ) AND (users.score BETWEEN ? AND ? ) and photo.position = 1 and users.active = 1  GROUP BY users.username';
+      let where = 'WHERE (users.age BETWEEN ? AND ? ) AND (users.score BETWEEN ? AND ? ) and photo.position = 1 and users.active = 1 AND users.id <> ? GROUP BY users.username';
       db.connection.query(`${SQL} ${where}`, info, function(error, result) {
         if (error) {
           return callback(error, null);
@@ -126,7 +127,7 @@ module.exports = {
         return callback(error, result);
       });
     } else {
-      db.connection.query(`${SQL} WHERE (users.age BETWEEN ? AND ? ) AND (users.score BETWEEN ? AND ? ) AND users.gender_id = ${gender}  and photo.position = 1 and users.active = 1 GROUP BY users.username`, info, function(error, result) {
+      db.connection.query(`${SQL} WHERE (users.age BETWEEN ? AND ? ) AND (users.score BETWEEN ? AND ? ) AND users.gender_id = ${gender}  and photo.position = 1 and users.active = 1 AND users.id <> ? GROUP BY users.username`, info, function(error, result) {
         if (error) {
           return callback(error, null);
         }
