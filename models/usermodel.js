@@ -1,6 +1,6 @@
 const db = require('../models/dbconnection');
 const path = require('path');
-const pathPhotoDefault = `${path.dirname(require.main.filename)}/uploads/1024px.png`;
+const pathPhotoDefault = `${global.appRoot}/uploads/1024px.png`;
 
 module.exports = {
   getAllusers: (req, callback) => {
@@ -53,6 +53,24 @@ module.exports = {
   },
   addInterest: (user_id, tag, callback) => {
     db.connection.query(`INSERT INTO interested_in_hobbies (user_id, hobbies_name) VALUES ('${user_id}', ?)`, [tag], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addNotification: (username, msg, callback) => {
+    db.connection.query(`INSERT INTO notification (user_id, message) VALUES ('${username}', ?)`, [msg], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getNotificationUnread: (username, callback) => {
+    db.connection.query(`SELECT * FROM notification WHERE username = ? and read = 0`, [username], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -217,7 +235,7 @@ module.exports = {
       return callback(error, result);
     });
   },
-  updateFieldUsername: (value, field, username, callback) => {
+  updateFieldUsername: (field, value, username, callback) => {
     db.connection.query('UPDATE users SET ?? = ? WHERE username =?', [field, value, username], function(error, result) {
       if (error) {
         return callback(error, null);

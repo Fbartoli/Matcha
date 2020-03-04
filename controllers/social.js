@@ -182,10 +182,7 @@ module.exports = {
 
           return response(500, 'Internal error isMatching', res);
         });
-      // add notification real time;
-      // add notification real time;
-      // add notification real time;
-      // add notification real time;
+
       message = ` and matched with ${username}`;
     }
 

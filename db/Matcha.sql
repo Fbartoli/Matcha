@@ -113,24 +113,29 @@ CREATE TABLE `interested_in_hobbies` (
 );
 
 CREATE TABLE `conversation` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
-  `user_id` varchar(255),
+  `id` varchar(255) PRIMARY KEY,
   `time_started` timestamp DEFAULT (now()),
   `active` boolean DEFAULT (1)
 );
 
-CREATE TABLE `participant` (
+CREATE TABLE `participants` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `conversation_id` int,
-  `user_id` varchar(255),
-  `time_joined` timestamp DEFAULT (now()),
-  `time_left` timestamp DEFAULT (now())
+  `conversation_id` varchar(255),
+  `user_id` varchar(255)
 );
 
-CREATE TABLE `message` (
+CREATE TABLE `messages` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
-  `participant_id` int,
+  `user_id` varchar(255),
   `message_text` varchar(255),
+  `time` timestamp
+);
+
+CREATE TABLE `notification` (
+  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `username` varchar(255),
+  `message` varchar(255),
+  `read` boolean DEFAULT (0),
   `time` timestamp
 );
 
@@ -171,6 +176,12 @@ ALTER TABLE `blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DE
 ALTER TABLE `history_blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `blocks` ADD FOREIGN KEY (`history_blocks_id`) REFERENCES `history_blocks` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `participants` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `participants` ADD FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`);
+
+ALTER TABLE `messages` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 
 INSERT INTO `gender` (`name`) VALUES ('bi'), ('male'), ('female');

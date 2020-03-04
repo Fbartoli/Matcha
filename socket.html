@@ -4,27 +4,41 @@
     <title>Socket.IO chat</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
       $(function () {
+       var app = new Vue({
+         el: '#app',
+        data: {
+          message: 'Hello Vue !'
+        },
+        methods: {
+          socket: function() {
+            socket.on('chat', function(msg){
+              this.message=msg;
+            })
+          }
+        }
+      })
         var socket = io.connect('http://localhost:8080');
         $('#chat').submit(function(e){
           e.preventDefault(); // prevents page reloading
-          socket.emit('chat', $('#m').val());
+          socket.emit('chat', 'angrybear579','angrybear579',$('#m').val());
           $('#m').val('');
           return false;
         });
-        $('#likes').submit(function(e){
-          e.preventDefault(); // prevents page reloading
-          socket.emit('like', 
-            'randomID',
-            $('#like').val()
-        );
-          $('#like').val('');
-          return false;
-        });
+        // $('#likes').submit(function(e){
+        //   e.preventDefault(); // prevents page reloading
+        //   socket.emit('like', 
+        //     'randomID',
+        //     $('#like').val()
+        // );
+        //   $('#like').val('');
+        //   return false;
+        // });
         $('#login').click(function(e){
           e.preventDefault(); // prevents page reloading
-          socket.emit('login', 'florent');
+          socket.emit('login', 'angrybear579');
           return false;
         });
         socket.on('chat', function(msg){
@@ -44,6 +58,9 @@
     </style>
   </head>
   <body>
+      <div id="app">
+          {{ message }}
+        </div>
     <ul id="messages"></ul>
     <form id="chat" action="">
       <input id="m" autocomplete="off" /><button>Send</button>

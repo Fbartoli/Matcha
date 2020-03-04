@@ -585,13 +585,13 @@ const User = {
         return response(500, 'Internal error', res);
       });
     const string = uniqid();
-    await updateFieldUsername(string, 'confirmation', username)
+    await updateFieldUsername('confirmation', string, username)
       .catch((err) => {
         console.log(err);
 
         return response(500, 'Internal error', res);
       });
-    await updateFieldUsername(0, 'password_reset', username)
+    await updateFieldUsername('password_reset', 0, username)
       .catch((err) => {
         console.log(err);
 
