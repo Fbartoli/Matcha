@@ -21,6 +21,7 @@ exports.receivers = (io) => {
       io.emit(CHAT, `${username} is now connected with id ${socket.id}`);
     });
     socket.on(CHAT, function(username, msg) {
+      console.log(`Chat message by ${username}: ${msg}`);
       if (username) {
         io.emit(CHAT, `${username}: ${msg}`);
       } else {
