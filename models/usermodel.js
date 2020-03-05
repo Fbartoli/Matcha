@@ -1,6 +1,6 @@
 const db = require('../models/dbconnection');
-const path = require('path');
-const pathPhotoDefault = `${global.appRoot}/uploads/1024px.png`;
+const rootDir = require('../constant').rootDIr;
+const pathPhotoDefault = `${rootDir}/uploads/1024px.png`;
 
 module.exports = {
   getAllusers: (req, callback) => {

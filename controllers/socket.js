@@ -10,7 +10,7 @@ const ERROR = 'error';
 const CHAT = 'chat';
 const NOTIFICATION = 'notification';
 const LIKE = 'like';
-const VIEW = 'VIEW';
+const VIEW = 'view';
 const LOGIN = 'login';
 const DISCONNECT = 'disconnect';
 

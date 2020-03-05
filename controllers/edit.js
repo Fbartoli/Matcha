@@ -5,7 +5,7 @@ const util = require('util');
 const fs = require('fs');
 const sharp = require('sharp');
 const path = require("path");
-const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
+const rootDir = require('../constant').rootDIr;
 const uniqid = require('uniqid');
 // const handlers = require('../middleware/handlers');
 
