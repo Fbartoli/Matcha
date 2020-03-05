@@ -1,6 +1,7 @@
 // IMPORT
 const usermodel = require('../models/usermodel');
 const util = require('util');
+const uniqid = require('uniqid');
 // PROMISIFIED
 const updateConnection = util.promisify(usermodel.updateFieldUsername);
 const addNotification = util.promisify(usermodel.addNotification);
@@ -56,21 +57,24 @@ exports.receivers = (io) => {
       await addNotification(user_liked, `user ${username} likes you`);
       console.log(`you like ${user_liked}`);
       io.to(userRegister[user_liked]).emit(NOTIFICATION, `user ${username} likes you`);
-      io.to(userRegister[username]).emit(NOTIFICATION, `you like ${user_liked}`);
     });
     socket.on(LIKEBACK, async function(username, user_liked) {
       await addNotification(user_liked, `user ${username} likes you back, it's a match`);
       console.log(`you liked ${user_liked}`);
-      io.to(userRegister[user_liked]).emit(NOTIFICATION, `user ${username} likes you back`);
-      io.to(userRegister[username]).emit(NOTIFICATION, `you like ${user_liked}`);
+      io.to(userRegister[user_liked]).emit(NOTIFICATION, `you are matched with ${username}`);
+      io.to(userRegister[username]).emit(NOTIFICATION, `match with ${user_liked}`);
     });
     socket.on(VIEW, async function(username, user_viewed) {
-      await addNotification(user_viewed, `user ${username} viewed your profile`);
-      io.to(userRegister[user_viewed]).emit(NOTIFICATION, `user ${username} viewed ${user_viewed}`);
+      let id = uniqid();
+      await addNotification(id, user_viewed, `user ${username} viewed your profile`);
+      io.to(userRegister[user_viewed]).emit(NOTIFICATION, {message: `user ${username} viewed ${user_viewed}`,
+        id: id});
     });
     socket.on(DISLIKE, async function(username, user_viewed) {
       await addNotification(user_viewed, `user ${username} viewed your profile`);
-      io.to(userRegister[user_viewed]).emit(NOTIFICATION, `${username} don't like you anymore`);
+      if (userRegister[user_viewed]) {
+        io.to(userRegister[user_viewed]).emit(NOTIFICATION, `${username} doesn't like you anymore`);
+      }
     });
     socket.on(DISCONNECT, function() {
       console.log(`User disconnected ${socket.id}`);

@@ -60,8 +60,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  addNotification: (username, msg, callback) => {
-    db.connection.query(`INSERT INTO notification (username, message) VALUES ('${username}', ?)`, [msg], function(error, result) {
+  addNotification: (id, username, msg, callback) => {
+    db.connection.query(`INSERT INTO notification (id, username, message) VALUES (? ,'${username}', ?)`, [id, msg], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -70,7 +70,7 @@ module.exports = {
     });
   },
   getNotificationUnread: (username, callback) => {
-    db.connection.query(`SELECT * FROM notification WHERE username = ? and read = 0`, [username], function(error, result) {
+    db.connection.query(`SELECT * FROM notification WHERE username = ? and 'read' = 0`, [username], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -79,7 +79,7 @@ module.exports = {
     });
   },
   updateNotification: (notifId, callback) => {
-    db.connection.query(`UPDATE notification SET read = 1 WHERE id = ?`, [notifId], function(error, result) {
+    db.connection.query('UPDATE notification SET `read` = 1 WHERE id = ?', [notifId], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -478,6 +478,15 @@ module.exports = {
       return callback(error, result);
     });
   },
+  getMatchIdUsers: (username1, username2, callback) => {
+    db.connection.query('select match.id, users.username from `match` INNER JOIN match_user on match_user.match_id = match.id INNER JOIN users ON users.id = match_user.user_id WHERE users.username = ? or users.username = ?', [username1, username2], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
   isMatch: (user_id_1, user_id_2, callback) => {
     // Check if users like each other
     db.connection.query(`SELECT history_likes.user_id as 'user liked', likes.user_id as 'user who likes' FROM history_likes INNER JOIN likes ON history_likes.id = likes.history_likes_id WHERE history_likes.user_id = '${user_id_1}' AND likes.user_id = '${user_id_2}' OR history_likes.user_id = '${user_id_2}' AND likes.user_id = '${user_id_1}'`, function(error, result) {
@@ -490,6 +499,15 @@ module.exports = {
   },
   addMatch: (id, callback) => {
     db.connection.query('INSERT INTO `match` (`id`,`active`) values (?,1)', [id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  deleteMatch: (id, callback) => {
+    db.connection.query('delete from `match` where id = ?', [id], function(error, result) {
       if (error) {
         return callback(error, null);
       }

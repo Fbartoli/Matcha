@@ -132,7 +132,7 @@ CREATE TABLE `messages` (
 );
 
 CREATE TABLE `notification` (
-  `id` int PRIMARY KEY AUTO_INCREMENT,
+  `id` varchar(255) PRIMARY KEY,
   `username` varchar(255),
   `message` varchar(255),
   `read` boolean DEFAULT (0),

@@ -42,6 +42,8 @@ const getTopProfil = util.promisify(usermodel.getTopProfil);
 
 const getNotificationUnread = util.promisify(usermodel.getNotificationUnread);
 const updateNotification = util.promisify(usermodel.updateNotification);
+const getMatchId = util.promisify(usermodel.getMatchIdUsers);
+const deleteMatch = util.promisify(usermodel.deleteMatch);
 
 const algo = util.promisify(handlers.algo);
 const Convertb64 = util.promisify(handlers.Convertb64);
@@ -194,7 +196,9 @@ module.exports = {
   },
   deleteLike: async(req, res, payload) => {
     let user_id = payload.user_id;
+    let user = payload.username;
     let username = sanitize(req.body.username);
+    let message = '';
     if (!username) {
       return response(400, 'Missing username', res);
     }
@@ -224,6 +228,29 @@ module.exports = {
 
         return response(500, 'Internal error getHistory/addLike', res);
       });
+    let match = await isMatching(user_id, user_liked[0].id).then((data) => data.length === 2)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error isMatching', res);
+      });
+    if (match === true) {
+      let matchId = await getMatchId(user, username).then((data) => data[0].id)
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error matchID', res);
+        });
+      if (matchId) {
+        await deleteMatch(matchId).catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error matchID', res);
+        });
+      }
+
+      message = ` and unmatched with ${username}`;
+    }
     if (data.length > 0) {
       await delLike(user_id, history[0].id).catch((error) => {
         console.log(error);
@@ -235,12 +262,8 @@ module.exports = {
 
         return response(500, 'Internal error update score', res);
       });
-      // add notification real time;
-      // add notification real time;
-      // add notification real time;
-      // add notification real time;
 
-      return response(200, `Disliked`, res);
+      return response(200, `Disliked${message}`, res);
     } else {
       return response(400, 'You need to like the user first', res);
     }
@@ -545,17 +568,17 @@ module.exports = {
     return response(200, result, res);
   },
   readNotification: async(req, res) => {
-    let id = req.ody.notificationId;
+    let id = req.body.notificationId;
     if (!id) {
       return response(400, 'missing informations', res);
     }
-    let result = await updateNotification(id).then((data) => data)
+    await updateNotification(id).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error', res);
       });
 
-    return response(200, result, res);
+    return response(200, 'OK', res);
   }
 };
