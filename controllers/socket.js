@@ -10,8 +10,10 @@ const ERROR = 'error';
 const CHAT = 'chat';
 const NOTIFICATION = 'notification';
 const LIKE = 'like';
+const LIKEBACK = 'likeback';
 const VIEW = 'view';
 const LOGIN = 'login';
+const DISLIKE = 'dislike';
 const DISCONNECT = 'disconnect';
 
 // DATA
@@ -26,14 +28,13 @@ exports.receivers = (io) => {
     console.log(`Connection incoming: ${socket.id}`);
     UserOnlinecount += 1;
     socket.on(LOGIN, async function(username) {
-      console.log(userRegister);
+      // handle different type of notification.
       await updateConnection('last_connection', new Date(Date.now()), username).then((data) => {
         if (data.affectedRows === 0) {
           // to turn into a notification
           io.to(socket.id).emit(CHAT, `${username} not found`);
         } else {
           userRegister[username] = socket.id;
-          console.log(userRegister);
           io.emit(CHAT, `${username} is now connected with id ${socket.id}`);
         }
       })
@@ -42,11 +43,10 @@ exports.receivers = (io) => {
           io.to(socket.id).emit(CHAT, 'Could not connect');
         });
     });
-    socket.on(CHAT, /* async*/ function(username, user_target, msg) {
+    socket.on(CHAT, async function(username, user_target, msg) {
       console.log(`Chat message by ${username}: ${msg}`);
       if (userRegister[username]) {
-        console.log('lol');
-        // await addNotification(user_target, `user ${username} likes you`);
+        await addNotification(user_target, `user ${username} sent you a message`);
         io.to(userRegister[user_target]).emit(CHAT, `${username}: ${msg}`);
       } else {
         io.to(socket.id).emit('chat', 'Please login');
@@ -57,11 +57,20 @@ exports.receivers = (io) => {
       console.log(`you like ${user_liked}`);
       io.to(userRegister[user_liked]).emit(NOTIFICATION, `user ${username} likes you`);
       io.to(userRegister[username]).emit(NOTIFICATION, `you like ${user_liked}`);
-
+    });
+    socket.on(LIKEBACK, async function(username, user_liked) {
+      await addNotification(user_liked, `user ${username} likes you back, it's a match`);
+      console.log(`you liked ${user_liked}`);
+      io.to(userRegister[user_liked]).emit(NOTIFICATION, `user ${username} likes you back`);
+      io.to(userRegister[username]).emit(NOTIFICATION, `you like ${user_liked}`);
     });
     socket.on(VIEW, async function(username, user_viewed) {
       await addNotification(user_viewed, `user ${username} viewed your profile`);
-      io.emit(NOTIFICATION, `user ${username} viewed ${user_viewed}`);
+      io.to(userRegister[user_viewed]).emit(NOTIFICATION, `user ${username} viewed ${user_viewed}`);
+    });
+    socket.on(DISLIKE, async function(username, user_viewed) {
+      await addNotification(user_viewed, `user ${username} viewed your profile`);
+      io.to(userRegister[user_viewed]).emit(NOTIFICATION, `${username} don't like you anymore`);
     });
     socket.on(DISCONNECT, function() {
       console.log(`User disconnected ${socket.id}`);
@@ -72,4 +81,3 @@ exports.receivers = (io) => {
     });
   });
 };
-// handle different type of notification.

@@ -49,4 +49,11 @@ editSocial.route('/search')
   .get((req, res) => {
     handlers.jwtCheck(req, res, social.getSearch);
   });
+editSocial.route('/notification')
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, social.getNotification);
+  })
+  .post((req, res) => {
+    handlers.jwtCheck(req, res, social.readNotification);
+  });
 module.exports = editSocial;

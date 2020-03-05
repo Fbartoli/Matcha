@@ -61,7 +61,7 @@ module.exports = {
     });
   },
   addNotification: (username, msg, callback) => {
-    db.connection.query(`INSERT INTO notification (user_id, message) VALUES ('${username}', ?)`, [msg], function(error, result) {
+    db.connection.query(`INSERT INTO notification (username, message) VALUES ('${username}', ?)`, [msg], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -71,6 +71,15 @@ module.exports = {
   },
   getNotificationUnread: (username, callback) => {
     db.connection.query(`SELECT * FROM notification WHERE username = ? and read = 0`, [username], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  updateNotification: (notifId, callback) => {
+    db.connection.query(`UPDATE notification SET read = 1 WHERE id = ?`, [notifId], function(error, result) {
       if (error) {
         return callback(error, null);
       }

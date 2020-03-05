@@ -40,6 +40,9 @@ const addUsersMatch = util.promisify(usermodel.addUsersMatch);
 
 const getTopProfil = util.promisify(usermodel.getTopProfil);
 
+const getNotificationUnread = util.promisify(usermodel.getNotificationUnread);
+const updateNotification = util.promisify(usermodel.updateNotification);
+
 const algo = util.promisify(handlers.algo);
 const Convertb64 = util.promisify(handlers.Convertb64);
 // const getAllUsers = util.promisify(usermodel.getAllusers);
@@ -57,25 +60,26 @@ module.exports = {
     if (!username) {
       return response(400, 'No user provided', res);
     }
+    console.log('1');
     let user_visited = await getUser('users.username', username).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error getUser/addView', res);
       });
-    console.log(user_visited);
     if (!user_visited[0]) {
       console.log('user_visited: ', user_visited);
 
       return response(400, 'User not in the db', res);
     }
+
     let history = await getHistoryViewsID(user_visited[0].id).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, 'Internal error getHistory/addView', res);
       });
-    console.log(history);
+
     await addView(user_id, history[0].id).then((data) => data)
       .catch((error) => {
         console.log(error);
@@ -83,7 +87,7 @@ module.exports = {
         return response(500, 'Internal error addView/addView', res);
       });
     await updateFieldUser('score', user_visited[0].score + 5, user_id).catch((error) => {
-      console.lof(error);
+      console.log(error);
 
       return response(500, 'Internal error update score', res);
     });
@@ -521,6 +525,31 @@ module.exports = {
     let user_id = payload.user_id;
     console.log(user_id);
     let result = await getUserMatched(user_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+
+    return response(200, result, res);
+  },
+  getNotification: async(req, res, payload) => {
+    let username = payload.username;
+    let result = await getNotificationUnread(username).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+
+    return response(200, result, res);
+  },
+  readNotification: async(req, res) => {
+    let id = req.ody.notificationId;
+    if (!id) {
+      return response(400, 'missing informations', res);
+    }
+    let result = await updateNotification(id).then((data) => data)
       .catch((error) => {
         console.log(error);
 

@@ -429,7 +429,8 @@ const User = {
       });
     } else if (bcrypt.compareSync(password, user[0].password)) {
       let user_id = user[0].id;
-      const token = jwt.sign({user_id}, jwtkey, {
+      const token = jwt.sign({user_id: user_id,
+        username: username}, jwtkey, {
         algorithm: 'HS256',
         expiresIn: jwtExpirySeconds
       });
