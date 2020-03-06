@@ -18,12 +18,13 @@ const VIEW = 'view';
 const LOGIN = 'login';
 const DISLIKE = 'dislike';
 const DISCONNECT = 'disconnect';
-const JOIN = 'join';
+const ONLINE = 'onlinee';
+const LOGOUT = 'logout';
 
 // DATA
 let UserOnlinecount = 0;
 let userRegister = {};
-let chatRoom = {};
+let userOnline = {};
 
 const deleteKeyByValue = (obj, value) => Reflect.deleteProperty(userRegister, Object.keys(obj).find((key) => obj[key] === value));
 
@@ -39,16 +40,17 @@ exports.receivers = (io) => {
         });
       await updateConnection('last_connection', new Date(Date.now()), username).then((data) => {
         if (data.affectedRows === 0) {
-          io.to(socket.id).emit(CHAT, `${username} not found`);
+          io.to(socket.id).emit(NOTIFICATION, `${username} not found`);
         } else {
           userRegister[username] = {socket: socket.id,
             user_id: user_id};
-          io.emit(CHAT, `${username} is now connected with id ${socket.id}`);
+          userOnline[username] = socket.id;
+          console.log(userOnline);
+          io.emit(ONLINE, userOnline);
         }
       })
         .catch((error) => {
           console.log(error);
-          io.to(socket.id).emit(CHAT, 'Could not connect');
         });
     });
     socket.on(CHAT, async function(username, user_target, msg) {
@@ -68,18 +70,22 @@ exports.receivers = (io) => {
               id: id});
           });
         console.log(`${username} : ${userRegister[username].user_id} : ${msg} : ${conversationId}`);
+        console.log(userRegister);
         await addMessages(userRegister[username].user_id, msg, conversationId).then((data) => console.log(data))
           .catch((error) => {
             console.log(error);
           });
         if (userRegister[user_target]) {
+          io.to(userRegister[user_target].socket).emit(NOTIFICATION, {message: `You received a message from ${username}`,
+            id: id});
           io.to(userRegister[user_target].socket).emit(CHAT, `${username}: ${msg}`);
         }
         if (userRegister[username]) {
           io.to(userRegister[username].socket).emit(CHAT, `${username}: ${msg}`);
         }
       } else {
-        io.to(socket.id).emit(NOTIFICATION, {message: 'Please login again'});
+        io.to(socket.id).emit(NOTIFICATION, {message: 'Please login again',
+          id: '99999999'});
       }
     });
     socket.on(LIKE, async function(username, user_liked) {
@@ -120,11 +126,34 @@ exports.receivers = (io) => {
           id: id});
       }
     });
+    socket.on(LOGOUT, async function(username) {
+      // handle different type of notification.
+      await updateConnection('last_connection', new Date(Date.now()), username).then((data) => {
+        if (data.affectedRows === 0) {
+          io.to(socket.id).emit(CHAT, `${username} not found`);
+        } else {
+          userRegister[username] = null;
+          userOnline[username] = null;
+          console.log('User online disconected', userOnline);
+          io.emit(ONLINE, userOnline);
+        }
+      })
+        .catch((error) => {
+          console.log(error);
+        });
+    });
+    socket.on(ONLINE, function(userOnline) {
+      console.log('User online listener', userOnline);
+    });
     socket.on(DISCONNECT, function() {
       console.log(`User disconnected ${socket.id}`);
       UserOnlinecount -= 1;
-      deleteKeyByValue(userRegister, socket.id);
+      deleteKeyByValue(userOnline, socket.id);
+      console.log(userOnline);
+      console.log('User online', userOnline);
+      io.emit(ONLINE, userOnline);
       console.log(`${UserOnlinecount} connected`);
     });
   });
 };
+// logout

@@ -160,38 +160,37 @@ const User = {
     const gender = ['male', 'female'];
     let username = req.query.username;
     let list = [];
-    await getUser('users.id', payload.user_id).then((data) => {
-      if (!data[0]) {
-        return response(400, 'User not in db', res);
-      }
-      if (data[0].profile_complete === 0) {
-        return response(400, 'Please complete your profile', res);
-      }
-    })
+    let check = await getUser('users.id', payload.user_id).then((data) => data)
       .catch((error) => {
         console.log(error);
+
+        return response(500, "internal error", res);
       });
+    if (!check[0].id) {
+      return response(400, 'User not in db 170 ', res);
+    }
+    if (check[0].profile_complete === 0) {
+      return response(400, 'Please complete your profile', res);
+    }
     let blocks = await getBlock(payload.user_id).then((data) => data)
       .catch((error) => {
         console.log(error);
 
         return response(500, "Internal Error, getView requete", res);
       });
-    let user = await getUserOther('username', username).then(async (data) => {
-      if (!data[0] || data[0].id === null) {
-        return res.status(400).json({client: 'User not found'});
-      } else {
-        data[0].sex = await gender[data[0].gender_id - 1];
-
-        return data;
-      }
-    })
+    let user = await getUserOther('username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
 
-        return res.status(500).json({error: err});
+        return response(500, "Internal error", res);
       });
-    console.log(blocks);
+    if (!user[0].id) {
+      return response(400, 'User not in db 170 ', res);
+    }
+    if (user[0].profile_complete === 0) {
+      return response(400, 'Please complete your profile', res);
+    }
+    user[0].sex = await gender[user[0].gender_id - 1];
     for (let ind = 0; ind < blocks.length; ind += 1) {
       let blocked_id = blocks[ind].user_blocked;
       if (user[0].id === blocked_id) {

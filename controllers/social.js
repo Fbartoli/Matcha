@@ -67,7 +67,6 @@ module.exports = {
     if (!username) {
       return response(400, 'No user provided', res);
     }
-    console.log('1');
     let user_visited = await getUser('users.username', username).then((data) => data)
       .catch((error) => {
         console.log(error);
