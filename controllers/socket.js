@@ -30,11 +30,10 @@ const deleteKeyByValue = (obj, value) => Reflect.deleteProperty(userRegister, Ob
 exports.receivers = (io) => {
 
   io.on('connection', function(socket) {
-    console.log(`Connection incoming: ${socket.id}`);
     UserOnlinecount += 1;
     socket.on(LOGIN, async function(username) {
       // handle different type of notification.
-      let user_id = await getUserInfo(username).then((data) => data[0])
+      let user_id = await getUserInfo(username).then((data) => data[0].id)
         .catch((error) => {
           console.log(error);
         });
@@ -53,39 +52,56 @@ exports.receivers = (io) => {
         });
     });
     socket.on(CHAT, async function(username, user_target, msg) {
-      if (userRegister[username]) {
-        await addNotification(user_target, `user ${username} sent you a message`).catch((error) => {
+      let user_target_id = await await getUserInfo(username).then((data) => data[0].id)
+        .catch((error) => {
           console.log(error);
         });
-        let conversationId = await getConversationId(username, user_target).then((data) => data)
+      if (userRegister[username]) {
+        let id = uniqid();
+        await addNotification(id, user_target, `user ${username} sent you a message`).catch((error) => {
+          console.log(error);
+        });
+        let conversationId = await getConversationId(userRegister[username].user_id, user_target_id).then((data) => data[0].conversation_id)
+          .catch((error) => {
+            console.log(error);
+            io.to(socket.id).emit(NOTIFICATION, {message: 'COULD NOT SEND THE MESSAGE',
+              id: id});
+          });
+        console.log(`${username} : ${userRegister[username].user_id} : ${msg} : ${conversationId}`);
+        await addMessages(userRegister[username].user_id, msg, conversationId).then((data) => console.log(data))
           .catch((error) => {
             console.log(error);
           });
-        await addMessages(userRegister[username].user_id, msg, conversationId).catch((error) => {
-          console.log(error);
-        });
         if (userRegister[user_target]) {
           io.to(userRegister[user_target].socket).emit(CHAT, `${username}: ${msg}`);
         }
+        if (userRegister[username]) {
+          io.to(userRegister[username].socket).emit(CHAT, `${username}: ${msg}`);
+        }
       } else {
-        io.to(socket.id).emit('chat', 'Please login');
+        io.to(socket.id).emit(NOTIFICATION, {message: 'Please login again'});
       }
     });
     socket.on(LIKE, async function(username, user_liked) {
-      await addNotification(user_liked, `user ${username} likes you`);
+      let id = uniqid();
+      await addNotification(id, user_liked, `user ${username} likes you`);
       console.log(`you like ${user_liked}`);
       if (userRegister[user_liked]) {
-        io.to(userRegister[user_liked].socket).emit(NOTIFICATION, `user ${username} likes you`);
+        io.to(userRegister[user_liked].socket).emit(NOTIFICATION, {message: `user ${username} likes you`,
+          id: id});
       }
     });
     socket.on(LIKEBACK, async function(username, user_liked) {
-      await addNotification(user_liked, `user ${username} likes you back, it's a match`);
+      let id = uniqid();
+      await addNotification(id, user_liked, {message: `user ${username} likes you back, it's a match`});
       console.log(`you liked ${user_liked}`);
       if (userRegister[user_liked]) {
-        io.to(userRegister[user_liked].socket).emit(NOTIFICATION, `you are matched with ${username}`);
+        io.to(userRegister[user_liked].socket).emit(NOTIFICATION, {message: `you are matched with ${username}`,
+          id: id});
       }
       if (userRegister[username]) {
-        io.to(userRegister[username].socket).emit(NOTIFICATION, `match with ${user_liked}`);
+        io.to(userRegister[username].socket).emit(NOTIFICATION, {message: `match with ${user_liked}`,
+          id: id});
       }
     });
     socket.on(VIEW, async function(username, user_viewed) {
@@ -97,16 +113,17 @@ exports.receivers = (io) => {
       }
     });
     socket.on(DISLIKE, async function(username, user_viewed) {
-      await addNotification(user_viewed, `user ${username} viewed your profile`);
+      let id = uniqid();
+      await addNotification(id, user_viewed, `user ${username} viewed your profile`);
       if (userRegister[user_viewed]) {
-        io.to(userRegister[user_viewed].socket).emit(NOTIFICATION, `${username} doesn't like you anymore`);
+        io.to(userRegister[user_viewed].socket).emit(NOTIFICATION, {message: `${username} doesn't like you anymore`,
+          id: id});
       }
     });
     socket.on(DISCONNECT, function() {
       console.log(`User disconnected ${socket.id}`);
       UserOnlinecount -= 1;
       deleteKeyByValue(userRegister, socket.id);
-      console.log(userRegister);
       console.log(`${UserOnlinecount} connected`);
     });
   });

@@ -608,9 +608,9 @@ module.exports = {
   },
   getMessages: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let conversation_id = req.body.conversation_id;
-    console.log(user_id);
-    let result = await getMessages(conversation_id).then((data) => data)
+    let conversation_id = req.query.conversation_id;
+    console.log(req.query);
+    let result = await getMessages(conversation_id, user_id).then((data) => data)
       .catch((error) => {
         console.log(error);
 

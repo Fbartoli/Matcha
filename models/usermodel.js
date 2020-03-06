@@ -605,8 +605,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  getMessages: (conversation_id, callback) => {
-    db.connection.query('SELECT messages.* FROM messages INNER JOIN users ON users.id = messages.user_id WHERE conversation_id = ?', [conversation_id], function(error, result) {
+  getMessages: (conversation_id, user_id, callback) => {
+    db.connection.query('SELECT messages.*, users.username FROM messages INNER JOIN users ON users.id = messages.user_id WHERE conversation_id = ?', [conversation_id, user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
