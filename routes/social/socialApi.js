@@ -56,4 +56,8 @@ editSocial.route('/notification')
   .post((req, res) => {
     handlers.jwtCheck(req, res, social.readNotification);
   });
+editSocial.route('/messages')
+  .get((req, res) => {
+    handlers.jwtCheck(req, res, social.getMessages);
+  });
 module.exports = editSocial;

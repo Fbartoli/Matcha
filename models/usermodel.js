@@ -470,7 +470,7 @@ module.exports = {
     });
   },
   getUserMatched: (user_id, callback) => {
-    db.connection.query('select username from users INNER JOIN match_user on match_user.user_id = users.id where match_user.match_id IN (select match_id from match_user where match_user.user_id = ?) and users.id <> ? group by users.username;', [user_id, user_id], function(error, result) {
+    db.connection.query('select username, users.id from users INNER JOIN match_user on match_user.user_id = users.id where match_user.match_id IN (select match_id from match_user where match_user.user_id = ?) and users.id <> ? group by users.username, users.id;', [user_id, user_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -559,7 +559,61 @@ module.exports = {
 
       return callback(error, result);
     });
-  }
+  },
+  addConversation: (id, callback) => {
+    db.connection.query('INSERT INTO `conversation` (`id`) values (?)', [id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getConversationId: (user1, user2, callback) => {
+    db.connection.query('select conversation_id from participants inner join users ON users.id = participants.user_id where user_id = ? and conversation_id IN (select conversation_id from participants where user_id = ?)', [user2, user1], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addParticipants: (user1, user2, id, callback) => {
+    db.connection.query('INSERT INTO participants (`conversation_id`, `user_id`) values (?,?),(?,?)', [id, user1, id, user2], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  addMessages: (user_id, msg, conversation_id, callback) => {
+    db.connection.query('INSERT INTO messages (`user_id`,`message_text`, `conversation_id`) values (?,?,?)', [user_id, msg, conversation_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getUserId: (username, callback) => {
+    db.connection.query('SELECT * FROM users WHERE USERNAME = ?', [username], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
+  getMessages: (conversation_id, callback) => {
+    db.connection.query('SELECT messages.* FROM messages INNER JOIN users ON users.id = messages.user_id WHERE conversation_id = ?', [conversation_id], function(error, result) {
+      if (error) {
+        return callback(error, null);
+      }
+
+      return callback(error, result);
+    });
+  },
 };
 // ;INSERT INTO `match_user`(`user_id`,`match_id`) values (`?`, LAST_INSERT_ID()),(`?`, LAST_INSERT_ID())
 // 'SELECT users.id, users.username, users.age, users.location, users.gender_id, users.score, interested_in_gender.gender_id as `interested_in` FROM users INNER JOIN interested_in_gender ON interested_in_gender.user_id = users.id WHERE users.id != ? AND (users.gender_id = ? OR users.gender_id = ?) '

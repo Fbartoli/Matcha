@@ -7,6 +7,11 @@ const uniqid = require('uniqid');
 
 const getPhoto = util.promisify(usermodel.getPhoto);
 
+const addConversation = util.promisify(usermodel.addConversation);
+const getConversationId = util.promisify(usermodel.getConversationId);
+const addParticipants = util.promisify(usermodel.addParticipants);
+const getMessages = util.promisify(usermodel.getMessages);
+
 const getUser = util.promisify(usermodel.findOneUser);
 const getFullProfile = util.promisify(usermodel.getFullProfile);
 const getSearch = util.promisify(usermodel.findFilteredUsers);
@@ -183,6 +188,18 @@ module.exports = {
           return response(500, 'Internal error addmatch', res);
         });
       await addUsersMatch(user_id, user_liked[0].id, id).then((data) => data)
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error isMatching', res);
+        });
+      id = uniqid();
+      await addConversation(id).catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error isMatching', res);
+      });
+      await addParticipants(user_id, user_liked[0].id, id).then((data) => data)
         .catch((error) => {
           console.log(error);
 
@@ -553,6 +570,14 @@ module.exports = {
 
         return response(500, 'Internal error', res);
       });
+    for (let index = 0; index < result.length; index += 1) {
+      result[index].conversationId = await getConversationId(user_id, result[index].id).then((data) => data[0].conversation_id)
+        .catch((error) => {
+          console.log(error);
+
+          return response(500, 'Internal error', res);
+        });
+    }
 
     return response(200, result, res);
   },
@@ -580,5 +605,18 @@ module.exports = {
       });
 
     return response(200, 'OK', res);
+  },
+  getMessages: async(req, res, payload) => {
+    let user_id = payload.user_id;
+    let conversation_id = req.body.conversation_id;
+    console.log(user_id);
+    let result = await getMessages(conversation_id).then((data) => data)
+      .catch((error) => {
+        console.log(error);
+
+        return response(500, 'Internal error', res);
+      });
+
+    return response(200, result, res);
   }
 };

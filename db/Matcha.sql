@@ -128,7 +128,8 @@ CREATE TABLE `messages` (
   `id` int PRIMARY KEY AUTO_INCREMENT,
   `user_id` varchar(255),
   `message_text` varchar(255),
-  `time` timestamp
+  `conversation_id` varchar(255),
+  `time` timestamp DEFAULT (now())
 );
 
 CREATE TABLE `notification` (
@@ -182,6 +183,9 @@ ALTER TABLE `participants` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ALTER TABLE `participants` ADD FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`);
 
 ALTER TABLE `messages` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+ALTER TABLE `messages` ADD FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`);
+
 
 
 INSERT INTO `gender` (`name`) VALUES ('bi'), ('male'), ('female');
