@@ -91,13 +91,13 @@ const User = {
       .catch((err) => {
         console.log(err);
 
-        response(500, 'Internal error', res);
+        return response(500, 'Internal error', res);
       });
     if (!user[0]) {
-      response(400, 'Unknown user', res);
+      return response(400, 'Unknown user', res);
     }
     if (!bcrypt.compareSync(passwordCurrent, user[0].password)) {
-      response(400, 'Passwords are not matching', res);
+      return response(400, 'Passwords are not matching', res);
     }
     const hashNew = await hashFct(passwordNew, 2).then((data) => data)
       .catch((err) => {
@@ -124,7 +124,7 @@ const User = {
         return res.status(500).json({error: err});
       });
     if (!user[0]) {
-      return res.status(500).json({client: 'User not found'});
+      return res.status(400).json({client: 'User not found'});
     }
     const relationship_id = await getRelationship(user_id).then((data) => data)
       .catch((err) => {
@@ -235,27 +235,31 @@ const User = {
     const confirmation = uniqid();
 
     if (!(username && name && surname && email && password)) {
-
       return res.status(400).json({client: "Missing informations, fill the form"});
     }
 
     if (!MAIL_REGEX.test(email)) {
+
       return res.status(400).json({client: 'Invalid mail.'});
     }
 
     if (!PASSWORD_REGEX.test(password) || password.length < 8) {
+
       return res.status(400).json({client: 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.'});
     }
 
     if (!USERNAME_REGEX.test(username) || username.length < 6) {
+
       return res.status(400).json({client: 'Invalid username, it should contain only letters, numbers and a minimun of 6 characters'});
     }
 
     if (!NAME_REGEX.test(name) || name.length < 2) {
+
       return res.status(400).json({client: 'Invalid name, it should contain only letters'});
     }
 
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
+
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
 
@@ -266,6 +270,7 @@ const User = {
         return res.status(500).json({client: "Internal error"});
       });
     if (user[0]) {
+
       return res.status(400).json({client: 'Email already exists'});
     }
     user = await getUser('users.username', username).then((data) => data)
@@ -275,6 +280,7 @@ const User = {
         return res.status(500).json({client: "Internal error"});
       });
     if (user[0]) {
+
       return res.status(400).json({client: 'Username already exists'});
     }
     const hash = await hashFct(password, 2).then((data) => data)
@@ -290,14 +296,12 @@ const User = {
 
         return res.status(500).json({client: "Internal error"});
       });
-    console.log(username);
     user = await getUser('users.username', username).then((data) => data)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: "Internal error"});
       });
-    console.log(user[0]);
     await addRelationship(user[0].id).then((data) => data)
       .catch((err) => {
         console.log(err);

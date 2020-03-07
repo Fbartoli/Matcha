@@ -84,8 +84,12 @@ exports.receivers = (io) => {
           io.to(userRegister[username].socket).emit(CHAT, `${username}: ${msg}`);
         }
       } else {
+        let id = uniqid();
+        await addNotification(id, user_target, `user ${username} sent you a message`).catch((error) => {
+          console.log(error);
+        });
         io.to(socket.id).emit(NOTIFICATION, {message: 'Please login again',
-          id: '99999999'});
+          id: id});
       }
     });
     socket.on(LIKE, async function(username, user_liked) {
@@ -156,4 +160,3 @@ exports.receivers = (io) => {
     });
   });
 };
-// logout

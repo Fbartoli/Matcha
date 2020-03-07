@@ -84,7 +84,8 @@ module.exports = {
       });
     }
     let token = req.header('Authorization');
-
+    if (token === null) return res.status(401).json({
+      client: "Missing token"});
     if (token && token.startsWith('Bearer ')) {
       token = token.slice(7, token.length);
     } else {
@@ -98,7 +99,6 @@ module.exports = {
       payload = jwt.verify(token, jwtKey);
     } catch (err) {
       if (err instanceof jwt.JsonWebTokenError) {
-        console.log(err);
 
         return res.status(401).json({client: 'Token error'});
       }
@@ -207,7 +207,6 @@ module.exports = {
     }
     callback(null, photos);
   },
-  getDistancePro: util.promisify(distance),
-
+  getDistancePro: util.promisify(distance)
 };
 
