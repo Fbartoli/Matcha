@@ -77,21 +77,15 @@ module.exports = {
     if (!(bio || user_id)) {
       return res.status(400).json({error: "Missing informations, fill the form"});
     }
-    let user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      return response(400, 'Unknown user', res);
+    try {
+      let user = await getUser('id', user_id).then((data) => data);
+      if (!user[0]) {
+        return response(400, 'Unknown user', res);
+      }
+      await updateFieldUser('bio', bio, user_id).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal error', res);
     }
-    await updateFieldUser('bio', bio, user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
 
     return response(200, 'OK', res);
   },
@@ -104,21 +98,15 @@ module.exports = {
     if (!(gender_id >= 1 && gender_id <= 2)) {
       return response(400, 'Wrong input gender_id', res);
     }
-    let user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      return response(400, 'Unknown user', res);
+    try {
+      let user = await getUser('id', user_id).then((data) => data);
+      if (!user[0]) {
+        return response(400, 'Unknown user', res);
+      }
+      await updateFieldUser('gender_id', gender_id, user_id).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal error', res);
     }
-    await updateFieldUser('gender_id', gender_id, user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
 
     return response(200, 'OK', res);
   },
@@ -131,23 +119,17 @@ module.exports = {
     if (!(gender >= 1 && gender <= 3)) {
       return response(400, 'Wrong input gender_id', res);
     }
-    let user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      response(400, 'Unknown user', res);
+    try {
+      let user = await getUser('id', user_id).then((data) => data);
+      if (!user[0]) {
+        response(400, 'Unknown user', res);
+      }
+      await updateRelationsip(user_id, gender).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal error', res);
     }
-    await updateRelationsip(user_id, gender).then((data) => data)
-      .catch((err) => {
-        console.log(err);
 
-        return res.status(500).json({error: err});
-      });
-
-    return res.status(200);
+    return response(200, 'OK', res);
   },
   editPhoto: async (req, res, payload) => {
     const user_id = payload.user_id;
@@ -206,12 +188,12 @@ module.exports = {
   },
   getPhoto: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let photos = await getPhoto(user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
+    let photos = {};
+    try {
+      photos = await getPhoto(user_id).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal error', res);
+    }
     for (let index = 0; index < photos.length; index += 1) {
       try {
         photos[index].link = Buffer.from(fs.readFileSync(photos[index].link)).toString('base64');
@@ -231,22 +213,18 @@ module.exports = {
     let location = {};
     try {
       location = JSON.parse(req.body.location);
-    } catch (e) {
+
+      const user_id = payload.user_id;
+      if (!location) {
+        return res.status(400).json({error: "Missing informations, fill the form"});
+      }
+      if (!(location.lat && location.lng && location.city && location.country)) {
+        return res.status(400).json({error: "Missing informations, locating info"});
+      }
+      await updateFieldUser('location', JSON.stringify(location), user_id).then((data) => data);
+    } catch (error) {
       return response(400, 'Bad json', res);
     }
-    const user_id = payload.user_id;
-    if (!location) {
-      return res.status(400).json({error: "Missing informations, fill the form"});
-    }
-    if (!(location.lat && location.lng && location.city && location.country)) {
-      return res.status(400).json({error: "Missing informations, locating info"});
-    }
-    await updateFieldUser('location', JSON.stringify(location), user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
-      });
 
     return response(200, "OK", res);
   }

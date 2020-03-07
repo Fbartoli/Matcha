@@ -58,22 +58,6 @@ const ValidDate = util.promisify(handlers.isValidDate);
 const ageCalculator = util.promisify(handlers.calculateAge);
 const Convertb64 = util.promisify(handlers.Convertb64);
 const User = {
-  // getAllusers: async(req, res) => {
-  //   const allUsers = await getAllUsers(req).then((data) => data)
-  //     .catch((err) => {
-  //       res.status(303).json({error: err.error});
-  //     });
-  //   console.log(allUsers);
-  //   let apiResult = {};
-  //   let resultJson = JSON.stringify(allUsers);
-  //   resultJson = JSON.parse(resultJson);
-  //   apiResult.meta = {
-  //     table: 'user',
-  //     total_entries: 0,
-  //   };
-  //   apiResult.data = resultJson;
-  //   res.json(apiResult);
-  // },
   editPassword: async(req, res, payload) => {
     const passwordNew = req.body.password2;
     const passwordCurrent = req.body.password;
@@ -275,49 +259,40 @@ const User = {
     if (!username || !password) {
       return response(400, 'Missing information', res);
     }
-    let user = await getUserPass('username', username).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    if (!user[0]) {
-      return res.status(401).json({
-        client: 'Wrong information'
-      });
-    } else if (user[0].active === 0) {
-      return res.status(401).json({
-        client: 'Account not activated'
-      });
-    } else if (bcrypt.compareSync(password, user[0].password)) {
-      let user_id = user[0].id;
-      const token = jwt.sign({user_id: user_id,
-        username: username}, jwtkey, {
-        algorithm: 'HS256',
-        expiresIn: jwtExpirySeconds
-      });
-      await updateFieldUser('last_connection', new Date(Date.now()), user[0].id).catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
-      let result = await getFulluser(user[0].id).then((data) => data[0])
-        .catch((err) => {
-          console.log(err);
-
-          return res.status(500).json({client: "Internal error"});
+    try {
+      let user = await getUserPass('username', username).then((data) => data);
+      if (!user[0]) {
+        return res.status(401).json({
+          client: 'Wrong information'
         });
-      Reflect.deleteProperty(result, 'password');
+      } else if (user[0].active === 0) {
+        return res.status(401).json({
+          client: 'Account not activated'
+        });
+      } else if (bcrypt.compareSync(password, user[0].password)) {
+        let user_id = user[0].id;
+        const token = jwt.sign({user_id: user_id,
+          username: username}, jwtkey, {
+          algorithm: 'HS256',
+          expiresIn: jwtExpirySeconds
+        });
+        await updateFieldUser('last_connection', new Date(Date.now()), user[0].id);
+        let result = await getFulluser(user[0].id).then((data) => data[0]);
+        Reflect.deleteProperty(result, 'password');
 
-      return res.status(200).json({
-        client: 'Login successful !',
-        token: token,
-        userdata: result,
-      });
-    } else {
-      return res.status(401).json({
-        client: 'Wrong information'
-      });
+        return res.status(200).json({
+          client: 'Login successful !',
+          token: token,
+          userdata: result,
+        });
+      } else {
+        return res.status(401).json({
+          client: 'Wrong information'
+        });
+
+      }
+    } catch (error) {
+      return res.status(500).json({client: "Internal error"});
     }
   },
   activate: async(req, res) => {
@@ -378,21 +353,17 @@ const User = {
   isPasswordReset: async(req, res) => {
     const confirmation = req.query.id;
     const username = req.query.username;
-    console.log(req.query);
-
+    let user = {};
     if (!confirmation || !username) {
-
       return response(400, 'missing parameters', res);
     }
-    let user = await getUserConfirmation(username, confirmation).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: 'Internal error'});
-      });
+    try {
+      user = await getUserConfirmation(username, confirmation).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal error', res);
+    }
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
-    console.log(resultJson[0]);
     if (resultJson[0].nb !== 1) {
       console.log(resultJson[0]);
 
@@ -403,55 +374,30 @@ const User = {
     return response(200, 'redirect to password change allowed', res);
   },
   PasswordReset: async(req, res) => {
+    if (!req.body.password2 || !req.body.username) {
+      return response(400, 'Missing parameters', res);
+    }
     const password = req.body.password2;
     const username = req.body.username;
 
-    if (!username) {
-      return response(500, 'Invalid request, missing username', res);
-    }
+    if (!username) return response(500, 'Invalid request, missing username', res);
     if (!PASSWORD_REGEX.test(password) || password.length < 8) {
-
       return response(500, 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.', res);
     }
-    let data = await getUserReset(username, 1).then((data) => data[0].nb !== 1)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: 'Internal error'});
-      });
-    console.log(data);
-    if (data) return res.status(401).json({client: 'Contact the website administrator'});
-    const hash = await hashFct(password, 2).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
-    await updatePasswordUsername(username, hash)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
-    const string = uniqid();
-    await updateFieldUsername('confirmation', string, username)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
-    await updateFieldUsername('password_reset', 0, username)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
+    try {
+      let data = await getUserReset(username, 1).then((data) => data[0].nb !== 1);
+      if (data) return res.status(401).json({client: 'Contact the website administrator'});
+      const hash = await hashFct(password, 2).then((data) => data);
+      await updatePasswordUsername(username, hash);
+      const string = uniqid();
+      await updateFieldUsername('confirmation', string, username);
+      await updateFieldUsername('password_reset', 0, username);
+    } catch (error) {
+      return response(500, 'Internal error', res);
+    }
 
     return response(200, 'Password updated', res);
   },
-  // getFilteredUser: async(req, res) => {
-
-  // }
 };
 
 module.exports = User;

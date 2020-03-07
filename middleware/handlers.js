@@ -161,31 +161,19 @@ module.exports = {
     let hobbies = [];
     result.matchScore = 0;
     result.hobbies = [];
-    hobbies = await getInterest(result.id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return callback(error, null);
-      });
-    for (let ind = 0; ind < hobbies.length; ind += 1) {
-      result.hobbies.push(hobbies[ind].hobbies_name);
-      if (!user.hobbies.includes(hobbies[ind].hobbies_name)) {
-        result.matchScore = await add(result.matchScore, 10).then((data) => data);
+    try {
+      hobbies = await getInterest(result.id).then((data) => data);
+      for (let ind = 0; ind < hobbies.length; ind += 1) {
+        result.hobbies.push(hobbies[ind].hobbies_name);
+        if (!user.hobbies.includes(hobbies[ind].hobbies_name)) {
+          result.matchScore = await add(result.matchScore, 10).then((data) => data);
+        }
       }
+      await getDistancePro(result, user);
+      await getScore(result, user);
+    } catch (error) {
+      return callback(error, null);
     }
-
-    await getDistancePro(result, user).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return callback(error, null);
-      });
-    await getScore(result, user).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return callback(error, null);
-      });
 
     return callback(null, 'ok');
   },

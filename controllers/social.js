@@ -80,15 +80,15 @@ module.exports = {
     return response(200, 'viewed', res);
   },
   getView: async(req, res, payload) => {
+    let views = {};
     if (!payload.user_id) {
       return response(400, 'You are not connected', res);
     }
-    let views = await getView(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getView requete", res);
-      });
+    try {
+      views = await getView(payload.user_id).then((data) => data);
+    } catch (error) {
+      return response(500, "Internal Error, getView requete", res);
+    }
 
     return response(200, views, res);
   },
@@ -102,92 +102,38 @@ module.exports = {
       return response(400, 'Missing username', res);
     }
     let message = '';
-    let user_liked = await getUser('users.username', username).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getUser/addView', res);
-      });
-    if (!user_liked[0]) {
-      console.log('user_liked: ', user_liked);
-
-      return response(400, 'User not in the db', res);
-    }
-    if (user_id === user_liked[0].id) {
-      return response(400, 'Cannot self like', res);
-    }
-    let blocks = await getBlock(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getView requete", res);
-      });
-    for (let ind = 0; ind < blocks.length; ind += 1) {
-      let blocked_id = blocks[ind].user_reported;
-      if (user_liked[0].id === blocked_id) {
-        return response(400, "Cannot like someone you blocked", res);
+    let user_liked = {};
+    try {
+      user_liked = await getUser('users.username', username).then((data) => data);
+      if (!user_liked[0]) return response(400, 'User not in the db', res);
+      if (user_id === user_liked[0].id) return response(400, 'Cannot self like', res);
+      let blocks = await getBlock(payload.user_id).then((data) => data);
+      for (let ind = 0; ind < blocks.length; ind += 1) {
+        let blocked_id = blocks[ind].user_reported;
+        if (user_liked[0].id === blocked_id) {
+          return response(400, "Cannot like someone you blocked", res);
+        }
       }
-    }
-    let history = await getHistoryLikesID(user_liked[0].id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
+      let history = await getHistoryLikesID(user_liked[0].id).then((data) => data);
+      let data = await isLiked(user_id, user_liked[0].id).then((data) => data);
+      if (data.length > 0) {
+        return response(400, 'User Already liked', res);
+      }
+      await addLike(user_id, history[0].id);
+      await updateFieldUser('score', user_liked[0].score + 10, user_id);
+      let match = await isMatching(user_id, user_liked[0].id).then((data) => data.length === 2);
+      if (match === true) {
+        let id = uniqid();
+        await addMatch(id);
+        await addUsersMatch(user_id, user_liked[0].id, id);
+        id = uniqid();
+        await addConversation(id);
+        await addParticipants(user_id, user_liked[0].id, id);
 
-        return response(500, 'Internal error getHistory/addLike', res);
-      });
-    let data = await isLiked(user_id, user_liked[0].id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getHistory/addLike', res);
-      });
-    if (data.length > 0) {
-      return response(400, 'User Already liked', res);
-    }
-    await addLike(user_id, history[0].id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error addLike/addLike', res);
-      });
-    await updateFieldUser('score', user_liked[0].score + 10, user_id).catch((error) => {
-      console.log(error);
-
-      return response(500, 'Internal error update score', res);
-    });
-    let match = await isMatching(user_id, user_liked[0].id).then((data) => data.length === 2)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error isMatching', res);
-      });
-    if (match === true) {
-      let id = uniqid();
-      await addMatch(id).then((data) => data)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error addmatch', res);
-        });
-      await addUsersMatch(user_id, user_liked[0].id, id).then((data) => data)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error isMatching', res);
-        });
-      id = uniqid();
-      await addConversation(id).catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error isMatching', res);
-      });
-      await addParticipants(user_id, user_liked[0].id, id).then((data) => data)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error isMatching', res);
-        });
-
-      message = ` and matched with ${username}`;
+        message = ` and matched with ${username}`;
+      }
+    } catch (error) {
+      return response(500, 'Internal error isMatching', res);
     }
 
     return response(200, `Liked${message}`, res);
@@ -197,92 +143,58 @@ module.exports = {
     let user = payload.username;
     let username = sanitize(req.body.username);
     let message = '';
+    let history = {};
+    let data = {};
+    let user_liked = {};
     if (!username) {
       return response(400, 'Missing username', res);
     }
-    let user_liked = await getUser('users.username', username).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getUser/addView', res);
-      });
-    if (!user_liked[0]) {
-      console.log('user_liked: ', user_liked);
-
-      return response(400, 'User not in the db', res);
-    }
-    if (user_id === user_liked[0].id) {
-      return response(400, 'Cannot self like', res);
-    }
-    let history = await getHistoryLikesID(user_liked[0].id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getHistory/addLike', res);
-      });
-    let data = await isLiked(user_id, user_liked[0].id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getHistory/addLike', res);
-      });
-    let match = await isMatching(user_id, user_liked[0].id).then((data) => data.length === 2)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error isMatching', res);
-      });
-    if (match === true) {
-      let matchId = await getMatchId(user, username).then((data) => data[0].id)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error matchID', res);
-        });
-      if (matchId) {
-        await deleteMatch(matchId).catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error matchID', res);
-        });
+    try {
+      user_liked = await getUser('users.username', username).then((data) => data);
+      if (!user_liked[0]) {
+        return response(400, 'User not in the db', res);
       }
-
-      message = ` and unmatched with ${username}`;
+      if (user_id === user_liked[0].id) {
+        return response(400, 'Cannot self like', res);
+      }
+      history = await getHistoryLikesID(user_liked[0].id).then((data) => data);
+      data = await isLiked(user_id, user_liked[0].id).then((data) => data);
+      let match = await isMatching(user_id, user_liked[0].id).then((data) => data.length === 2);
+      if (match === true) {
+        let matchId = await getMatchId(user, username).then((data) => data[0].id);
+        if (matchId) {
+          await deleteMatch(matchId);
+        }
+        message = ` and unmatched with ${username}`;
+      }
+    } catch (error) {
+      return response(500, 'Internal error getHistory/addLike', res);
     }
     if (data.length > 0) {
-      await delLike(user_id, history[0].id).catch((error) => {
-        console.log(error);
-
+      try {
+        await delLike(user_id, history[0].id);
+        await updateFieldUser('score', user_liked[0].score - 10, user_id);
+      } catch (error) {
         return response(500, 'Internal error getHistory/addLike', res);
-      });
-      await updateFieldUser('score', user_liked[0].score - 10, user_id).catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error update score', res);
-      });
+      }
 
       return response(200, `Disliked${message}`, res);
     } else {
       return response(400, 'You need to like the user first', res);
     }
-
   },
   getLike: async(req, res, payload) => {
     if (!payload.user_id) {
       return response(400, 'You are not connected', res);
     }
-    let LikesReceived = await getAllLikesReceived(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getLike requete", res);
-      });
-    let LikesGiven = await getAllLikesGiven(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getLike requete", res);
-      });
+    let LikesReceived = {};
+    let LikesGiven = {};
+    try {
+      LikesReceived = await getAllLikesReceived(payload.user_id).then((data) => data);
+      LikesGiven = await getAllLikesGiven(payload.user_id).then((data) => data);
+    } catch (error) {
+      return response(500, "Internal Error, getLike requete", res);
+    }
 
     return response(200, {received: LikesReceived,
       given: LikesGiven}, res);
@@ -290,41 +202,25 @@ module.exports = {
   addReport: async(req, res, payload) => {
     let user_id = payload.user_id;
     let username = sanitize(req.body.username);
+    let user_reported = {};
+    let history = {};
     if (!username) {
       return response(400, 'No user provided', res);
     }
-    let user_reported = await getUser('users.username', username).then((data) => data[0])
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    if (!user_reported || !user_reported.id) {
-
-      return response(400, 'User not in the db', res);
-    }
-    let history = await getHistoryReportsID(user_reported.id).then((data) => data[0])
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getHistory/addView', res);
-      });
-    if (!history || !history.id) {
-      console.log(history);
-
-      return response(400, 'History id not found', res);
-    }
-    await addReport(user_id, history.id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error addView/addView', res);
-      });
-    await updateFieldUser('score', user_reported.score - 10, user_id).catch((error) => {
-      console.log(error);
-
+    try {
+      user_reported = await getUser('users.username', username).then((data) => data[0]);
+      if (!user_reported || !user_reported.id) {
+        return response(400, 'User not in the db', res);
+      }
+      history = await getHistoryReportsID(user_reported.id).then((data) => data[0]);
+      if (!history || !history.id) {
+        return response(400, 'History id not found', res);
+      }
+      await addReport(user_id, history.id).then((data) => data);
+      await updateFieldUser('score', user_reported.score - 10, user_id);
+    } catch (error) {
       return response(500, 'Internal error update score', res);
-    });
+    }
 
     return response(200, 'reported', res);
   },
@@ -332,53 +228,37 @@ module.exports = {
     if (!payload.user_id) {
       return response(400, 'You are not connected', res);
     }
-    let result = await getReport(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getView requete", res);
-      });
+    let result = {};
+    try {
+      result = await getReport(payload.user_id).then((data) => data);
+    } catch (error) {
+      return response(500, "Internal Error, getView requete", res);
+    }
 
     return response(200, result, res);
   },
   addBlock: async(req, res, payload) => {
     let user_id = payload.user_id;
     let username = sanitize(req.body.username);
+    let user_blocked = {};
+    let history = {};
     if (!username) {
       return response(400, 'No user provided', res);
     }
-    let user_blocked = await getUser('users.username', username).then((data) => data[0])
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    if (!user_blocked || !user_blocked.id) {
-
-      return response(400, 'User not in the db', res);
-    }
-
-    let history = await getHistoryBlocksID(user_blocked.id).then((data) => data[0])
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getHistory/addView', res);
-      });
-    if (!history || !history.id) {
-
-      return response(400, 'History id not found', res);
-    }
-    await addBlock(user_id, history.id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error addView/addView', res);
-      });
-    await updateFieldUser('score', user_blocked.score - 20, user_id).catch((error) => {
-      console.log(error);
-
+    try {
+      user_blocked = await getUser('users.username', username).then((data) => data[0]);
+      if (!user_blocked || !user_blocked.id) {
+        return response(400, 'User not in the db', res);
+      }
+      history = await getHistoryBlocksID(user_blocked.id).then((data) => data[0]);
+      if (!history || !history.id) {
+        return response(400, 'History id not found', res);
+      }
+      await addBlock(user_id, history.id).then((data) => data);
+      await updateFieldUser('score', user_blocked.score - 20, user_id);
+    } catch (error) {
       return response(500, 'Internal error update score', res);
-    });
+    }
 
     return response(200, 'Blocked', res);
   },
@@ -386,12 +266,12 @@ module.exports = {
     if (!payload.user_id) {
       return response(400, 'You are not connected', res);
     }
-    let results = await getBlock(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getView requete", res);
-      });
+    let results = {};
+    try {
+      results = await getBlock(payload.user_id).then((data) => data);
+    } catch (error) {
+      return response(500, "Internal Error, getView requete", res);
+    }
 
     return response(200, results, res);
   },
@@ -403,79 +283,58 @@ module.exports = {
   getPotentialMatch: async(req, res, payload) => {
     let user_id = payload.user_id;
     let number = parseInt(req.query.number, 10);
+    let user = {};
+    let users = {};
     if (typeof number !== 'number' || isNaN(number)) {
       return response(400, 'Please provide the amount of results desired', res);
     }
-    let user = await getFullProfile(user_id).then((data) => data[0])
-      .catch((error) => {
-        console.log(error);
+    try {
+      user = await getFullProfile(user_id).then((data) => data[0]);
+      if (!payload.user_id) {
+        return response(400, 'You are not connected', res);
+      }
+      if (!user) {
+        return response(500, 'User not found', res);
+      }
+      users = await getTopProfil(user_id, user).then((data) => data);
+      if (!users[0]) {
+        return response(200, 'no potential mate, natural selection bitch', res);
+      }
+      let blocks = await getBlock(payload.user_id).then((data) => data);
+      users.unshift(user);
+      for (let index = 0; index < users.length; index += 1) {
+        await algo(users[index], user).then((data) => data);
+      }
+      users.shift();
+      if (number > users.length) {
+        number = users.length;
+      }
+      for (let index = 0; index < blocks.length; index += 1) {
+        users = users.filter((user) => user.id !== blocks[index].user_blocked);
+      }
+      users = users.splice(0, number);
+      let result = users.sort(function compare(user1, user2) {
+        if (user1.matchScore < user2.matchScore) {
+          return -1;
+        }
+        if (user1.matchScore > user2.matchScore) {
+          return 1;
+        }
 
-        return response(500, 'Internal error', res);
+        return 0;
       });
-    if (!payload.user_id) {
-      return response(400, 'You are not connected', res);
-    }
-    if (!user) {
-      return response(500, 'User not found', res);
-    }
-    let users = await getTopProfil(user_id, user).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    if (!users[0]) {
-      return response(200, 'no potential mate, natural selection bitch', res);
-    }
-    let blocks = await getBlock(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getView requete", res);
-      });
-    users.unshift(user);
-    for (let index = 0; index < users.length; index += 1) {
-      await algo(users[index], user).then((data) => data)
-        .catch((error) => {
+      for (let index = 0; index < result.length; index += 1) {
+        let photos = await getPhoto(result[index].id).then((data) => data);
+        try {
+          photos[0].link = Buffer.from(fs.readFileSync(photos[0].link)).toString('base64');
+          result[index].photo = photos[0].link;
+          Reflect.deleteProperty(result, 'id');
+        } catch (error) {
           console.log(error);
-
-          return response(500, 'Internal error', res);
-        });
-    }
-    users.shift();
-    if (number > users.length) {
-      number = users.length;
-    }
-    for (let index = 0; index < blocks.length; index += 1) {
-      users = users.filter((user) => user.id !== blocks[index].user_blocked);
-    }
-    users = users.splice(0, number);
-    let result = users.sort(function compare(user1, user2) {
-      if (user1.matchScore < user2.matchScore) {
-        return -1;
+        }
       }
-      if (user1.matchScore > user2.matchScore) {
-        return 1;
-      }
-
-      return 0;
-    });
-    for (let index = 0; index < result.length; index += 1) {
-      let photos = await getPhoto(result[index].id).then((data) => data)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error', res);
-        });
-      try {
-        photos[0].link = Buffer.from(fs.readFileSync(photos[0].link)).toString('base64');
-        result[index].photo = photos[0].link;
-        Reflect.deleteProperty(result, 'id');
-      } catch (error) {
-        console.log(error);
-
-        return response(404, 'File not available', res);
-      }
+    } catch (error) {
+      return response(500, 'Internal error', res);
     }
 
     return response(200, {length: users.length,
@@ -488,54 +347,33 @@ module.exports = {
     let distance = req.query.distance;
     let tags = req.query.tags.split(',');
     let gender = req.query.gender;
+    let user = {};
+    let results = {};
     if (!age || !distance || !popularity || !tags || !user_id || !gender) {
       return response(400, 'missing parameters', res);
     }
-    let user = await getFullProfile(user_id).then((data) => data[0])
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-
-    console.log(user);
-    let info = [age[0], age[1], popularity[0], popularity[1], user.id];
-    let results = await getSearch(info, gender).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    let blocks = await getBlock(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getView requete", res);
-      });
-    for (let index = 0; index < results.length; index += 1) {
-      await handlers.getDistancePro(results[index], user).then((data) => data)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error', res);
-        });
-      for (let ind = 0; ind < blocks.length; ind += 1) {
-        let blocked_id = blocks[ind].user_blocked;
-        if (results[index].id === blocked_id) {
-          results.splice(index, 1);
+    try {
+      user = await getFullProfile(user_id).then((data) => data[0]);
+      let info = [age[0], age[1], popularity[0], popularity[1], user.id];
+      results = await getSearch(info, gender).then((data) => data);
+      let blocks = await getBlock(payload.user_id).then((data) => data);
+      for (let index = 0; index < results.length; index += 1) {
+        await handlers.getDistancePro(results[index], user).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (results[index].id === blocked_id) {
+            results.splice(index, 1);
+          }
         }
+        let photos = await Convertb64(results[index]).then((data) => data);
+        results[index].photo = photos;
       }
-      let photos = await Convertb64(results[index]).then((data) => data)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error', res);
-        });
-      results[index].photo = photos;
-    }
-    results = results.filter((result) => result.distance < distance);
-    for (let index = 0; index < tags.length; index += 1) {
-      results = results.filter((result) => result.hobbies.includes(tags[index]));
+      results = results.filter((result) => result.distance < distance);
+      for (let index = 0; index < tags.length; index += 1) {
+        results = results.filter((result) => result.hobbies.includes(tags[index]));
+      }
+    } catch (error) {
+      return response(500, 'Internal error', res);
     }
 
     return response(200, {
@@ -544,32 +382,26 @@ module.exports = {
   },
   getMatchedUser: async(req, res, payload) => {
     let user_id = payload.user_id;
-    console.log(user_id);
-    let result = await getUserMatched(user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    for (let index = 0; index < result.length; index += 1) {
-      result[index].conversationId = await getConversationId(user_id, result[index].id).then((data) => data[0].conversation_id)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, 'Internal error', res);
-        });
+    let result = {};
+    try {
+      result = await getUserMatched(user_id).then((data) => data);
+      for (let index = 0; index < result.length; index += 1) {
+        result[index].conversationId = await getConversationId(user_id, result[index].id).then((data) => data[0].conversation_id);
+      }
+    } catch (error) {
+      return response(500, 'Internal error', res);
     }
 
     return response(200, result, res);
   },
   getNotification: async(req, res, payload) => {
     let username = payload.username;
-    let result = await getNotificationUnread(username).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
+    let result = {};
+    try {
+      await getNotificationUnread(username).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal error', res);
+    }
 
     return response(200, result, res);
   },
@@ -578,25 +410,23 @@ module.exports = {
     if (!id) {
       return response(400, 'missing informations', res);
     }
-    await updateNotification(id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
+    try {
+      await updateNotification(id).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal error', res);
+    }
 
     return response(200, 'OK', res);
   },
   getMessages: async(req, res, payload) => {
     let user_id = payload.user_id;
     let conversation_id = req.query.conversation_id;
-    console.log(req.query);
-    let result = await getMessages(conversation_id, user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
+    let result = {};
+    try {
+      result = await getMessages(conversation_id, user_id).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal error', res);
+    }
 
     return response(200, result, res);
   }
