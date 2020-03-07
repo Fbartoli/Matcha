@@ -87,72 +87,55 @@ const User = {
     if (!PASSWORD_REGEX.test(passwordNew)) {
       return res.status(400).json({error: 'Invalid input.'});
     }
-    let user = await getUser('users.id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
+    try {
+      let user = await getUser('users.id', user_id).then((data) => data);
+      if (!user[0]) {
+        return response(400, 'Unknown user', res);
+      }
+      if (!bcrypt.compareSync(passwordCurrent, user[0].password)) {
+        return response(400, 'Passwords are not matching', res);
+      }
+      const hashNew = await hashFct(passwordNew, 2).then((data) => data);
 
-        return response(500, 'Internal error', res);
-      });
-    if (!user[0]) {
-      return response(400, 'Unknown user', res);
+      await updateFieldUser('password', hashNew, user_id).then((data) => console.log(data));
+
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({error: error});
     }
-    if (!bcrypt.compareSync(passwordCurrent, user[0].password)) {
-      return response(400, 'Passwords are not matching', res);
-    }
-    const hashNew = await hashFct(passwordNew, 2).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, 'Internal error', res);
-      });
-    await updateFieldUser(hashNew, 'password', user_id).then((data) => console.log(data))
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
-      });
 
     return response(200, 'OK', res);
   },
   getUser: async(req, res, payload) => {
     const gender = ['male', 'female'];
     let user_id = payload.user_id;
-    const user = await getUser('users.id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
+    let user = {};
+    try {
+      user = await getUser('users.id', user_id).then((data) => data);
+      if (!user[0]) {
+        return res.status(400).json({client: 'User not found'});
+      }
+      const relationship_id = await getRelationship(user_id).then((data) => data);
+      const tags = await getTags(user_id).then((data) => data);
+      let list = [];
+      tags.forEach((tag) => {
+        list.push(tag.hobbies_name);
       });
-    if (!user[0]) {
-      return res.status(400).json({client: 'User not found'});
+      console.log(list);
+      user[0].tags = list;
+      // refacto coté sql parce que c'est pas beau
+      Reflect.deleteProperty(user[0], 'password');
+      Reflect.deleteProperty(user[0], 'password_reset');
+      Reflect.deleteProperty(user[0], 'registration_date');
+      Reflect.deleteProperty(user[0], 'active');
+      Reflect.deleteProperty(user[0], 'confirmation');
+      Reflect.deleteProperty(user[0], 'isOnline');
+      user[0].interested_in = relationship_id[0].gender_id;
+      user[0].sex = gender[user[0].gender_id - 1];
+    } catch (error) {
+      return response(500, 'Internal Error', res);
     }
-    const relationship_id = await getRelationship(user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
-      });
-    const tags = await getTags(user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return res.status(500).json({error: error});
-      });
-    let list = [];
-    tags.forEach((tag) => {
-      list.push(tag.hobbies_name);
-    });
-    console.log(list);
-    user[0].tags = list;
-    // refacto coté sql parce que c'est pas beau
-    Reflect.deleteProperty(user[0], 'password');
-    Reflect.deleteProperty(user[0], 'password_reset');
-    Reflect.deleteProperty(user[0], 'registration_date');
-    Reflect.deleteProperty(user[0], 'active');
-    Reflect.deleteProperty(user[0], 'confirmation');
-    Reflect.deleteProperty(user[0], 'isOnline');
-    user[0].interested_in = relationship_id[0].gender_id;
-    user[0].sex = gender[user[0].gender_id - 1];
 
     return res.status(200).json({userdata: user[0]});
   },
@@ -160,186 +143,79 @@ const User = {
     const gender = ['male', 'female'];
     let username = req.query.username;
     let list = [];
-    let check = await getUser('users.id', payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "internal error", res);
-      });
-    if (!check[0].id) {
-      return response(400, 'User not in db 170 ', res);
-    }
-    if (check[0].profile_complete === 0) {
-      return response(400, 'Please complete your profile', res);
-    }
-    let blocks = await getBlock(payload.user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, "Internal Error, getView requete", res);
-      });
-    let user = await getUserOther('username', username).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return response(500, "Internal error", res);
-      });
-    if (!user[0].id) {
-      return response(400, 'User not in db 170 ', res);
-    }
-    if (user[0].profile_complete === 0) {
-      return response(400, 'Please complete your profile', res);
-    }
-    user[0].sex = await gender[user[0].gender_id - 1];
-    for (let ind = 0; ind < blocks.length; ind += 1) {
-      let blocked_id = blocks[ind].user_blocked;
-      if (user[0].id === blocked_id) {
-        console.log(`${blocked_id}:  ${user[0]}`);
-
-        return response(400, 'You Blocked that user', res);
+    let user = {};
+    try {
+      let check = await getUser('users.id', payload.user_id).then((data) => data);
+      if (!check[0].id) return response(400, 'User not in db 170 ', res);
+      if (check[0].profile_complete === 0) return response(400, 'Please complete your profile', res);
+      let blocks = await getBlock(payload.user_id).then((data) => data);
+      user = await getUserOther('username', username).then((data) => data);
+      if (!user[0].id) return response(400, 'User not in db 170 ', res);
+      if (user[0].profile_complete === 0) return response(400, 'Please complete your profile', res);
+      user[0].sex = await gender[user[0].gender_id - 1];
+      for (let ind = 0; ind < blocks.length; ind += 1) {
+        let blocked_id = blocks[ind].user_blocked;
+        if (user[0].id === blocked_id) return response(400, 'You Blocked that user', res);
       }
+      await getRelationship(user[0].id).then((data) => {
+        user[0].interested_in = data[0].gender_id;
+      });
+      await getTags(user[0].id).then((data) => {
+        if (data[0]) {
+          data.forEach((tag) => {
+            list.push(tag.hobbies_name);
+          });
+          user[0].tags = list;
+        }
+      });
+      let photos = await Convertb64(user[0]).then((data) => data);
+      user[0].photos = photos;
+    } catch (error) {
+      return response(500, 'Internal error', res);
     }
-    await getRelationship(user[0].id).then((data) => {
-      user[0].interested_in = data[0].gender_id;
-    })
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({error: err});
-      });
-    await getTags(user[0].id).then((data) => {
-      if (data[0]) {
-        data.forEach((tag) => {
-          list.push(tag.hobbies_name);
-        });
-        user[0].tags = list;
-      }
-    })
-      .catch((error) => {
-        console.log(error);
-
-        return res.status(500).json({error: error});
-      });
-    let photos = await Convertb64(user[0]).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    user[0].photos = photos;
 
     return res.status(200).json({userdata: user[0]});
   },
   addUser: async(req, res) => {
     let {username, name, surname, email, password} = req.body;
     const confirmation = uniqid();
-
     if (!(username && name && surname && email && password)) {
       return res.status(400).json({client: "Missing informations, fill the form"});
     }
-
     if (!MAIL_REGEX.test(email)) {
-
       return res.status(400).json({client: 'Invalid mail.'});
     }
-
     if (!PASSWORD_REGEX.test(password) || password.length < 8) {
-
       return res.status(400).json({client: 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.'});
     }
-
     if (!USERNAME_REGEX.test(username) || username.length < 6) {
-
       return res.status(400).json({client: 'Invalid username, it should contain only letters, numbers and a minimun of 6 characters'});
     }
-
     if (!NAME_REGEX.test(name) || name.length < 2) {
-
       return res.status(400).json({client: 'Invalid name, it should contain only letters'});
     }
-
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
-
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
-
-    let user = await getUser('users.email', email).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    if (user[0]) {
-
-      return res.status(400).json({client: 'Email already exists'});
+    try {
+      let user = await getUser('users.email', email).then((data) => data);
+      if (user[0]) return res.status(400).json({client: 'Email already exists'});
+      user = await getUser('users.username', username).then((data) => data);
+      if (user[0]) return res.status(400).json({client: 'Username already exists'});
+      const hash = await hashFct(password, 2).then((data) => data);
+      const post = [username, name, surname, email, hash, confirmation];
+      await addUser(post).then((data) => data);
+      user = await getUser('users.username', username).then((data) => data);
+      await addRelationship(user[0].id).then((data) => data);
+      await addViewsHistory(user[0].id).then((data) => data);
+      await addLikeHistory(user[0].id).then((data) => data);
+      await addBlocksHistory(user[0].id).then((data) => data);
+      await addReportsHistory(user[0].id).then((data) => data);
+      await addPhoto(user[0].id).then((data) => data);
+      mail(email, 'activation link matcha', null, '<p>lien pour activer votre compte : <a href="http://localhost:3000/activate?id=' + confirmation + '"> lien pour activer </a></p>');
+    } catch (error) {
+      return res.status(500).json({client: "Internal error"});
     }
-    user = await getUser('users.username', username).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    if (user[0]) {
-
-      return res.status(400).json({client: 'Username already exists'});
-    }
-    const hash = await hashFct(password, 2).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    const post = [username, name, surname, email, hash, confirmation];
-    await addUser(post).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    user = await getUser('users.username', username).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    await addRelationship(user[0].id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    await addViewsHistory(user[0].id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    await addLikeHistory(user[0].id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    await addBlocksHistory(user[0].id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    await addReportsHistory(user[0].id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    await addPhoto(user[0].id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    mail(email, 'activation link matcha', null, '<p>lien pour activer votre compte : <a href="http://localhost:3000/activate?id=' + confirmation + '"> lien pour activer </a></p>');
-
 
     return res.status(200).json({client: 'accepted',
       link: confirmation});
@@ -350,13 +226,11 @@ const User = {
     if (!(user_id && bio && birth_date && gender_id && notification && interested_in && username && name && surname && email && tags)) {
       return response(400, "Missing information", res);
     }
-    await ValidDate(birth_date).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(400, "Wrong date format", res);
-
-      });
+    try {
+      await ValidDate(birth_date).then((data) => data);
+    } catch (error) {
+      return response(400, 'Wrong input', res);
+    }
     if (!USERNAME_REGEX.test(username) || username.length < 6) {
       return res.status(400).json({client: 'Invalid username, it should contain only letters, numbers and a minimun of 6 characters'});
     }
@@ -372,41 +246,26 @@ const User = {
       sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification), sanitize(username),
       sanitize(name), sanitize(surname), sanitize(email), age, sanitize(user_id)
     ];
-    if (email) {
-      await editEmail(email, user_id).then((data) => data)
-        .catch((error) => {
-          console.log(error);
-
-          return response(500, error, res);
-        });
+    try {
+      let userEmail = await getUser('email', email).then((data) => data);
+      if (userEmail[0] && email === userEmail[0].email) {
+        return response(400, 'Wrong input', res);
+      }
+      await editEmail(email, user_id).then((data) => data);
+      let user = await getUser('username', username).then((data) => data);
+      if (user[0] && username === user[0].username) {
+        return response(400, 'Wrong input', res);
+      }
+      await updateUser(info).then((data) => data);
+      await delTags(user_id).then((data) => data);
+      let arrayTags = tags.split(',');
+      arrayTags.forEach(async (tag) => {
+        await addTags(user_id, tag);
+      });
+      await updateRelationsip(interested_in, user_id).then((data) => data);
+    } catch (error) {
+      return response(500, 'Internal Error', res);
     }
-    await updateUser(info).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    await delTags(user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    let arrayTags = tags.split(',');
-    console.log(arrayTags);
-    arrayTags.forEach(async (tag) => {
-      await addTags(user_id, tag).catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
-    });
-    await updateRelationsip(interested_in, user_id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error', res);
-      });
 
     return response(200, 'Information updated', res);
 
@@ -448,6 +307,7 @@ const User = {
 
           return res.status(500).json({client: "Internal error"});
         });
+      Reflect.deleteProperty(result, 'password');
 
       return res.status(200).json({
         client: 'Login successful !',
@@ -468,33 +328,22 @@ const User = {
     if (!confirmation) {
       return res.status(400).json({client: "Missing information"});
     }
-    let user = await getUser('confirmation', confirmation).then((data) => data)
-      .catch((err) => {
-        console.log(err);
+    try {
+      let user = await getUser('confirmation', confirmation).then((data) => data);
+      let resultJson = JSON.stringify(user);
+      resultJson = JSON.parse(resultJson);
+      if (!resultJson[0]) {
 
-        return res.status(500).json({client: "Internal error"});
-      });
-    let resultJson = JSON.stringify(user);
-    resultJson = JSON.parse(resultJson);
-    if (!resultJson[0]) {
-
-      return res.status(500).json({
-        client: 'User already activated or wrong link',
-      });
+        return res.status(500).json({
+          client: 'User already activated or wrong link',
+        });
+      }
+      await activate('1', confirmation).then((data) => data);
+      const string = uniqid();
+      await updateConfirmation(string, confirmation).then((data) => data);
+    } catch (error) {
+      return res.status(500).json({client: "Internal error"});
     }
-    await activate('1', confirmation).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
-    const string = uniqid();
-    await updateConfirmation(string, confirmation).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-
-        return res.status(500).json({client: "Internal error"});
-      });
 
     return res.status(200).json({client: 'User activated'});
   },
@@ -503,7 +352,6 @@ const User = {
     if (!email) {
       return res.status(401).json({client: "Email not provided"});
     }
-    console.log(email);
     const user = await getUser('email', email).then((data) => data)
       .catch((error) => {
         console.log(error);
@@ -513,7 +361,7 @@ const User = {
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (resultJson[0]) {
-      await updateFieldUser(1, 'password_reset', resultJson[0].id).then((data) => console.log(data))
+      await updateFieldUser('password_reset', 1, resultJson[0].id).then((data) => console.log(data))
         .catch((err) => {
           console.log(err);
 
@@ -531,9 +379,10 @@ const User = {
     const confirmation = req.query.id;
     const username = req.query.username;
     console.log(req.query);
-    if (!(confirmation || username)) {
 
-      return res.status(500).json({client: 'Internal error'});
+    if (!confirmation || !username) {
+
+      return response(400, 'missing parameters', res);
     }
     let user = await getUserConfirmation(username, confirmation).then((data) => data)
       .catch((err) => {
@@ -549,7 +398,7 @@ const User = {
 
       return res.status(401).json({client: 'Contact the website administrator'});
     }
-    // redirection versla page pour changer le mot de passe
+    // redirection vers la page pour changer le mot de passe
 
     return response(200, 'redirect to password change allowed', res);
   },
@@ -564,18 +413,14 @@ const User = {
 
       return response(500, 'Invalid password, it should contain at least one capital letter, one numerical character and a minimun of 8 characters.', res);
     }
-    await getUserReset(username, 1).then((data) => {
-      if (data[0].nb !== 1) {
-        console.log(data[0]);
-
-        return res.status(401).json({client: 'Contact the website administrator'});
-      }
-    })
+    let data = await getUserReset(username, 1).then((data) => data[0].nb !== 1)
       .catch((err) => {
         console.log(err);
 
         return res.status(500).json({client: 'Internal error'});
       });
+    console.log(data);
+    if (data) return res.status(401).json({client: 'Contact the website administrator'});
     const hash = await hashFct(password, 2).then((data) => data)
       .catch((err) => {
         console.log(err);

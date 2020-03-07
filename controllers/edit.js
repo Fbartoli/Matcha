@@ -4,7 +4,6 @@ const sanitize = require('sanitize-html');
 const util = require('util');
 const fs = require('fs');
 const sharp = require('sharp');
-const path = require("path");
 const rootDir = require('../constant').rootDIr;
 const uniqid = require('uniqid');
 // const handlers = require('../middleware/handlers');
@@ -70,6 +69,9 @@ module.exports = {
     return callback(null, 'Email updated');
   },
   editBio: async(req, res, payload) => {
+    if (!req.body.bio) {
+      return res.status(400).json({error: "Missing informations, fill the form"});
+    }
     const bio = sanitize(req.body.bio);
     const user_id = payload.user_id;
     if (!(bio || user_id)) {
@@ -82,16 +84,16 @@ module.exports = {
         return response(500, 'Internal error', res);
       });
     if (!user[0]) {
-      response(400, 'Unknown user', res);
+      return response(400, 'Unknown user', res);
     }
-    await updateFieldUser(bio, 'bio', user_id).then((data) => data)
+    await updateFieldUser('bio', bio, user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 
-        return res.status(500).json({error: err});
+        return response(500, 'Internal error', res);
       });
 
-    return res.status(200);
+    return response(200, 'OK', res);
   },
   editGender: async(req, res, payload) => {
     const gender_id = req.body.gender_id;
@@ -106,19 +108,19 @@ module.exports = {
       .catch((err) => {
         console.log(err);
 
-        response(500, 'Internal error', res);
+        return response(500, 'Internal error', res);
       });
     if (!user[0]) {
-      response(400, 'Unknown user', res);
+      return response(400, 'Unknown user', res);
     }
-    await updateFieldUser(gender_id, 'gender_id', user_id).then((data) => data)
+    await updateFieldUser('gender_id', gender_id, user_id).then((data) => data)
       .catch((err) => {
         console.log(err);
 
-        return res.status(500).json({error: err});
+        return response(500, 'Internal error', res);
       });
 
-    return res.status(200);
+    return response(200, 'OK', res);
   },
   editRelationship: async(req, res, payload) => {
     const gender = req.body.gender_id;
@@ -210,7 +212,6 @@ module.exports = {
 
         return response(500, 'Internal error', res);
       });
-    console.log(photos);
     for (let index = 0; index < photos.length; index += 1) {
       try {
         photos[index].link = Buffer.from(fs.readFileSync(photos[index].link)).toString('base64');
@@ -224,7 +225,15 @@ module.exports = {
     return response(200, photos, res);
   },
   editLocation: async(req, res, payload) => {
-    const location = JSON.parse(req.body.location);
+    if (!req.body.location) {
+      return response(400, 'Missing parameters', res);
+    }
+    let location = {};
+    try {
+      location = JSON.parse(req.body.location);
+    } catch (e) {
+      return response(400, 'Bad json', res);
+    }
     const user_id = payload.user_id;
     if (!location) {
       return res.status(400).json({error: "Missing informations, fill the form"});

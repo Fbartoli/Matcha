@@ -63,40 +63,19 @@ function response (status, message, res) {
 module.exports = {
   addView: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let username = sanitize(req.body.username);
-    if (!username) {
+    if (!req.body.username) {
       return response(400, 'No user provided', res);
     }
-    let user_visited = await getUser('users.username', username).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getUser/addView', res);
-      });
-    if (!user_visited[0]) {
-      console.log('user_visited: ', user_visited);
-
-      return response(400, 'User not in the db', res);
-    }
-
-    let history = await getHistoryViewsID(user_visited[0].id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error getHistory/addView', res);
-      });
-
-    await addView(user_id, history[0].id).then((data) => data)
-      .catch((error) => {
-        console.log(error);
-
-        return response(500, 'Internal error addView/addView', res);
-      });
-    await updateFieldUser('score', user_visited[0].score + 5, user_id).catch((error) => {
-      console.log(error);
-
+    let username = sanitize(req.body.username);
+    try {
+      let user_visited = await getUser('users.username', username).then((data) => data);
+      if (!user_visited[0]) return response(400, 'User not in the db', res);
+      let history = await getHistoryViewsID(user_visited[0].id).then((data) => data);
+      await addView(user_id, history[0].id).then((data) => data);
+      await updateFieldUser('score', user_visited[0].score + 5, user_id);
+    } catch (error) {
       return response(500, 'Internal error update score', res);
-    });
+    }
 
     return response(200, 'viewed', res);
   },
@@ -115,6 +94,9 @@ module.exports = {
   },
   addLike: async(req, res, payload) => {
     let user_id = payload.user_id;
+    if (!req.body.username) {
+      return response(400, 'No user provided', res);
+    }
     let username = sanitize(req.body.username);
     if (!username) {
       return response(400, 'Missing username', res);
