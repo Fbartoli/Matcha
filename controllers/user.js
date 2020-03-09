@@ -206,17 +206,23 @@ const User = {
   },
   addUserInfo: async(req, res, payload) => {
     let user_id = payload.user_id;
-    let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, username, tags} = req.body;
-    if (!(user_id && bio && birth_date && gender_id && notification && interested_in && username && name && surname && email && tags)) {
+    console.log(payload);
+    let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, tags} = req.body;
+    if (!(user_id && bio && birth_date && gender_id && notification && interested_in && name && surname && email && tags)) {
       return response(400, "Missing information", res);
     }
-    try {
-      await ValidDate(birth_date).then((data) => data);
-    } catch (error) {
-      return response(400, 'Wrong input', res);
+    if (gender_id < 1 || gender_id > 3) {
+      return response(400, 'Wrong gender ID', res);
     }
-    if (!USERNAME_REGEX.test(username) || username.length < 6) {
-      return res.status(400).json({client: 'Invalid username, it should contain only letters, numbers and a minimun of 6 characters'});
+    if (interested_in < 1 || interested_in > 3) {
+      return response(400, 'Wrong Interested_in ID', res);
+    }
+    try {
+      await ValidDate(birth_date);
+    } catch (error) {
+      console.log(error);
+
+      return response(400, 'Wrong input', res);
     }
     if (!NAME_REGEX.test(name) || name.length < 2) {
       return res.status(400).json({client: 'Invalid name, it should contain only letters'});
@@ -227,27 +233,25 @@ const User = {
     let age = await ageCalculator(new Date(birth_date)).then((data) => data)
       .catch((error) => console.log(error));
     let info = [
-      sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification), sanitize(username),
+      sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification),
       sanitize(name), sanitize(surname), sanitize(email), age, sanitize(user_id)
     ];
     try {
       let userEmail = await getUser('email', email).then((data) => data);
       if (userEmail[0] && email === userEmail[0].email) {
-        return response(400, 'Wrong input', res);
+        return response(400, 'Wrong Email', res);
       }
       await editEmail(email, user_id).then((data) => data);
-      let user = await getUser('username', username).then((data) => data);
-      if (user[0] && username === user[0].username) {
-        return response(400, 'Wrong input', res);
-      }
-      await updateUser(info).then((data) => data);
-      await delTags(user_id).then((data) => data);
+      await updateUser(info);
+      await delTags(user_id);
       let arrayTags = tags.split(',');
       arrayTags.forEach(async (tag) => {
         await addTags(user_id, tag);
       });
       await updateRelationsip(interested_in, user_id).then((data) => data);
     } catch (error) {
+      console.log(error);
+
       return response(500, 'Internal Error', res);
     }
 

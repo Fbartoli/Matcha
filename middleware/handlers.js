@@ -7,7 +7,6 @@ const geolib = require('geolib');
 const util = require('util');
 const fs = require('fs');
 const jwtKey = CONFIG.jwt_secret;
-const jwtExpirySeconds = CONFIG.jwt_expiration; //eslint-disable-line
 const rootDir = path.dirname(require.main.filename || process.mainModule.filename);
 const uniqid = require('uniqid');
 const {add, multiply, subtract} = require('async-math');
@@ -71,9 +70,21 @@ function distance(result, user, callback) {
 
   return callback(null, 'ok');
 }
+// async function isProfileComplete(user_id, callback) {
+//   let user_profile = {};
+//   try {
+//     user_profile = await usermodel.getFullProfile(user_id).then((data) => data);
+//   } catch (error) {
+//     return callback(error, null);
+//   }
+//   if (user_profile[0].profile_complete === 0) {
+//     return callback('Please complete your profile', null);
+//   } else return callback('null', true);
+// }
 const getInterest = util.promisify(usermodel.getInterest);
 const getScore = util.promisify(computeMatchScore);
 const getDistancePro = util.promisify(distance);
+// const isProfile = util.promisify(isProfileComplete);
 
 
 module.exports = {
@@ -146,11 +157,11 @@ module.exports = {
       }
 
       let filename = `${uniqid()}-matcha${path.extname(file.originalname)}`;
-      callback(null, filename);
+
+      return callback(null, filename);
     }
   }),
   calculateAge: (birthday, callback) => {
-    console.log(birthday);
     let ageDifMs = Date.now() - birthday.getTime();
     let ageDate = new Date(ageDifMs);
     let age = Math.abs(ageDate.getUTCFullYear() - 1970);
@@ -193,7 +204,8 @@ module.exports = {
         return callback('File not available', null);
       }
     }
-    callback(null, photos);
+
+    return callback(null, photos);
   },
   getDistancePro: util.promisify(distance)
 };

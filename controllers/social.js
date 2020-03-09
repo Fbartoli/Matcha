@@ -204,6 +204,9 @@ module.exports = {
     let username = sanitize(req.body.username);
     let user_reported = {};
     let history = {};
+    if (!payload.user_id) {
+      return response(400, 'Please LOGIN', res);
+    }
     if (!username) {
       return response(400, 'No user provided', res);
     }
