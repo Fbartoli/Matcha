@@ -22,7 +22,6 @@ const ONLINE = 'onlinee';
 const LOGOUT = 'logout';
 
 // DATA
-let UserOnlinecount = 0;
 let userRegister = {};
 let userOnline = {};
 
@@ -31,13 +30,10 @@ const deleteKeyByValue = (obj, value) => Reflect.deleteProperty(userRegister, Ob
 exports.receivers = (io) => {
 
   io.on('connection', function(socket) {
-    UserOnlinecount += 1;
     socket.on(LOGIN, async function(username) {
       // handle different type of notification.
       let user_id = await getUserInfo(username).then((data) => data[0].id)
-        .catch((error) => {
-          console.log(error);
-        });
+        .catch((error) => error);
       await updateConnection('last_connection', new Date(Date.now()), username).then((data) => {
         if (data.affectedRows === 0) {
           io.to(socket.id).emit(NOTIFICATION, `${username} not found`);
@@ -55,26 +51,17 @@ exports.receivers = (io) => {
     });
     socket.on(CHAT, async function(username, user_target, msg) {
       let user_target_id = await await getUserInfo(username).then((data) => data[0].id)
-        .catch((error) => {
-          console.log(error);
-        });
+        .catch((error) => error);
       if (userRegister[username]) {
         let id = uniqid();
-        await addNotification(id, user_target, `user ${username} sent you a message`).catch((error) => {
-          console.log(error);
-        });
+        await addNotification(id, user_target, `user ${username} sent you a message`).catch((error) => error);
         let conversationId = await getConversationId(userRegister[username].user_id, user_target_id).then((data) => data[0].conversation_id)
           .catch((error) => {
-            console.log(error);
-            io.to(socket.id).emit(NOTIFICATION, {message: 'COULD NOT SEND THE MESSAGE',
+            io.to(socket.id).emit(NOTIFICATION, {message: `COULD NOT SEND THE MESSAGE`,
               id: id});
           });
-        console.log(`${username} : ${userRegister[username].user_id} : ${msg} : ${conversationId}`);
-        console.log(userRegister);
         await addMessages(userRegister[username].user_id, msg, conversationId).then((data) => console.log(data))
-          .catch((error) => {
-            console.log(error);
-          });
+          .catch((error) => error);
         if (userRegister[user_target]) {
           io.to(userRegister[user_target].socket).emit(NOTIFICATION, {message: `You received a message from ${username}`,
             id: id});
@@ -85,9 +72,7 @@ exports.receivers = (io) => {
         }
       } else {
         let id = uniqid();
-        await addNotification(id, user_target, `user ${username} sent you a message`).catch((error) => {
-          console.log(error);
-        });
+        await addNotification(id, user_target, `user ${username} sent you a message`).catch((error) => error);
         io.to(socket.id).emit(NOTIFICATION, {message: 'Please login again',
           id: id});
       }
@@ -95,7 +80,6 @@ exports.receivers = (io) => {
     socket.on(LIKE, async function(username, user_liked) {
       let id = uniqid();
       await addNotification(id, user_liked, `user ${username} likes you`);
-      console.log(`you like ${user_liked}`);
       if (userRegister[user_liked]) {
         io.to(userRegister[user_liked].socket).emit(NOTIFICATION, {message: `user ${username} likes you`,
           id: id});
@@ -104,7 +88,6 @@ exports.receivers = (io) => {
     socket.on(LIKEBACK, async function(username, user_liked) {
       let id = uniqid();
       await addNotification(id, user_liked, {message: `user ${username} likes you back, it's a match`});
-      console.log(`you liked ${user_liked}`);
       if (userRegister[user_liked]) {
         io.to(userRegister[user_liked].socket).emit(NOTIFICATION, {message: `you are matched with ${username}`,
           id: id});
@@ -138,25 +121,17 @@ exports.receivers = (io) => {
         } else {
           userRegister[username] = null;
           userOnline[username] = null;
-          console.log('User online disconected', userOnline);
           io.emit(ONLINE, userOnline);
         }
       })
-        .catch((error) => {
-          console.log(error);
-        });
+        .catch((error) => error);
     });
     socket.on(ONLINE, function(userOnline) {
       console.log('User online listener', userOnline);
     });
     socket.on(DISCONNECT, function() {
-      console.log(`User disconnected ${socket.id}`);
-      UserOnlinecount -= 1;
       deleteKeyByValue(userOnline, socket.id);
-      console.log(userOnline);
-      console.log('User online', userOnline);
       io.emit(ONLINE, userOnline);
-      console.log(`${UserOnlinecount} connected`);
     });
   });
 };

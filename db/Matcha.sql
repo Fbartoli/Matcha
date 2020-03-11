@@ -178,13 +178,13 @@ ALTER TABLE `history_blocks` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id
 
 ALTER TABLE `blocks` ADD FOREIGN KEY (`history_blocks_id`) REFERENCES `history_blocks` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `participants` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `participants` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `participants` ADD FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`);
+ALTER TABLE `participants` ADD FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `messages` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+ALTER TABLE `messages` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `messages` ADD FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`);
+ALTER TABLE `messages` ADD FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`) ON DELETE CASCADE;
 
 
 

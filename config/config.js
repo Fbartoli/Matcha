@@ -17,4 +17,8 @@ CONFIG.jwt_secret = process.env.SECRET_JWT;
 CONFIG.jwt_encryption = process.env.JWT_ENCRYPTION;
 CONFIG.jwt_expiration = process.env.JWT_EXPIRATION;
 
+CONFIG.email_user = process.env.EMAIL_USER;
+CONFIG.email_pass = process.env.EMAIL_PASS;
+CONFIG.email_smtp = process.env.EMAIL_SMTP;
+
 module.exports = CONFIG;
