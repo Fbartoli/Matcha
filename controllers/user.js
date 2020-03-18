@@ -230,18 +230,13 @@ const User = {
     if (!NAME_REGEX.test(surname) || surname.length < 2) {
       return res.status(400).json({client: 'Invalid surname, it should contain only letters and it should be longer that 2 characters'});
     }
-    let age = await ageCalculator(new Date(birth_date)).then((data) => data)
-      .catch((error) => console.log(error));
+    let age = await ageCalculator(new Date(birth_date)).then((data) => data);
     let info = [
       sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification),
-      sanitize(name), sanitize(surname), sanitize(email), age, sanitize(user_id)
+      sanitize(name), sanitize(surname), age, sanitize(user_id)
     ];
     try {
-      let userEmail = await getUser('email', email).then((data) => data);
-      if (userEmail[0] && email === userEmail[0].email) {
-        return response(400, 'Wrong Email', res);
-      }
-      await editEmail(email, user_id).then((data) => data);
+      await editEmail(email, user_id);
       await updateUser(info);
       await delTags(user_id);
       let arrayTags = tags.split(',');

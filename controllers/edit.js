@@ -27,44 +27,24 @@ module.exports = {
     if (!(email && user_id)) {
       let error = "Missing informations, fill the form";
 
-      return callback(error, null);
+      return callback(null, error);
     }
     if (!MAIL_REGEX.test(email)) {
       let error = "Invalid Email";
 
-      return callback(error, null);
+      return callback(null, error);
     }
-    let user = await getUser('email', email).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-        let error = 'Internal error; MYSQL';
+    let user = {};
+    try {
+      user = await getUser('email', email).then((data) => data);
+      if (user[0] && !(user[0].email === email)) {
 
-        return callback(error, null);
-      });
-    if (user[0] && !(user[0].email === email)) {
-      let error = "Email aready used";
-
-      return callback(error, null);
+        return callback(null, 'Email already Used');
+      }
+      await updateFieldUser('email', email, user_id);
+    } catch (err) {
+      return callback(err, null);
     }
-    user = await getUser('id', user_id).then((data) => data)
-      .catch((err) => {
-        console.log(err);
-        let error = 'Internal error; MYSQL';
-
-        return callback(error, null);
-      });
-    if (!user[0]) {
-      let error = "User doesn't exist";
-
-      return callback(error, null);
-    }
-    // await updateFieldUser(email, 'email', user_id).then((data) => data)
-    //   .catch((err) => {
-    //     console.log(err);
-    //     let error = 'Internal error; MYSQL';
-
-    //     return callback(error, null);
-    //   });
 
     return callback(null, 'Email updated');
   },
