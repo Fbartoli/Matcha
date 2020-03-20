@@ -14,7 +14,7 @@ const getUser = util.promisify(usermodel.findOneUser);
 const getUserPass = util.promisify(usermodel.getUserPassword);
 const getUserOther = util.promisify(usermodel.findOneUserOther);
 const getFulluser = util.promisify(usermodel.getFullProfile);
-// const getAllUsers = util.promisify(usermodel.getAllusers);
+
 const getUserConfirmation = util.promisify(usermodel.findOneUserConfirmation);
 const getUserReset = util.promisify(usermodel.findOneUserReset);
 const getRelationship = util.promisify(usermodel.findRelationship);

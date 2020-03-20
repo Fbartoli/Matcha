@@ -401,7 +401,7 @@ module.exports = {
     let username = payload.username;
     let result = {};
     try {
-      await getNotificationUnread(username).then((data) => data);
+      result = await getNotificationUnread(username).then((data) => data);
     } catch (error) {
       return response(500, 'Internal error', res);
     }

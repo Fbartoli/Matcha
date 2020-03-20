@@ -6,10 +6,8 @@ const fs = require('fs');
 const sharp = require('sharp');
 const rootDir = require('../constant').rootDIr;
 const uniqid = require('uniqid');
-// const handlers = require('../middleware/handlers');
 
 const getUser = util.promisify(usermodel.findOneUser);
-// const getAllUsers = util.promisify(usermodel.getAllusers);
 const updatePhoto = util.promisify(usermodel.updatePhoto);
 const getPhoto = util.promisify(usermodel.getPhoto);
 
