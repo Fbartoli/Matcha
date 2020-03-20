@@ -421,15 +421,15 @@ module.exports = {
 
     return response(200, 'OK', res);
   },
-  getMessages: async(req, res, payload) => {
-    let user_id = payload.user_id;
+  getMessages: async(req, res) => {
     let conversation_id = req.query.conversation_id;
     let result = {};
     try {
-      result = await getMessages(conversation_id, user_id).then((data) => data);
+      result = await getMessages(conversation_id).then((data) => data);
     } catch (error) {
       return response(500, 'Internal error', res);
     }
+    console.log(result);
 
     return response(200, result, res);
   }

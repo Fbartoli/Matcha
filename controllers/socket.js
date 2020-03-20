@@ -50,7 +50,7 @@ exports.receivers = (io) => {
         });
     });
     socket.on(CHAT, async function(username, user_target, msg) {
-      let user_target_id = await await getUserInfo(username).then((data) => data[0].id)
+      let user_target_id = await await getUserInfo(user_target).then((data) => data[0].id)
         .catch((error) => error);
       if (userRegister[username]) {
         let id = uniqid();
@@ -60,6 +60,7 @@ exports.receivers = (io) => {
             io.to(socket.id).emit(NOTIFICATION, {message: `COULD NOT SEND THE MESSAGE`,
               id: id});
           });
+        console.log(conversationId);
         await addMessages(userRegister[username].user_id, msg, conversationId).then((data) => console.log(data))
           .catch((error) => error);
         if (userRegister[user_target]) {

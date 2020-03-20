@@ -570,7 +570,7 @@ module.exports = {
     });
   },
   getConversationId: (user1, user2, callback) => {
-    db.connection.query('select conversation_id from participants inner join users ON users.id = participants.user_id where user_id = ? and conversation_id IN (select conversation_id from participants where user_id = ?)', [user2, user1], function(error, result) {
+    db.connection.query('select conversation_id from participants inner join users ON users.id = participants.user_id where user_id = ? and conversation_id IN (select conversation_id from participants where user_id = ?)', [user1, user2], function(error, result) {
       if (error) {
         return callback(error, null);
       }
@@ -605,8 +605,8 @@ module.exports = {
       return callback(error, result);
     });
   },
-  getMessages: (conversation_id, user_id, callback) => {
-    db.connection.query('SELECT messages.*, users.username FROM messages INNER JOIN users ON users.id = messages.user_id WHERE conversation_id = ?', [conversation_id, user_id], function(error, result) {
+  getMessages: (conversation_id, callback) => {
+    db.connection.query('SELECT messages.*, users.username FROM messages INNER JOIN users ON users.id = messages.user_id WHERE conversation_id = ?', [conversation_id], function(error, result) {
       if (error) {
         return callback(error, null);
       }
