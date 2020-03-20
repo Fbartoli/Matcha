@@ -109,7 +109,7 @@ module.exports = {
       if (user_id === user_liked[0].id) return response(400, 'Cannot self like', res);
       let blocks = await getBlock(payload.user_id).then((data) => data);
       for (let ind = 0; ind < blocks.length; ind += 1) {
-        let blocked_id = blocks[ind].user_reported;
+        let blocked_id = blocks[ind].user_blocked;
         if (user_liked[0].id === blocked_id) {
           return response(400, "Cannot like someone you blocked", res);
         }

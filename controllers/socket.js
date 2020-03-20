@@ -8,6 +8,7 @@ const addNotification = util.promisify(usermodel.addNotification);
 const addMessages = util.promisify(usermodel.addMessages);
 const getUserInfo = util.promisify(usermodel.getUserId);
 const getConversationId = util.promisify(usermodel.getConversationId);
+const getBlock = util.promisify(usermodel.getAllBlocks);
 
 // CONSTANT
 const CHAT = 'chat';
@@ -31,7 +32,6 @@ exports.receivers = (io) => {
 
   io.on('connection', function(socket) {
     socket.on(LOGIN, async function(username) {
-      // handle different type of notification.
       let user_id = await getUserInfo(username).then((data) => data[0].id)
         .catch((error) => error);
       await updateConnection('last_connection', new Date(Date.now()), username).then((data) => {
@@ -81,6 +81,20 @@ exports.receivers = (io) => {
       let id = uniqid();
       await addNotification(id, user_liked, `user ${username} likes you`);
       if (userRegister[user_liked]) {
+        let blocks = await getBlock(userRegister[username].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[user_liked].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
+        blocks = await getBlock(userRegister[user_liked].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[username].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
         io.to(userRegister[user_liked].socket).emit(NOTIFICATION, {message: `user ${username} likes you`,
           id: id});
       }
@@ -101,6 +115,20 @@ exports.receivers = (io) => {
       let id = uniqid();
       await addNotification(id, user_viewed, `user ${username} viewed your profile`);
       if (userRegister[user_viewed]) {
+        let blocks = await getBlock(userRegister[username].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[user_viewed].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
+        blocks = await getBlock(userRegister[user_viewed].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[username].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
         io.to(userRegister[user_viewed].socket).emit(NOTIFICATION, {message: `user ${username} viewed ${user_viewed}`,
           id: id});
       }
@@ -109,6 +137,20 @@ exports.receivers = (io) => {
       let id = uniqid();
       await addNotification(id, user_viewed, `user ${username} viewed your profile`);
       if (userRegister[user_viewed]) {
+        let blocks = await getBlock(userRegister[username].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[user_viewed].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
+        blocks = await getBlock(userRegister[user_viewed].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[username].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
         io.to(userRegister[user_viewed].socket).emit(NOTIFICATION, {message: `${username} doesn't like you anymore`,
           id: id});
       }
