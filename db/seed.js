@@ -57,7 +57,6 @@ async function importUser(callback) {
         score,
         1
       ];
-      try
       await importSeed(post).then((data) => data)
         .catch((err) => {
           console.log(err);

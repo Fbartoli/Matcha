@@ -137,7 +137,7 @@ CREATE TABLE `notification` (
   `username` varchar(255),
   `message` varchar(255),
   `read` boolean DEFAULT (0),
-  `time` timestamp
+  `time` timestamp DEFAULT (now())
 );
 
 ALTER TABLE `history_views` ADD FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
