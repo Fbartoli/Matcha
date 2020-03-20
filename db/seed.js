@@ -1,4 +1,4 @@
-/* eslint-disable */ 
+/* eslint-disable */
 // include the model (aka DB connection)
 const uniqid = require('uniqid');
 const usermodel = require('../models/usermodel');
@@ -57,6 +57,7 @@ async function importUser(callback) {
         score,
         1
       ];
+      try
       await importSeed(post).then((data) => data)
         .catch((err) => {
           console.log(err);
@@ -96,13 +97,13 @@ async function importUser(callback) {
         await addBlocksHistory(id).then((data) => data)
         .catch((err) => {
           console.log(err);
-  
+
           return res.status(500).json({client: "Internal error"});
         });
       await addReportsHistory(id).then((data) => data)
         .catch((err) => {
           console.log(err);
-  
+
           return res.status(500).json({client: "Internal error"});
         });
       arrayTags.forEach(async (tag) => {
@@ -144,4 +145,3 @@ importUsers().then((data) => {
 
     process.exit();
   });
-

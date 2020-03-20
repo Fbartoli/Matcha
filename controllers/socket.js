@@ -64,6 +64,20 @@ exports.receivers = (io) => {
         await addMessages(userRegister[username].user_id, msg, conversationId).then((data) => console.log(data))
           .catch((error) => error);
         if (userRegister[user_target]) {
+          let blocks = await getBlock(userRegister[username].user_id).then((data) => data);
+          for (let ind = 0; ind < blocks.length; ind += 1) {
+            let blocked_id = blocks[ind].user_blocked;
+            if (userRegister[user_target].user_id === blocked_id) {
+              return console.log('socketio block');
+            }
+          }
+          blocks = await getBlock(userRegister[user_target].user_id).then((data) => data);
+          for (let ind = 0; ind < blocks.length; ind += 1) {
+            let blocked_id = blocks[ind].user_blocked;
+            if (userRegister[username].user_id === blocked_id) {
+              return console.log('socketio block');
+            }
+          }
           io.to(userRegister[user_target].socket).emit(NOTIFICATION, {message: `You received a message from ${username}`,
             id: id});
           io.to(userRegister[user_target].socket).emit(CHAT, `${username}: ${msg}`);
@@ -104,10 +118,38 @@ exports.receivers = (io) => {
       let id = uniqid();
       await addNotification(id, user_liked, {message: `user ${username} likes you back, it's a match`});
       if (userRegister[user_liked]) {
+        let blocks = await getBlock(userRegister[username].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[user_liked].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
+        blocks = await getBlock(userRegister[user_liked].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[username].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
         io.to(userRegister[user_liked].socket).emit(NOTIFICATION, {message: `you are matched with ${username}`,
           id: id});
       }
       if (userRegister[username]) {
+        let blocks = await getBlock(userRegister[username].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[user_liked].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
+        blocks = await getBlock(userRegister[user_liked].user_id).then((data) => data);
+        for (let ind = 0; ind < blocks.length; ind += 1) {
+          let blocked_id = blocks[ind].user_blocked;
+          if (userRegister[username].user_id === blocked_id) {
+            return console.log('socketio block');
+          }
+        }
         io.to(userRegister[username].socket).emit(NOTIFICATION, {message: `match with ${user_liked}`,
           id: id});
       }
