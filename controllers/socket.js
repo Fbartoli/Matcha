@@ -116,7 +116,7 @@ exports.receivers = (io) => {
     });
     socket.on(LIKEBACK, async function(username, user_liked) {
       let id = uniqid();
-      await addNotification(id, user_liked, {message: `user ${username} likes you back, it's a match`});
+      await addNotification(id, user_liked, `user ${username} likes you back, it's a match`);
       if (userRegister[user_liked]) {
         let blocks = await getBlock(userRegister[username].user_id).then((data) => data);
         for (let ind = 0; ind < blocks.length; ind += 1) {
