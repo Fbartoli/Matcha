@@ -207,8 +207,8 @@ const User = {
   addUserInfo: async(req, res, payload) => {
     let user_id = payload.user_id;
     console.log(payload);
-    let {bio, birth_date, gender_id, notification, interested_in, name, surname, email, tags} = req.body;
-    if (!(user_id && bio && birth_date && gender_id && notification && interested_in && name && surname && email && tags)) {
+    let {bio, birth_date, gender_id, interested_in, name, surname, email, tags} = req.body;
+    if (!(user_id && bio && birth_date && gender_id && interested_in && name && surname && email && tags)) {
       return response(400, "Missing information", res);
     }
     if (gender_id < 1 || gender_id > 3) {
@@ -232,7 +232,7 @@ const User = {
     }
     let age = await ageCalculator(new Date(birth_date)).then((data) => data);
     let info = [
-      sanitize(bio), sanitize(birth_date), sanitize(gender_id), sanitize(notification),
+      sanitize(bio), sanitize(birth_date), sanitize(gender_id),
       sanitize(name), sanitize(surname), age, sanitize(user_id)
     ];
     try {
