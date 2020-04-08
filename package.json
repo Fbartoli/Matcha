@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "setupBack": "cd ./server && npm install && npm run data && npm run nodemon",
+    "setupServer": "cd ./server && npm install && npm run data && npm run nodemon",
     "setupFront": "cd ./client && npm install && npm run dev"
   },
   "author": "",
