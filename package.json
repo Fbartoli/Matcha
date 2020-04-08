@@ -1,0 +1,13 @@
+{
+  "name": "matchasubmit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "setupBack": "cd ./back && npm install && npm run data && npm run nodemon",
+    "setupFront": "cd ./client && npm install && npm run dev"
+  },
+  "author": "",
+  "license": "ISC"
+}

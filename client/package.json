@@ -1,0 +1,44 @@
+{
+  "name": "front",
+  "version": "1.0.0",
+  "description": "font-end package_matcha42",
+  "author": "msaubin",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
+    "test": "jest"
+  },
+  "lint-staged": {
+    "*.{js,vue}": "eslint"
+  },
+  "dependencies": {
+    "@nuxtjs/axios": "^5.9.5",
+    "@nuxtjs/pwa": "^3.0.0-beta.20",
+    "dependencies": "0.0.1",
+    "dgram": "^1.0.1",
+    "fs": "0.0.1-security",
+    "moment": "^2.24.0",
+    "net": "^1.0.2",
+    "nuxt": "^2.0.0",
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
+    "uws": "^100.0.1",
+    "vuex-persistedstate": "^2.7.1"
+  },
+  "devDependencies": {
+    "@nuxtjs/eslint-config": "^1.0.1",
+    "@nuxtjs/eslint-module": "^1.0.0",
+    "@nuxtjs/stylelint-module": "^3.2.2",
+    "@nuxtjs/vuetify": "^1.11.0",
+    "@vue/test-utils": "^1.0.0-beta.27",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-nuxt": "^0.5.1",
+    "lint-staged": "^8.2.1",
+    "stylelint": "^13.2.1"
+  }
+}
