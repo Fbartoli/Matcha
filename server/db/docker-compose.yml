@@ -6,7 +6,10 @@ services:
     command: mysqld --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: matcha
+      MYSQL_USER: flo
+      MYSQL_PASSWORD: password
     ports:
       - 3308:3306
     volumes:
-      - ./:/db
+      - ./Matcha.sql:/docker-entrypoint-initdb.d/Matcha.sql

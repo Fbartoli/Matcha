@@ -10,7 +10,7 @@ CONFIG.db_dialect = process.env.DB_DIALECT || "mysql";
 CONFIG.db_host = process.env.DB_HOST || "0.0.0.0";
 CONFIG.db_port = process.env.DB_PORT || "3308";
 CONFIG.db_name = process.env.DB_NAME || "matcha";
-CONFIG.db_user = process.env.DB_USER || "root";
+CONFIG.db_user = process.env.DB_USER || "flo";
 CONFIG.db_password = process.env.DB_PASSWORD || "password";
 
 CONFIG.jwt_secret = process.env.SECRET_JWT || "SECRET";
