@@ -177,7 +177,7 @@ module.exports = {
     if (data.length > 0) {
       try {
         await delLike(user_id, history[0].id);
-        await updateFieldUser('score', user_liked[0].score - 10, user_id);
+        await updateFieldUser('score', user_liked[0].score - 10, user_liked[0].id);
       } catch (error) {
         return response(500, 'Internal error getHistory/addLike', res);
       }
