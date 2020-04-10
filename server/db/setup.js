@@ -1,7 +1,7 @@
 const cp = require("child_process");
 
 cp.exec(
-  "docker exec -i 569c8a91111d mysql -uroot -ppassword < matcha.sql",
+  "docker exec -i $(docker ps -q --filter name=mysql) mysql -uroot -ppassword < matcha.sql",
   (error, stdout, stderr) => {
     if (error) throw error;
     `stdout: ${stdout}`;

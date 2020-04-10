@@ -18,7 +18,7 @@ export const mutations = {
     state.checker = value
   },
   setUserData (state, userinfo) {
-    state.loadedUsers = Object.assign({}, userinfo)
+    state.loadedUsers = userinfo
   },
   setUsername (state, username) {
     state.loadedUsers.username = username
@@ -72,14 +72,14 @@ export const actions = {
       .catch((error) => {
       })
   },
-  registerUser ({ commit }, user) {
+  registerUser ({ commit, dispatch }, user) {
     const createdUser = {
       ...user
     }
     axios
       .post(process.env.serverUrl + '/users/register', createdUser)
       .then((response) => {
-        commit('setMessage', response.data.client)
+        dispatch('interact/setMessage', response.data.client, { root: true })
       //   vuexContext.commit('registerUser', { ...createdUser, id: vuexContext.data.insertId })
       })
       // eslint-disable-next-line
@@ -122,7 +122,9 @@ export const getters = {
     return state.checker
   },
   loadedUsers (state) {
-    return state.loadedUsers
+    const resUser = {}
+
+    return Object.assign(resUser, state.loadedUsers)
   },
   loadedPictures (state) {
     return state.loadedPictures
