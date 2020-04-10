@@ -120,7 +120,11 @@ module.exports = {
         return response(400, 'User Already liked', res);
       }
       await addLike(user_id, history[0].id);
-      await updateFieldUser('score', user_liked[0].score + 10, user_id);
+      await updateFieldUser(
+        "score",
+        user_liked[0].score + 10,
+        user_liked[0].score
+      );
       let match = await isMatching(user_id, user_liked[0].id).then((data) => data.length === 2);
       if (match === true) {
         let id = uniqid();
