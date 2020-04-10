@@ -19,8 +19,8 @@ let tags = ['#gamer', '#surfer', '#hacker', '#starwars', '#meditation', '#42', '
 const importSeed = util.promisify(usermodel.importSeed);
 
 async function importUser(callback) {
-  if (fs.existsSync('./db/seed.json')) {
-    let rawData = fs.readFileSync('./db/seed.json');
+  if (fs.existsSync('seed.json')) {
+    let rawData = fs.readFileSync('./seed.json');
     let users = JSON.parse(rawData);
     let length = users.results.length;
     for (let index = 0; index < users.results.length; index += 1) {
@@ -61,64 +61,64 @@ async function importUser(callback) {
         .catch((err) => {
           console.log(err);
 
-          return callback('oups', null);
+          return callback(err, null);
         });
       await addRelationship(id)
         .catch((err) => {
           console.log(err);
 
-          return callback('oups', null);
+          return callback(err, null);
         });
       await addViewsHistory(id)
         .catch((err) => {
           console.log(err);
 
-          return callback('oups', null);
+          return callback(err, null);
         });
       await addLikeHistory(id)
         .catch((err) => {
           console.log(err);
 
-          return callback('oups', null);
+          return callback(err, null);
         });
       await addPhoto(id)
         .catch((err) => {
           console.log(err);
 
-          return callback('oups', null);
+          return callback(err, null);
         });
       await updateRelationship(interested_in, id)
         .catch((err) => {
           console.log(err);
 
-          return callback('oups', null);
+          return callback(err, null);
         });
         await addBlocksHistory(id).then((data) => data)
         .catch((err) => {
           console.log(err);
 
-          return res.status(500).json({client: "Internal error"});
+          return callback(err, null);
         });
       await addReportsHistory(id).then((data) => data)
         .catch((err) => {
           console.log(err);
 
-          return res.status(500).json({client: "Internal error"});
+          return callback(err, null);
         });
       arrayTags.forEach(async (tag) => {
         await addTags(id, tag).catch((err) => {
           console.log(err);
 
-          return callback('oups', null);
+          return callback(err, null);
         });
       });
     }
 
     return callback(null, 'ok');
   } else {
-    console.log('blyat');
+    console.log('File not found');
 
-    return callback('oups', null);
+    return callback('lol', null);
   }
 }
 const importUsers = util.promisify(importUser);
