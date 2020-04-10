@@ -123,7 +123,7 @@ module.exports = {
       await updateFieldUser(
         "score",
         user_liked[0].score + 10,
-        user_liked[0].score
+        user_liked[0].id
       );
       let match = await isMatching(user_id, user_liked[0].id).then((data) => data.length === 2);
       if (match === true) {
