@@ -26,3 +26,10 @@ lancer le front-end à la racine
 sudo npm run setupFront
 
 Probleme si les host ont déja mysql d'installer sur le pc à étudier
+
+
+localhost: 
+	-8080 serveur api
+	-3000 serveur front
+	-8081 serveur adminer/phpmyadmin
+	-33080 serveur php docker
