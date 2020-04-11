@@ -1,35 +1,32 @@
-Linux vm 42 :
+[here](#Linux-vm-42)
+[here](#Mac)
+
+### Linux vm 42
 lancer le daemon docker
-Sudo dockerd
+```Sudo dockerd```
 
 lancer le conteneur dans le dossier /server/db
-sudo docker-compose exec -f docker-compose.yml up
+```sudo docker-compose -f docker-compose.yml up```
 
 lancer le back-end à la racine
-sudo npm run setupServeur
+```sudo npm run setupServeur```
 
 lancer le front-end à la racine
-sudo npm run setupFront
+```sudo npm run setupFront```
 
-Mac:
-
-si vous avez MYSQL sur mac faites:
-`brew services stop mysql` le temps de la correction
+### Mac:
 
 lancer le conteneur dans le dossier /server/db
-sudo docker-compose exec -f docker-compose.yml up
+```docker-compose -f docker-compose.yml up```
 
 lancer le back-end à la racine
-sudo npm run setupServeur
+```npm run setupServeur```
 
 lancer le front-end à la racine
-sudo npm run setupFront
+```npm run setupFront```
 
-Probleme si les host ont déja mysql d'installer sur le pc à étudier
-
-
-localhost: 
-	-8080 serveur api
-	-3000 serveur front
-	-8081 serveur adminer/phpmyadmin
-	-33080 serveur php docker
+localhost:
+-8080 serveur api
+-3000 serveur front
+-8081 serveur adminer/phpmyadmin
+-33080 serveur php docker
