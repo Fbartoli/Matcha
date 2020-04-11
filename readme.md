@@ -1,5 +1,6 @@
-[here](#Linux-vm-42)
-[here](#Mac)
+[Linux section](#Linux-vm-42)
+
+[Mac Section](#Mac)
 
 ### Linux vm 42
 lancer le daemon docker
