@@ -15,7 +15,7 @@ lancer le back-end à la racine
 lancer le front-end à la racine
 ```sudo npm run setupFront```
 
-### Mac:
+### Mac
 
 lancer le conteneur dans le dossier /server/db
 ```docker-compose -f docker-compose.yml up```
