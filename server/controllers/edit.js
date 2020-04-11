@@ -124,14 +124,12 @@ module.exports = {
 
           return response(500, 'Internal error', res);
         });
-      console.log('photos: ', photos);
       let err = [];
       req.files.forEach(async (link) => {
         const resizedLink = `${rootDir}/uploads/resized/${uniqid()}-matcha.jpeg`;
         await sharp(link.path).resize(320, 240)
           .jpeg()
           .toFile(resizedLink);
-        console.log(parseInt(link.originalname, 10));
         if (fs.existsSync(photos[parseInt(link.originalname, 10) - 1].link) && photos[parseInt(link.originalname, 10) - 1].link !== `${rootDir}/uploads/1024px.png`) {
           fs.unlinkSync(photos[parseInt(link.originalname, 10) - 1].link);
         }

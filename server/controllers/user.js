@@ -81,7 +81,7 @@ const User = {
       }
       const hashNew = await hashFct(passwordNew, 2).then((data) => data);
 
-      await updateFieldUser('password', hashNew, user_id).then((data) => console.log(data));
+      await updateFieldUser('password', hashNew, user_id);
 
     } catch (error) {
       console.log(error);
@@ -106,7 +106,6 @@ const User = {
       tags.forEach((tag) => {
         list.push(tag.hobbies_name);
       });
-      console.log(list);
       user[0].tags = list;
       // refacto coté sql parce que c'est pas beau
       Reflect.deleteProperty(user[0], 'password');
@@ -206,7 +205,6 @@ const User = {
   },
   addUserInfo: async(req, res, payload) => {
     let user_id = payload.user_id;
-    console.log(payload);
     let {bio, birth_date, gender_id, interested_in, name, surname, email, tags} = req.body;
     if (!(user_id && bio && birth_date && gender_id && interested_in && name && surname && email && tags)) {
       return response(400, "Missing information", res);
@@ -335,7 +333,7 @@ const User = {
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (resultJson[0]) {
-      await updateFieldUser('password_reset', 1, resultJson[0].id).then((data) => console.log(data))
+      await updateFieldUser('password_reset', 1, resultJson[0].id)
         .catch((err) => {
           console.log(err);
 
@@ -364,7 +362,6 @@ const User = {
     let resultJson = JSON.stringify(user);
     resultJson = JSON.parse(resultJson);
     if (resultJson[0].nb !== 1) {
-      console.log(resultJson[0]);
 
       return res.status(401).json({client: 'Contact the website administrator'});
     }

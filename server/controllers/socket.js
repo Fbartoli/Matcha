@@ -57,10 +57,9 @@ exports.receivers = (io) => {
         await addNotification(id, user_target, `user ${username} sent you a message`).catch((error) => error);
         let conversationId = await getConversationId(userRegister[username].user_id, user_target_id).then((data) => data[0].conversation_id)
           .catch((error) => {
-            io.to(socket.id).emit(NOTIFICATION, {message: `COULD NOT SEND THE MESSAGE`,
+            io.to(socket.id).emit(NOTIFICATION, {message: `COULD NOT SEND THE MESSAGE ${error}`,
               id: id});
           });
-        console.log(conversationId);
         await addMessages(userRegister[username].user_id, msg, conversationId).then((data) => console.log(data))
           .catch((error) => error);
         if (userRegister[user_target]) {
