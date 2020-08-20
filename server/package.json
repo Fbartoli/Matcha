@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "async-math": "^1.0.2",
-    "bcrypt": "^3.0.7",
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "commander": "^4.1.1",
     "cookie-parser": "^1.4.4",
